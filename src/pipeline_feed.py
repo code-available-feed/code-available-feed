@@ -174,6 +174,25 @@ def parse_entries(body: bytes) -> list[dict]:
     return entries
 
 
+def build_feed_url(github_repository: str, category_id: str) -> str:
+    """
+    Construct the canonical GitHub Pages URL for the feed.
+
+    Splits github_repository on '/' to extract owner and repo, lowercases
+    category_id for the URL path segment, and returns the full feed URL.
+
+    Parameters:
+      github_repository: "owner/repo" as set by GITHUB_REPOSITORY
+      category_id:       ARXIV_CATEGORY_ID (e.g. "cs.AI")
+
+    Returns:
+      https://{owner}.github.io/{repo}/arxiv/{category}/atom.xml
+    """
+    owner, repo = github_repository.split("/", 1)
+    category_lower = category_id.lower()
+    return f"https://{owner}.github.io/{repo}/arxiv/{category_lower}/atom.xml"
+
+
 def build_feed(
     articles: list[dict],
     category_id: str,
@@ -208,9 +227,17 @@ def build_feed(
     strict_str = str(strict_mode).lower()
     title_elem.text = f"{category_id} strict={strict_str} {github_repository}"
 
+    feed_url = build_feed_url(github_repository, category_id)
+    id_elem = ET.SubElement(feed, f"{{{_ATOM_NS}}}id")
+    id_elem.text = feed_url
+
     if sorted_articles:
         updated_elem = ET.SubElement(feed, f"{{{_ATOM_NS}}}updated")
         updated_elem.text = sorted_articles[0]["published"]
+
+    link_self_elem = ET.SubElement(feed, f"{{{_ATOM_NS}}}link")
+    link_self_elem.set("rel", "self")
+    link_self_elem.set("href", feed_url)
 
     for article in sorted_articles:
         entry = ET.SubElement(feed, f"{{{_ATOM_NS}}}entry")

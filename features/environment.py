@@ -29,6 +29,7 @@ def before_scenario(context, scenario):
     # Tracks env vars modified by step definitions so after_scenario can
     # restore them.  Maps variable name to original value (None = was absent).
     context.env_overrides = {}
+    context.articles = []
     context.fixture_server = None
     context.run_dir = None
 

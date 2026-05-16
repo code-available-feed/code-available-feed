@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-009 Feed self-URL construction
 
   The feed <id> and <link rel="self" href="..."/> are set to the canonical

@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: NFR-006 README contains the arXiv brand disclaimer
 
   The repository's README.md must include the disclaimer required by the

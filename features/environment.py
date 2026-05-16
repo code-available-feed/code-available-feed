@@ -16,6 +16,8 @@ import sys
 
 # Allow step definitions to import from src/ when behave runs from /app.
 sys.path.insert(0, str(pathlib.Path(".").resolve()))
+# Allow step definitions to import from features/ (e.g. fixtures package).
+sys.path.insert(0, str(pathlib.Path(".").resolve() / "features"))
 
 _RUNNABLE_STATUSES = frozenset({"status-active", "status-done"})
 
@@ -27,6 +29,8 @@ def before_scenario(context, scenario):
     # Tracks env vars modified by step definitions so after_scenario can
     # restore them.  Maps variable name to original value (None = was absent).
     context.env_overrides = {}
+    context.fixture_server = None
+    context.run_dir = None
 
 
 def after_scenario(context, scenario):
@@ -35,3 +39,7 @@ def after_scenario(context, scenario):
             os.environ.pop(key, None)
         else:
             os.environ[key] = original_value
+
+    if context.fixture_server is not None:
+        context.fixture_server.stop()
+        context.fixture_server = None

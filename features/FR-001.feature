@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-001 Fetch the current ISO week from the arxiv API
 
   The pipeline fetches every article submitted to the configured arxiv category

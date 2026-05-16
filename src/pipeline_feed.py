@@ -1,0 +1,262 @@
+"""
+Pipeline entry point: fetch arxiv articles for the current ISO week and write
+docs/arxiv/{category}/atom.xml.
+
+Environment variables read by this module:
+  GITHUB_REPOSITORY          required; "owner/repo" (always set by GitHub Actions)
+  ARXIV_CATEGORY_ID          optional; default "cs.AI"
+  ARXIV_CATEGORY_STRICT      optional; "true" enables strict primary-category filter
+  ARXIV_API_BASE_URL         optional; default "https://export.arxiv.org"
+  PIPELINE_TODAY             optional; ISO date (YYYY-MM-DD) overrides the current UTC date
+  RETRY_BACKOFF_BASE_SECONDS optional; seconds for exponential retry backoff; default 10
+"""
+
+import datetime
+import os
+import pathlib
+import sys
+import time
+import urllib.error
+import urllib.request
+import xml.etree.ElementTree as ET
+
+import src.config
+import src.filter
+
+_ATOM_NS = "http://www.w3.org/2005/Atom"
+_ARXIV_NS = "http://arxiv.org/schemas/atom"
+
+# NFR-002: minimum pause before every API request to respect arxiv rate limits.
+_MIN_REQUEST_INTERVAL_SECONDS: int = 5
+
+
+def compute_week_bounds(today: datetime.date) -> tuple[str, str]:
+    """
+    Return (monday, sunday) as YYYYMMDD strings for the ISO week that
+    contains today.  Monday is weekday 0; Sunday is weekday 6.
+    """
+    monday = today - datetime.timedelta(days=today.weekday())
+    sunday = monday + datetime.timedelta(days=6)
+    return monday.strftime("%Y%m%d"), sunday.strftime("%Y%m%d")
+
+
+def build_api_url(
+    base_url: str,
+    category_id: str,
+    monday: str,
+    sunday: str,
+    start: int,
+    max_results: int,
+) -> str:
+    """
+    Construct the arxiv API query URL.
+
+    The query uses literal + for AND and square brackets for date ranges as
+    required by the arxiv API user manual.  These characters are left
+    unencoded because the arxiv server expects this exact form.
+    """
+    search_query = (
+        f"cat:{category_id}+AND+submittedDate:[{monday}0000+TO+{sunday}2359]"
+    )
+    return (
+        f"{base_url}/api/query"
+        f"?search_query={search_query}"
+        f"&start={start}"
+        f"&max_results={max_results}"
+        f"&sortBy=submittedDate"
+        f"&sortOrder=descending"
+    )
+
+
+def _fetch_page(url: str) -> tuple[int, bytes]:
+    """Return (http_status, body_bytes) for a GET request to url."""
+    try:
+        with urllib.request.urlopen(url) as response:
+            return response.status, response.read()
+    except urllib.error.HTTPError as exc:
+        return exc.code, b""
+
+
+def parse_entries(body: bytes) -> list[dict]:
+    """
+    Parse an arxiv Atom XML response and return one dict per <entry>.
+
+    Each dict contains:
+      primary_category: str        arxiv:primary_category term attribute value
+      comment:          str | None arxiv:comment text, or None when absent
+    """
+    root = ET.fromstring(body)
+    entries = []
+    for entry in root.findall(f"{{{_ATOM_NS}}}entry"):
+        primary_cat_elem = entry.find(f"{{{_ARXIV_NS}}}primary_category")
+        primary_category = (
+            primary_cat_elem.get("term", "")
+            if primary_cat_elem is not None
+            else ""
+        )
+        comment_elem = entry.find(f"{{{_ARXIV_NS}}}comment")
+        comment: str | None = (
+            comment_elem.text if comment_elem is not None else None
+        )
+        entries.append(
+            {
+                "primary_category": primary_category,
+                "comment": comment,
+            }
+        )
+    return entries
+
+
+def fetch_all_articles(
+    base_url: str,
+    category_id: str,
+    today: datetime.date,
+    backoff_base_seconds: int,
+) -> list[dict]:
+    """
+    Fetch all arxiv articles for the ISO week that contains today, paginating
+    in steps of 2000.
+
+    NFR-002: sleeps _MIN_REQUEST_INTERVAL_SECONDS before every API request.
+    FR-011: retries the first page up to 2 times with exponential backoff on
+    non-200 responses; exits immediately on non-200 for subsequent pages.
+
+    Raises RuntimeError on unrecoverable errors:
+    - all retries for the first page exhausted
+    - non-200 on a pagination page
+    - zero results returned by the first page (signals an API issue)
+    """
+    monday, sunday = compute_week_bounds(today)
+    max_results = 2000
+    max_retries_first_page = 2
+    start = 0
+    all_entries: list[dict] = []
+
+    while True:
+        url = build_api_url(
+            base_url, category_id, monday, sunday, start, max_results
+        )
+        print(url, flush=True)
+
+        # NFR-002: pause before every request, including the first.
+        time.sleep(_MIN_REQUEST_INTERVAL_SECONDS)
+
+        if start == 0:
+            status, body = _fetch_page(url)
+            # Retry up to max_retries_first_page times on non-200.
+            for retry_number in range(max_retries_first_page):
+                if status == 200:
+                    break
+                wait_seconds = (retry_number + 1) * backoff_base_seconds
+                time.sleep(wait_seconds)
+                status, body = _fetch_page(url)
+
+            if status != 200:
+                raise RuntimeError(
+                    f"First API page failed after {max_retries_first_page}"
+                    f" retries: HTTP {status}"
+                )
+        else:
+            # Pagination pages: no retry; a failure here means the session is
+            # already partially complete and the error is unlikely transient.
+            status, body = _fetch_page(url)
+            if status != 200:
+                raise RuntimeError(
+                    f"Pagination request failed: HTTP {status} (start={start})"
+                )
+
+        entries = parse_entries(body)
+        count = len(entries)
+        print(f"Fetched {count} results (start={start})", flush=True)
+
+        if start == 0 and count == 0:
+            # Zero results on the first page signals an API issue, not an
+            # empty week; the next daily run will retry the full week range.
+            raise RuntimeError(
+                "First API page returned zero entries; aborting to avoid"
+                " publishing an empty feed"
+            )
+
+        all_entries.extend(entries)
+
+        if count < max_results:
+            # Received fewer entries than requested: this is the last page.
+            break
+
+        start += max_results
+
+    return all_entries
+
+
+def main() -> int:
+    """Run the pipeline and return the process exit code."""
+    github_repository = os.environ.get("GITHUB_REPOSITORY")
+    if not github_repository:
+        print(
+            "Error: GITHUB_REPOSITORY is not set",
+            file=sys.stderr,
+            flush=True,
+        )
+        return 1
+
+    category_id = src.config.resolve_category_id()
+    base_url = os.environ.get("ARXIV_API_BASE_URL", "https://export.arxiv.org")
+    backoff_base_seconds = int(
+        os.environ.get("RETRY_BACKOFF_BASE_SECONDS", "10")
+    )
+
+    today_override = os.environ.get("PIPELINE_TODAY")
+    today: datetime.date
+    if today_override:
+        today = datetime.date.fromisoformat(today_override)
+    else:
+        today = datetime.datetime.now(datetime.timezone.utc).date()
+
+    try:
+        articles = fetch_all_articles(
+            base_url, category_id, today, backoff_base_seconds
+        )
+    except RuntimeError as exc:
+        print(f"Error: {exc}", file=sys.stderr, flush=True)
+        return 1
+
+    filtered = [
+        article
+        for article in articles
+        if src.filter.include_article(
+            article["primary_category"],
+            article["comment"],
+        )
+    ]
+    n_filtered = len(filtered)
+    singular = n_filtered == 1
+    print(
+        f"{n_filtered} {'article' if singular else 'articles'} passed the filter",
+        flush=True,
+    )
+
+    if n_filtered == 0:
+        print(
+            "Error: no articles passed the inclusion filter; aborting",
+            file=sys.stderr,
+            flush=True,
+        )
+        return 1
+
+    # TODO(FR-004): replace this placeholder with a proper Atom 1.0 feed.
+    category_lower = category_id.lower()
+    output_dir = pathlib.Path("docs") / "arxiv" / category_lower
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "atom.xml"
+    output_path.write_text(
+        "<?xml version='1.0' encoding='UTF-8'?>\n"
+        f'<feed xmlns="http://www.w3.org/2005/Atom">\n'
+        "</feed>\n",
+        encoding="utf-8",
+    )
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

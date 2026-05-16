@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-003 Per-article field extraction from the arxiv API response
 
   For each article that passes the inclusion filter the pipeline records: the

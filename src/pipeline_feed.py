@@ -14,6 +14,7 @@ Environment variables read by this module:
 import datetime
 import os
 import pathlib
+import re
 import sys
 import time
 import urllib.error
@@ -28,6 +29,10 @@ _ARXIV_NS = "http://arxiv.org/schemas/atom"
 
 # NFR-002: minimum pause before every API request to respect arxiv rate limits.
 _MIN_REQUEST_INTERVAL_SECONDS: int = 5
+
+# Characters stripped from the trailing end of each extracted comment URL.
+# These are common punctuation characters that surround URLs in prose text.
+_TRAILING_PUNCT: frozenset[str] = frozenset(".,;:)]>")
 
 
 def compute_week_bounds(today: datetime.date) -> tuple[str, str]:
@@ -77,31 +82,89 @@ def _fetch_page(url: str) -> tuple[int, bytes]:
         return exc.code, b""
 
 
+def extract_comment_urls(comment: str | None) -> list[str]:
+    """
+    Extract all https:// URLs from comment in order of appearance.
+
+    Trailing characters from the set .,;:)]> are stripped from each URL to
+    handle common punctuation that surrounds URLs in prose (e.g. "see
+    https://example.com/x.").  Returns an empty list when comment is None
+    or empty.
+    """
+    if not comment:
+        return []
+    urls = re.findall(r"https://\S+", comment)
+    result: list[str] = []
+    for url in urls:
+        while url and url[-1] in _TRAILING_PUNCT:
+            url = url[:-1]
+        result.append(url)
+    return result
+
+
 def parse_entries(body: bytes) -> list[dict]:
     """
     Parse an arxiv Atom XML response and return one dict per <entry>.
 
     Each dict contains:
+      title:            str        atom:title text
+      authors:          list[str]  atom:author/atom:name texts in document order
       primary_category: str        arxiv:primary_category term attribute value
+      abstract_url:     str        atom:link[@rel='alternate'][@type='text/html'] href
+      published:        str        atom:published text (RFC 3339)
+      updated:          str        atom:updated text (RFC 3339)
       comment:          str | None arxiv:comment text, or None when absent
+      comment_urls:     list[str]  https:// URLs from comment, punctuation stripped
     """
     root = ET.fromstring(body)
     entries = []
     for entry in root.findall(f"{{{_ATOM_NS}}}entry"):
+        title_elem = entry.find(f"{{{_ATOM_NS}}}title")
+        title = title_elem.text if title_elem is not None else ""
+
+        authors: list[str] = []
+        for author_elem in entry.findall(f"{{{_ATOM_NS}}}author"):
+            name_elem = author_elem.find(f"{{{_ATOM_NS}}}name")
+            if name_elem is not None:
+                authors.append(name_elem.text or "")
+
         primary_cat_elem = entry.find(f"{{{_ARXIV_NS}}}primary_category")
         primary_category = (
             primary_cat_elem.get("term", "")
             if primary_cat_elem is not None
             else ""
         )
+
+        abstract_url = ""
+        for link_elem in entry.findall(f"{{{_ATOM_NS}}}link"):
+            if (
+                link_elem.get("rel") == "alternate"
+                and link_elem.get("type") == "text/html"
+            ):
+                abstract_url = link_elem.get("href", "")
+                break
+
+        published_elem = entry.find(f"{{{_ATOM_NS}}}published")
+        published = published_elem.text if published_elem is not None else ""
+
+        updated_elem = entry.find(f"{{{_ATOM_NS}}}updated")
+        updated = updated_elem.text if updated_elem is not None else ""
+
         comment_elem = entry.find(f"{{{_ARXIV_NS}}}comment")
         comment: str | None = (
             comment_elem.text if comment_elem is not None else None
         )
+
         entries.append(
             {
+                "title": title,
+                "authors": authors,
                 "primary_category": primary_category,
+                "abstract_url": abstract_url,
+                "published": published,
+                "updated": updated,
                 "comment": comment,
+                "comment_urls": extract_comment_urls(comment),
             }
         )
     return entries

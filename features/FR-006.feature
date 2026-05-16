@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-006 No-change commit guard
 
   The scenarios here cover:

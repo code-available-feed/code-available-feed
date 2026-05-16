@@ -302,6 +302,42 @@ def archive_prior_week_feed(
     (archive_dir / "atom.xml").write_bytes(feed_bytes)
 
 
+def feeds_are_identical(
+    committed_bytes: bytes | None, generated_bytes: bytes
+) -> bool:
+    """
+    Return True if committed_bytes equals generated_bytes.
+
+    Returns False when committed_bytes is None, which indicates that no prior
+    committed version exists (first pipeline run).
+    """
+    return committed_bytes is not None and committed_bytes == generated_bytes
+
+
+def build_commit_message(feed_bytes: bytes) -> str:
+    """
+    Construct the git commit message for a weekly feed update.
+
+    Counts <entry> elements in feed_bytes, derives the ISO year and week from
+    the newest <entry><published> date, and formats the message as:
+    "Update YYYY-WNN feed (N article)" or "Update YYYY-WNN feed (N articles)".
+
+    Parameters:
+      feed_bytes: UTF-8 encoded Atom XML bytes of the generated feed
+    """
+    root = ET.fromstring(feed_bytes)
+    entries = root.findall(f"{{{_ATOM_NS}}}entry")
+    n = len(entries)
+    article_word = "article" if n == 1 else "articles"
+    newest_date = newest_published_date_from_feed(feed_bytes)
+    # newest_date is non-None here: build_commit_message is only called when
+    # the feed contains at least one entry.
+    entry_date = datetime.date.fromisoformat(newest_date[:10])
+    iso = entry_date.isocalendar()
+    week_str = f"{iso.year}-W{iso.week:02d}"
+    return f"Update {week_str} feed ({n} {article_word})"
+
+
 def fetch_all_articles(
     base_url: str,
     category_id: str,
@@ -443,9 +479,19 @@ def main() -> int:
     output_dir = pathlib.Path("docs") / "arxiv" / category_lower
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "atom.xml"
+
+    # Capture committed bytes before any changes so the commit guard can
+    # compare the previously committed version with the generated feed.
+    committed_bytes = output_path.read_bytes() if output_path.exists() else None
+
     archive_prior_week_feed(output_path, today)
     feed_bytes = build_feed(filtered, category_id, strict_mode, github_repository)
     output_path.write_bytes(feed_bytes)
+
+    if feeds_are_identical(committed_bytes, feed_bytes):
+        print("no change: feed unchanged", flush=True)
+    else:
+        print(build_commit_message(feed_bytes), flush=True)
 
     return 0
 

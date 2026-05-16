@@ -65,6 +65,9 @@ def step_run_pipeline(context):
     # Ensure the pipeline subprocess can find src/ regardless of cwd.
     env["PYTHONPATH"] = "/app"
 
+    if context.run_dir is None:
+        context.run_dir = pathlib.Path(tempfile.mkdtemp())
+
     result = subprocess.run(
         ["python3", "-m", "src.pipeline_feed"],
         cwd=str(context.run_dir),

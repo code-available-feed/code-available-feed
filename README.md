@@ -109,7 +109,8 @@ bash scripts/validate_atom_xml.sh
   `ARXIV_CATEGORY_ID` case-insensitively; (2) the comment contains at least one `https://` URL
 - **Feed pipeline** (`src/pipeline_feed.py`): pages the arxiv API in steps of 2000,
   applies the inclusion filter, generates RFC 4287 Atom XML sorted by published date descending;
-  archiving prior-week feeds (FR-005) and stdout diff logging (FR-013) are not yet implemented
+  archives the prior week's feed before overwriting (`archive_prior_week_feed`);
+  stdout diff logging (FR-013) is not yet implemented
 - **Atom feed** (`docs/arxiv/{category}/atom.xml`): RFC 4287, UTF-8, deterministic byte output;
   one file per ISO calendar week; archived under `archive/YYYY-WNN/`
 - **Docker container** (`Dockerfile.server`): `debian:trixie-slim` with `python3`, `newsboat`,

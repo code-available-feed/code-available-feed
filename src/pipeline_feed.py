@@ -248,6 +248,60 @@ def build_feed(
     return ET.tostring(feed, encoding="UTF-8", xml_declaration=True)
 
 
+def newest_published_date_from_feed(feed_bytes: bytes) -> str | None:
+    """
+    Parse an Atom feed and return the maximum <entry><published> date string.
+
+    Compares dates as strings; RFC 3339 timestamps with the same format are
+    lexicographically ordered, so max() gives the newest date without parsing.
+    Returns None when the feed contains no <entry> elements.
+    """
+    root = ET.fromstring(feed_bytes)
+    published_dates: list[str] = []
+    for entry in root.findall(f"{{{_ATOM_NS}}}entry"):
+        published_elem = entry.find(f"{{{_ATOM_NS}}}published")
+        if published_elem is not None and published_elem.text:
+            published_dates.append(published_elem.text)
+    if not published_dates:
+        return None
+    return max(published_dates)
+
+
+def archive_prior_week_feed(
+    output_path: pathlib.Path, today: datetime.date
+) -> None:
+    """
+    Copy output_path to the archive directory when its newest entry belongs
+    to a prior ISO week.
+
+    The archive path is docs/arxiv/{category}/archive/YYYY-WNN/atom.xml where
+    YYYY-WNN is the ISO year and week of the existing file's newest entry.
+    Does nothing when output_path does not exist, the feed has no entries, or
+    the newest entry is already in the current ISO week.
+    """
+    if not output_path.exists():
+        return
+
+    feed_bytes = output_path.read_bytes()
+    newest_date = newest_published_date_from_feed(feed_bytes)
+    if newest_date is None:
+        return
+
+    # RFC 3339 date strings start with YYYY-MM-DD; fromisoformat handles the
+    # date portion without needing to strip the time and timezone suffix.
+    entry_date = datetime.date.fromisoformat(newest_date[:10])
+    entry_iso = entry_date.isocalendar()
+    today_iso = today.isocalendar()
+
+    if (entry_iso.year, entry_iso.week) == (today_iso.year, today_iso.week):
+        return
+
+    archive_week = f"{entry_iso.year}-W{entry_iso.week:02d}"
+    archive_dir = output_path.parent / "archive" / archive_week
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    (archive_dir / "atom.xml").write_bytes(feed_bytes)
+
+
 def fetch_all_articles(
     base_url: str,
     category_id: str,
@@ -389,6 +443,7 @@ def main() -> int:
     output_dir = pathlib.Path("docs") / "arxiv" / category_lower
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "atom.xml"
+    archive_prior_week_feed(output_path, today)
     feed_bytes = build_feed(filtered, category_id, strict_mode, github_repository)
     output_path.write_bytes(feed_bytes)
 

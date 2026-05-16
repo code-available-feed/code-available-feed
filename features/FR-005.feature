@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-005 Weekly storage path and week-rollover archive
 
   The current week's feed is stored at "docs/arxiv/{category}/atom.xml" where

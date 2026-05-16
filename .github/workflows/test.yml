@@ -1,0 +1,56 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 01 1 * *' # First day of every month at 01:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v6
+
+      - name: print system info
+        run: |
+          set -eo pipefail
+          docker info
+          docker image ls
+          docker ps
+          df -h
+          id
+
+      - name: docker compose build
+        run: |
+          set -eo pipefail
+          export BUILDKIT_PROGRESS=plain
+          docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g)
+
+      - name: bash scripts/test_e2e_behave.sh
+        run: |
+          set -eo pipefail
+          bash scripts/test_e2e_behave.sh
+
+      - name: debug
+        if: failure()
+        run: |
+          docker ps -a | grep -v CONTAINER | cut -d' ' -f1 | xargs -I{} -r bash -c "docker container stats --no-stream {} ; docker logs {}"
+
+      - name: bash scripts/test_mypy.sh
+        run: |
+          set -eo pipefail
+          bash scripts/test_mypy.sh
+
+      - name: debug
+        if: failure()
+        run: |
+          docker ps -a | grep -v CONTAINER | cut -d' ' -f1 | xargs -I{} -r bash -c "docker container stats --no-stream {} ; docker logs {}"

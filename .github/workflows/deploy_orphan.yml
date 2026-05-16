@@ -1,0 +1,65 @@
+name: deploy_orphan
+
+on:
+  workflow_run:
+    workflows:
+      - pipeline_artifacts
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v6
+
+      - name: print system info
+        run: |
+          set -eo pipefail
+          docker info
+          docker image ls
+          docker ps
+          df -h
+          id
+
+      - name: docker compose build
+        run: |
+          set -eo pipefail
+          export BUILDKIT_PROGRESS=plain
+          docker compose build server --build-arg UID=$(id -u) --build-arg GID=$(id -g)
+
+      - name: bash scripts/validate_atom_xml.sh
+        run: |
+          set -eo pipefail
+          bash scripts/validate_atom_xml.sh
+
+      - name: debug
+        if: failure()
+        run: |
+          docker ps -a | grep -v CONTAINER | cut -d' ' -f1 | xargs -I{} -r bash -c "docker container stats --no-stream {} ; docker logs {}"
+
+      - name: force-push docs/ to gh-pages orphan branch
+        # To deploy on GitHub Pages:
+        # Settings -> Pages -> Source: Deploy from a branch -> Branch: gh-pages / docs
+        run: |
+          set -eo pipefail
+          mkdir /tmp/orphan-deploy
+          cp -r docs /tmp/orphan-deploy/docs
+          cd /tmp/orphan-deploy
+          git init
+          git config user.email "marcindulak@users.noreply.github.com"
+          git config user.name "Marcin Dulak"
+          git checkout -b gh-pages
+          git add docs/
+          git commit --message "Deploy docs/ snapshot from main@${GITHUB_SHA}"
+          git remote add origin \
+            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --force origin gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

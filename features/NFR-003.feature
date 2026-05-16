@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: NFR-003 GitHub-hosted runner is ubuntu-24.04
 
   # Not tested via BDD.

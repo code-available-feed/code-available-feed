@@ -1,13 +1,14 @@
 @status-todo
-Feature: FR-006 No-change commit guard and commit message format
+Feature: FR-006 No-change commit guard
 
-  The workflow commits "docs/arxiv/{category}/atom.xml" and the newly created
-  archive file (if any) with the message "Update YYYY-WNN feed (X articles)".
-  If the generated atom.xml is byte-for-byte identical to the version already
-  in the repository, no commit is made. The git push to main itself is part
-  of the GitHub Actions workflow and is not covered by these scenarios. What
-  is covered is the local script-level decision of whether a commit should be
-  made and the format of the commit message string.
+  The scenarios here cover:
+  (1) the script-level change-detection decision (changed vs. no change), and
+  (2) the commit message construction function, which reads the generated
+  atom.xml to count <entry> elements and derive the ISO week from the newest
+  <entry><published> date.
+  The no-change byte comparison runs after newsboat validation (FR-010) has
+  already passed. The git commit invocation itself is part of the GitHub
+  Actions workflow and is not covered by BDD scenarios.
 
   Background:
     Given the environment variable ARXIV_CATEGORY_ID is "cs.AI"
@@ -30,14 +31,18 @@ Feature: FR-006 No-change commit guard and commit message format
     When the commit-guard step runs
     Then the commit-guard step reports "changed"
 
-  Scenario Outline: Commit message format is "Update YYYY-WNN feed (X articles)"
-    Given the ISO week of today is "<iso_week>"
-    And the article count in the generated feed is <count>
-    When the commit message is built
-    Then the commit message equals "<expected>"
+  Scenario: Commit message uses singular "article" when the feed contains exactly one entry
+    Given an atom.xml containing 1 entry whose newest published date is "2026-05-14T15:00:00Z"
+    When the commit message is constructed from the atom.xml
+    Then the commit message is "Update 2026-W20 feed (1 article)"
 
-    Examples:
-      | iso_week | count | expected                          |
-      | 2026-W20 | 100   | Update 2026-W20 feed (100 articles) |
-      | 2026-W01 | 1     | Update 2026-W01 feed (1 articles)   |
-      | 2027-W53 | 0     | Update 2027-W53 feed (0 articles)   |
+  Scenario: Commit message uses plural "articles" when the feed contains more than one entry
+    Given an atom.xml containing 3 entries whose newest published date is "2026-05-14T15:00:00Z"
+    When the commit message is constructed from the atom.xml
+    Then the commit message is "Update 2026-W20 feed (3 articles)"
+
+  Scenario: Commit message ISO week is derived from the newest entry published date across a year boundary
+    Given an atom.xml containing 2 entries whose newest published date is "2026-12-31T12:00:00Z"
+    When the commit message is constructed from the atom.xml
+    Then the commit message is "Update 2026-W53 feed (2 articles)"
+

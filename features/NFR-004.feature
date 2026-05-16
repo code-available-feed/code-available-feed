@@ -21,11 +21,13 @@ Feature: NFR-004 The Atom XML output is valid RFC 4287 and properly escaped
     When the feed is generated
     Then the raw output bytes do not contain the substring "&amp;amp;"
 
-  Scenario: An ampersand inside a URL used as href attribute is escaped exactly once
+  Scenario: An ampersand inside a URL is escaped exactly once in href attributes and in content
     Given one input article with abstract URL "https://example.com/path?a=1&b=2"
+    And the article has comment URL "https://example.com/path?a=1&b=2"
     When the feed is generated
     Then the raw output bytes contain the substring "https://example.com/path?a=1&amp;b=2"
     And the raw output bytes do not contain the substring "&amp;amp;b=2"
+    And the raw output bytes contain the substring "https://example.com/path?a=1&amp;b=2" inside a content element
 
   Scenario: The generated output is well-formed XML
     Given one input article with title "Foo & <Bar>"

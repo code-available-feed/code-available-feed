@@ -1,6 +1,8 @@
 services:
   server:
-    image: python:3.14-slim-trixie
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.server
     working_dir: /app
     command: python3 -m http.server 8000 --bind 0.0.0.0
     healthcheck:

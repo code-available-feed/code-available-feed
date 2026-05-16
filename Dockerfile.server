@@ -1,0 +1,42 @@
+FROM debian:trixie-slim
+
+ENV USER=nonroot
+
+# Install base dependencies
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    newsboat \
+    procps \
+    python3 \
+    python3-pip \
+    python3-venv
+
+# Install test dependencies
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    python3-behave \
+    python3-mypy
+
+# Set the UID/GID of the user:group to the IDs of the user using this Dockerfile
+ARG USER=nonroot
+ARG GROUP=nonroot
+ARG UID=1000
+ARG GID=1000
+RUN echo user:group ${USER}:${GROUP}
+RUN echo uid:gid ${UID}:${GID}
+RUN getent group ${GROUP} || groupadd --non-unique --gid ${GID} ${GROUP}
+RUN getent passwd ${USER} || useradd --uid ${UID} --gid ${GID} --create-home --shell /bin/bash ${USER}
+RUN if [ "${GID}" != "1000" ] || [ "${UID}" != "1000" ]; then \
+      groupmod --non-unique --gid ${GID} ${GROUP} && \
+      usermod --uid ${UID} --gid ${GID} ${USER} && \
+      chown -R ${UID}:${GID} /home/${USER}; \
+    fi
+
+WORKDIR /app
+RUN chown -R ${USER}:${USER} /app && chmod 0700 /app
+USER ${USER}
+
+RUN whoami
+RUN id
+
+SHELL ["/bin/bash", "-l", "-c"]
+
+CMD ["sleep", "infinity"]

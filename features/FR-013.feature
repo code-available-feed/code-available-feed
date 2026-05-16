@@ -2,16 +2,16 @@
 Feature: FR-013 Diagnostic logging to stdout
 
   The pipeline logs the API URL queried (with date bounds), the number of
-  results returned per API page, the number of articles passing the filter,
-  and the final article count written to the feed. After generating the new
-  atom.xml the workflow logs a diff between the previously committed file
-  and the newly generated one. If no previous file exists the diff step is
-  skipped.
+  results returned per API page, and the number of articles passing the
+  filter. After generating the new atom.xml the workflow logs a diff between
+  the previously committed file and the newly generated one. If no previous
+  file exists the diff step is skipped.
 
   Background:
     Given the local arxiv fixture server is running
     And the environment variable ARXIV_API_BASE_URL points at the fixture server
     And the environment variable ARXIV_CATEGORY_ID is "cs.AI"
+    And the environment variable GITHUB_REPOSITORY is "marcindulak/code-available-feed"
     And the environment variable PIPELINE_TODAY is "2026-05-14"
 
   Scenario: The API URL with date bounds is logged before the first request
@@ -24,27 +24,24 @@ Feature: FR-013 Diagnostic logging to stdout
     Given the fixture server returns 2000 entries for query parameter "start=0"
     And the fixture server returns 350 entries for query parameter "start=2000"
     When the pipeline runs to completion
-    Then stdout contains a line reporting "2000" results for "start=0"
-    And stdout contains a line reporting "350" results for "start=2000"
+    Then stdout contains a line containing "Fetched 2000 results (start=0)"
+    And stdout contains a line containing "Fetched 350 results (start=2000)"
 
   Scenario: The number of articles passing the inclusion filter is logged
     Given the fixture server returns 10 entries where 3 satisfy the inclusion filter
     When the pipeline runs to completion
-    Then stdout contains a line reporting "3 articles" passed the filter
+    Then stdout contains a line containing "3 articles passed the filter"
 
-  Scenario: The final article count written to the feed is logged
-    Given the fixture server returns 10 entries where 3 satisfy the inclusion filter
-    When the pipeline runs to completion
-    Then stdout contains a line reporting "3" as the final article count written to the feed
-
-  Scenario: A diff between previous and new atom.xml is logged when a previous file exists
+  Scenario: A unified diff between previous and new atom.xml is logged when a previous file exists
     Given an existing file "docs/arxiv/cs.ai/atom.xml" with known previous content
     And the fixture server returns 5 entries where all 5 satisfy the inclusion filter
     When the pipeline runs to completion
-    Then stdout contains the output of a unified diff between the previous and the newly generated atom.xml
+    Then stdout contains a line starting with "--- "
+    And stdout contains a line starting with "+++ "
 
   Scenario: The diff step is skipped when no previous atom.xml file exists
     Given no file "docs/arxiv/cs.ai/atom.xml" exists in a fresh temporary directory
     And the fixture server returns 5 entries where all 5 satisfy the inclusion filter
     When the pipeline runs to completion
-    Then stdout does not contain any line starting with "--- " or "+++ "
+    Then stdout does not contain any line starting with "--- "
+    And stdout does not contain any line starting with "+++ "

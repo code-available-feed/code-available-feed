@@ -22,12 +22,17 @@ Feature: FR-002 Article inclusion filter
     When the inclusion filter is applied to the article
     Then the article is excluded
 
-  Scenario: Non-strict mode excludes an article that has no arxiv:comment element
+  Scenario Outline: Non-strict mode excludes an article whose arxiv:comment element is absent or empty
     Given the environment variable ARXIV_CATEGORY_STRICT is "false"
     And an article has primary category "cs.AI"
-    And the article has no arxiv:comment element
+    And the article comment element is "<element_state>"
     When the inclusion filter is applied to the article
     Then the article is excluded
+
+    Examples:
+      | element_state |
+      | absent        |
+      | empty         |
 
   Scenario: Non-strict mode excludes an article whose comment contains only an http URL
     Given the environment variable ARXIV_CATEGORY_STRICT is "false"

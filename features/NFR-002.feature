@@ -15,3 +15,10 @@ Feature: NFR-002 At least 5 seconds between consecutive arxiv API requests
   # Verification path: the inter-request sleep call is inspected during code
   # review of the pipeline source; the production runtime exercises the
   # full sleep every day on the GitHub Actions runner.
+  #
+  # Note: FR-011's retry backoff has a RETRY_BACKOFF_BASE_SECONDS injection
+  # variable that allows tests to run without wall-clock waits. No equivalent
+  # variable (e.g. ARXIV_REQUEST_SLEEP_SECONDS) is defined for the
+  # inter-request sleep because doing so would add pipeline complexity for a
+  # constraint that is low-risk and already covered by code review and daily
+  # CI execution.

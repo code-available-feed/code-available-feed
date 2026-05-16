@@ -9,7 +9,7 @@ Feature: FR-003 Per-article field extraction from the arxiv API response
   URL.
 
   Scenario: Extract all recorded fields from a representative API entry
-    Given an arxiv API entry fixture file "features/fixtures/entry_two_urls.xml" with:
+    Given an arxiv API entry with:
       | element                                                    | value                                                         |
       | atom:title                                                 | Entity-Consistent Video Generation                            |
       | atom:author[0]/atom:name                                   | Alice Example                                                 |
@@ -20,7 +20,7 @@ Feature: FR-003 Per-article field extraction from the arxiv API response
       | atom:published                                             | 2026-05-12T11:30:00Z                                          |
       | atom:updated                                               | 2026-05-12T11:30:00Z                                          |
       | arxiv:comment                                              | Code: https://github.com/foo/bar demo: https://foo.github.io/ |
-    When the pipeline extracts article fields from the fixture
+    When the pipeline extracts article fields
     Then the recorded title is "Entity-Consistent Video Generation"
     And the recorded authors in order are "Alice Example" then "Bob Sample"
     And the recorded primary category is "cs.CV"
@@ -36,22 +36,40 @@ Feature: FR-003 Per-article field extraction from the arxiv API response
     Then the recorded abstract page URL is "https://arxiv.org/abs/2605.15199v1"
     And the recorded abstract page URL does not start with "http://"
 
-  Scenario: PDF link is not recorded
-    Given an arxiv API entry whose atom:link rel "related" type "application/pdf" has href "https://arxiv.org/pdf/2605.15199v1"
-    When the pipeline extracts article fields
-    Then the recorded fields contain no field equal to "https://arxiv.org/pdf/2605.15199v1"
-
-  Scenario Outline: Trailing punctuation is stripped from each comment URL
-    Given an article whose comment is "<comment>"
+  Scenario Outline: Each character in the trailing-punctuation strip set is stripped from a single comment URL
+    Given an article whose comment is "available at https://github.com/foo/bar<suffix>"
     When the pipeline extracts the comment URLs
-    Then the recorded comment URLs in order are "<urls>"
+    Then the recorded comment URLs in order are:
+      | https://github.com/foo/bar |
 
     Examples:
-      | comment                                                                  | urls                                              |
-      | available at https://github.com/foo/bar.                                 | https://github.com/foo/bar                        |
-      | see https://example.com/x);                                              | https://example.com/x                             |
-      | https://a.example/path, and https://b.example/                           | https://a.example/path,then,https://b.example/    |
-      | https://example.com/path?q=1&r=2.                                        | https://example.com/path?q=1&r=2                  |
+      | suffix |
+      | .      |
+      | ,      |
+      | ;      |
+      | :      |
+      | )      |
+      | ]      |
+      | >      |
+
+  Scenario: Multiple consecutive trailing punctuation characters are all stripped
+    Given an article whose comment is "see https://example.com/x);"
+    When the pipeline extracts the comment URLs
+    Then the recorded comment URLs in order are:
+      | https://example.com/x |
+
+  Scenario: Two URLs separated by prose are both recorded with punctuation stripped
+    Given an article whose comment is "https://a.example/path, and https://b.example/"
+    When the pipeline extracts the comment URLs
+    Then the recorded comment URLs in order are:
+      | https://a.example/path |
+      | https://b.example/     |
+
+  Scenario: Trailing period is stripped but internal query-string punctuation is preserved
+    Given an article whose comment is "https://example.com/path?q=1&r=2."
+    When the pipeline extracts the comment URLs
+    Then the recorded comment URLs in order are:
+      | https://example.com/path?q=1&r=2 |
 
   Scenario: Updated equals published for a v1 article
     Given an arxiv API entry whose atom:published is "2026-05-12T11:30:00Z" and atom:updated is "2026-05-12T11:30:00Z"

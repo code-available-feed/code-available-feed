@@ -1,0 +1,16 @@
+services:
+  server:
+    image: python:3.14-slim-trixie
+    working_dir: /app
+    command: python3 -m http.server 8000 --bind 0.0.0.0
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/').read()"]
+      interval: 2s
+      timeout: 3s
+      retries: 5
+      start_period: 2s
+    init: true
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./:/app

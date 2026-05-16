@@ -1,0 +1,147 @@
+# code-available-feed
+
+A weekly Atom feed of arxiv articles that mention a code, data, or demo URL in their
+`arxiv:comment` field, generated from the arxiv API without scraping.
+
+## Value Proposal
+
+The arxiv API does not expose a flag indicating whether an article has associated code.
+However, articles that provide code, data, or demo sites list one or more
+`https://` URLs in their `arxiv:comment` field (visible for example on the arxiv
+listing page at `https://arxiv.org/list/cs.AI/current`).
+Filtering on the presence of any such URL requires only the comment field, no PDF
+download and no abstract parsing.
+
+The article-with-code subset is useful because:
+- Code availability suggests reproducibility may have been considered.
+- The linked URLs let a reader assess scope before committing to reading the article.
+- arxiv's own web feeds cover all articles with no filtering with counts of hundreds per day.
+- paperswithcode.com, which was the source of a filtered RSS feed provided by a 3rd party
+  https://github.com/ml-feeds/pwc-feeds project, is maintained by https://huggingface.co/
+  and no longer exposes the necessary data.
+
+This project generates one Atom 1.0 feed file per ISO calendar week.
+Each article contains the title, authors, published date, the arxiv abstract URL,
+and the `https://` URLs extracted from the comment.
+The project does not store the abstract, does not download the PDF, or store data in a database.
+
+A fork of the repository can serve a different arxiv category by setting the GitHub
+repository variable (`ARXIV_CATEGORY_ID`) without the project code.
+Additional variable (`ARXIV_CATEGORY_STRICT`), set by default to `false` controls
+whether all categories of the article are considered for inclusion in the feed,
+or only the primary category is considered.
+
+## Functional Requirements
+
+| ID | Feature | Designer's Note |
+|----|---------|-----------------|
+| FR-001 | A GitHub Actions workflow runs on a daily schedule; it fetches all articles submitted to the configured arxiv category during the current ISO calendar week (Monday 00:00 UTC to Sunday 23:59 UTC) via the arxiv API at `https://export.arxiv.org/api/query`; the query uses `search_query=cat:{ARXIV_CATEGORY_ID}+AND+submittedDate:[YYYYMMDD0000+TO+YYYYMMDD2359]` with the Monday and Sunday of the current week as the date bounds; `max_results` is set to 2000 and the `start` parameter is incremented in steps of 2000 until the returned count is less than the requested count, to handle categories with more than 2000 submissions per week; consecutive requests are separated by at least 5 seconds (exceeding the 3-second minimum required by the arxiv ToU) to comply with a margin with the arxiv API terms of use | The arxiv API supports date range filtering via `submittedDate` as documented at `https://info.arxiv.org/help/api/user-manual.html`; the maximum `max_results` is 30,000 but pagination in steps of 2000 is safer and still covers any realistic weekly volume; daily re-fetching the full week range is idempotent; 3-second minimum between requests is required per `https://info.arxiv.org/help/api/tou.html`; the end bound `YYYYMMDD2359` covers only up to 23:59:00 and technically misses articles submitted in the last 59 seconds of Sunday — this gap is accepted as harmless because arxiv applies a daily submission cutoff at 14:00 US Eastern (≈19:00 UTC) and articles become visible in the API around 00:00 UTC the following day, so no real submission falls in the 23:59:01–23:59:59 window; cs.AI has approximately 1000 articles per week (4,000 per month ÷ 4.3 weeks), so a single request with max_results=2000 is sufficient for that category |
+| FR-002 | An article is included in the feed if and only if two conditions hold: (1) the primary-category condition, controlled by `ARXIV_CATEGORY_STRICT`: when `false` (the default) every article returned by the API query is eligible regardless of its `<arxiv:primary_category>`; when `true` the article's `<arxiv:primary_category term="..."/>` lowercased must match `ARXIV_CATEGORY_ID` lowercased (both values are normalized to lowercase before comparison, consistent with the project-wide lowercasing convention); (2) its `<arxiv:comment>` field contains at least one `https://` URL | The arxiv listing page at e.g. `https://arxiv.org/list/cs.AI/current` shows all articles cross-listed to cs.AI, not only those with cs.AI as primary; `ARXIV_CATEGORY_STRICT=false` (default) replicates that behaviour; `ARXIV_CATEGORY_STRICT=true` narrows to articles whose primary focus is the configured category — the live API confirmed that a `cat:cs.AI` query returns articles with for example `primary_category=cs.CV`; condition (2) is the code-availability signal; a project page URL in the comment is sufficient for inclusion, on the assumption that a project page accompanies code in most cases; articles that place code links exclusively in the abstract with no comment URL are false negatives — scanning the abstract is deferred (see Deferred Features); false positives such as a journal URL in the comment are acceptable at this stage |
+| FR-003 | For each included article the pipeline records: the article title (from `<title>`), all author names (from `<author><name>` elements, in document order), the primary category (from `<arxiv:primary_category term="..."/>`), the arxiv abstract page URL (from `<link rel="alternate" type="text/html">`, e.g. `https://arxiv.org/abs/2605.15199v1`; this is the main article page on arxiv, not the PDF and not the HTML-rendered article at `arxiv.org/html/...`), the first publication date (from `<published>`, which the arxiv API defines as "the date the first version was submitted and processed", in RFC 3339 format), the latest version date (from `<updated>`, which the arxiv API defines as "the date the retrieved version was submitted and processed", in RFC 3339 format; identical to `<published>` for v1 articles), and all `https://` URLs extracted from the comment in order of appearance with trailing punctuation characters from the set `.,;:)]>` stripped from each URL | The abstract page URL from `<link rel="alternate" type="text/html">` is used in preference to `<id>` because `<id>` uses `http://` while the link element already carries `https://`; the PDF link (`rel="related" type="application/pdf"`) is discarded; no abstract, no full category list |
+| FR-004 | The pipeline generates an Atom 1.0 feed (RFC 4287) from the collected articles; articles are sorted by first arxiv publication date (`<published>`) descending (newest first); a same-week revision does not change an article's position; each `<entry>` contains: `<title>` (article title prefixed with the primary category in brackets, e.g. `[cs.CV] Entity-Consistent Video Generation`; the prefix is always present regardless of whether the primary category matches `ARXIV_CATEGORY_ID`), one `<author><name>...</name></author>` element per author in document order, `<category term="..." scheme="http://arxiv.org/schemas/atom"/>` (the primary category, e.g. `cs.AI`), `<id>` (arxiv abstract page URL), `<link href="..." rel="alternate" type="text/html"/>` (arxiv abstract page URL), `<published>` (first arxiv publication date from arxiv `<published>`, RFC 3339; optional per RFC 4287, stays static across revisions), `<updated>` (latest revision date from arxiv `<updated>`, RFC 3339; required per RFC 4287; equals `<published>` for v1 articles), and `<content type="text">` (all `https://` URLs from the comment, one per line); the top-level `<feed><updated>` is the `<published>` date of the first article (the one with the newest `<published>` date in the `<published>`-descending list) | RFC 4287 defines `<published>` as "an instant in time associated with an event early in the life cycle of the entry" (static) and `<updated>` as "the most recent instant in time when an entry was modified in a way the publisher considers significant"; the natural mapping is arxiv `<published>` → Atom `<published>` and arxiv `<updated>` → Atom `<updated>`; if an article is revised within the same week, the `<entry>`'s `<updated>` will change on the next daily regeneration and some feed readers may re-show the article — this is correct behaviour since the article content changed; the `<entry><id>` (arxiv abstract URL) is stable regardless of revisions; `<feed><updated>` uses the newest article's `<published>` rather than the maximum `<updated>` across articles or the pipeline execution timestamp because this value is deterministic across repeated runs with the same input data, which is required by NFR-005's byte-for-byte idempotency guarantee; using the pipeline run time would cause the output to differ on every run even when no data changed, defeating the no-commit guard in FR-006; using the maximum `<updated>` would also be deterministic but would shift the feed-level timestamp on revision-only days when no new articles appeared, which is less informative to subscribers |
+| FR-005 | The current week's feed is stored at `docs/arxiv/{category}/atom.xml`, where `{category}` is the value of `ARXIV_CATEGORY_ID` lowercased (e.g. `cs.AI` becomes `docs/arxiv/cs.ai/atom.xml`); the lowercasing is a project-wide convention: the case-sensitive arxiv category ID is always converted to lowercase for all file paths, URLs, and internal comparisons to avoid platform-dependent case sensitivity issues; at the start of each workflow run the script parses the ISO week number of the newest `<entry><published>` date in the existing `docs/arxiv/{category}/atom.xml` (if the file exists) and compares it to the ISO week number of today; if they differ, the existing file is copied to `docs/arxiv/{category}/archive/YYYY-WNN/atom.xml` (e.g. `docs/arxiv/cs.ai/archive/2025-W03/atom.xml`) before the file is overwritten with the new week's data; no archive step is performed on the very first run | One file per week keeps the Atom XML file size bounded; the `archive/YYYY-WNN` path uses the ISO 8601 week notation; the `arxiv` path segment identifies the data source and permits future addition of other sources under the same repository; lowercasing the category ID is a deliberate choice to avoid case-sensitivity issues on case-insensitive filesystems (macOS, Windows) and in URL routing |
+| FR-006 | The workflow commits `docs/arxiv/{category}/atom.xml` and the newly created archive file (if any) to the `main` branch with a commit message stating the ISO week and the article count "Update YYYY-WNN feed (X articles)"; if the generated `atom.xml` is byte-for-byte identical to the version already in the repository, no commit is made; the `contents: write` permission is granted to the workflow job | Direct commits to `main` are simpler than an orphan-branch deployment; atom.xml is a text file and benefits from git delta compression unlike binary files; the no-change guard avoids empty commits on days when no new articles match the filter |
+| FR-007 | GitHub Pages is configured to serve the `docs/` directory from the `main` branch; the feed URL for account `{user}` with repository named `{repo}` is `https://{user}.github.io/{repo}/arxiv/{category}/atom.xml` (e.g. `https://marcindulak.github.io/code-available-feed/arxiv/cs.ai/atom.xml`) | Static file serving via GitHub Pages requires no server infrastructure; the `arxiv` path segment identifies the data source; the category subdirectory makes the feed URL self-describing; a fork that changes `ARXIV_CATEGORY_ID` to `cs.CV` gets its feed at `.../arxiv/cs.cv/atom.xml` with no code change |
+| FR-008 | Two GitHub Actions repository variables control filtering: `ARXIV_CATEGORY_ID` sets the arxiv category identifier (default `cs.AI`; the workflow `env` block supplies this default so the repository works without any variable configuration); `ARXIV_CATEGORY_STRICT` sets the primary-category filter (default `false`; when `true` only articles whose `<arxiv:primary_category>` matches `ARXIV_CATEGORY_ID` are included); a fork configures both variables independently in the repository Settings under Actions > Variables (not Secrets; these values are not sensitive) without changing any code | GitHub Actions repository variables are not inherited by forks; `ARXIV_CATEGORY_ID` and `ARXIV_CATEGORY_STRICT` are non-sensitive public configuration values and must be stored as Variables, not Secrets; `ARXIV_CATEGORY_ID` drives both the API query and the `docs/arxiv/{category}/` URL path; `ARXIV_CATEGORY_STRICT` is a string variable since GitHub Actions repository variables are always strings; the pipeline lowercases the value and compares it against the string `true` — only the value `true` (any casing: `true`, `True`, `TRUE`) enables strict mode; any other value including `false`, empty string, or unset variable disables strict mode; this follows the GitHub Actions convention for boolean-like inputs |
+| FR-009 | The feed `<id>` and `<link rel="self" href="..."/>` are set to the canonical GitHub Pages URL of the feed, derived automatically in the workflow shell step as `https://${{ github.repository_owner }}.github.io/${GITHUB_REPOSITORY#*/}/arxiv/{category}/atom.xml`; `${GITHUB_REPOSITORY#*/}` strips the `owner/` prefix from the always-available `GITHUB_REPOSITORY` environment variable and is safe for all trigger types including `schedule`; the resulting URL is passed to the pipeline script as the `FEED_URL` environment variable; the `<entry><id>` of each article is the versioned arxiv abstract page URL as returned by the API (e.g. `https://arxiv.org/abs/2605.15199v1`) | `github.event.repository.name` is empty for `schedule`-triggered workflows because `github.event` is `{}` on schedule; `GITHUB_REPOSITORY` (format `owner/repo`) is always set regardless of trigger type; a stable `<feed><id>` prevents feed readers from treating the same feed as a new subscription after a fork renames the repository; hardcoding the feed URL in source code would break forks silently; if an article is revised within the same week the API may return a `v2` URL, which feed readers treat as a new article — this is intentional because a new version may contain substantive changes that warrant a fresh read; the apparent duplicate disappears when the week rolls over and same-week revisions are rare |
+| FR-010 | A Docker-based validation step runs after the feed is generated but before the commit; a single container starts `python -m http.server` in the background to serve `docs/` on a local port, then runs newsboat in non-interactive mode (`newsboat --url-file /tmp/urls --execute reload`) against both the current week's feed URL and the most recent archived feed URL (the archive file created during the current run if archiving occurred, otherwise the lexicographically latest `YYYY-WNN` directory if any archive exists); the workflow step fails and no commit is made if newsboat exits with a non-zero code | Validating the preceding week's archived feed detects regressions in the Atom XML format across week boundaries; newsboat validates both HTTP serving and Atom XML well-formedness in a single step; a single container is sufficient since newsboat is a lightweight client that does not need isolation from the server; the container Dockerfile must install newsboat with `apt-get update && apt-get install -y --no-install-recommends newsboat` before the validation step can run; on the very first run no archive exists and newsboat validates only the current week's feed — single-file validation is accepted as sufficient for the first run since the two-file path is exercised from the second week onward |
+
+| FR-011 | If the arxiv API returns a non-200 HTTP status, the pipeline retries the request up to 2 times with exponential backoff (10 seconds after the first failure, 20 seconds after the second failure); if all retries fail, the pipeline exits with a non-zero exit code and no commit is made; if the API returns a 200 response but zero articles for a date range that should contain articles, the pipeline exits with a non-zero exit code and no commit is made; the next daily scheduled run will re-attempt the full week range | Transient API errors (503, timeouts) are common for `export.arxiv.org`; 2 retries with short exponential backoff handle most transient failures without excessive delay; a zero-result response for a non-empty week signals an API issue rather than a genuine absence of articles, so failing loudly is safer than silently producing an empty feed |
+| FR-012 | The GitHub Actions workflow supports `workflow_dispatch` as an additional trigger alongside the daily schedule; the manual trigger uses the same logic as the scheduled run (current ISO week, same variables) and allows re-running the pipeline after a transient failure without waiting for the next scheduled execution | Manual trigger does not accept custom date range parameters; backfilling past weeks via `workflow_dispatch` with a custom date range remains a deferred feature |
+| FR-013 | The pipeline script logs the following to stdout: the API URL queried (with date bounds), the number of results returned per API page, the number of articles passing the filter, and the final article count written to the feed; after generating the new `atom.xml`, the workflow runs `diff` between the previously committed `atom.xml` and the newly generated one, logging the output to stdout; if no previous file exists the diff step is skipped | Logs are the primary diagnostic tool in GitHub Actions; the API URL confirms the correct date range and category were queried; per-page counts help detect pagination issues or API truncation; the diff output makes it visible in the workflow log what changed between runs, aiding review of new articles, removed articles (due to category reclassification), and updated fields |
+
+## Non-Functional Requirements
+
+| ID | Feature | Quality Attribute | Designer's Note |
+|----|---------|-------------------|-----------------|
+| NFR-001 | The pipeline script uses only the Python standard library (`urllib.request`, `xml.etree.ElementTree`, `re`, `datetime`); no third-party packages are installed | Minimal dependencies | No `pip install` step in the Docker container; no supply chain risk from third-party packages; the arxiv API does not support field selection so the full article (including abstract and authors) is always received and the unwanted fields are discarded in the pipeline |
+| NFR-002 | Each arxiv API request is preceded by at least a 5-second sleep; the total number of API requests per daily run is at most `ceil(weekly_article_count / 2000)`, which is 1 for cs.AI (approximately 1000 articles per week) and at most 2 for any current arxiv category | Respectful API usage | The arxiv terms of use at `https://info.arxiv.org/help/api/tou.html` require at least 3 seconds between requests; non-compliance risks IP blocks |
+| NFR-003 | The GitHub Actions workflow targets a GitHub-hosted runner (`ubuntu-24.04`) free (public repositories have unlimited GitHub Actions minutes as of 2026) | Runner choice | `https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions` documents the minute quotas |
+| NFR-004 | The Atom XML output is valid RFC 4287; all text content that could contain characters reserved in XML (`<`, `>`, `&`, `"`, `'`) is XML-escaped; URL values in `href` attributes are not double-escaped | Correctness | arxiv article titles occasionally contain `&` and `<` characters; the `xml.etree.ElementTree` serialiser handles escaping automatically |
+| NFR-005 | The XML generator must produce byte-for-byte identical output for identical input: articles are always written in `<published>`-descending order; XML attributes are always inserted in the same fixed order (matching the order in the code); the output encoding is always UTF-8 with the `<?xml version='1.0' encoding='UTF-8'?>` declaration; no timestamp or run-id is embedded in the output | Determinism | Required by FR-006's no-commit guard, which compares the generated file to the committed version byte-for-byte; `xml.etree.ElementTree` writes attributes in Python dict insertion order (guaranteed stable in Python 3.7+), so insertion order in the builder code is the specification; any change to attribute insertion order in the code is a breaking change for the idempotency check |
+| NFR-006 | The README.md of the repository must include the following disclaimer required by the arXiv brand guidelines for any use of the arXiv name to acknowledge API or data use: *"This service was not reviewed or approved by, nor does it necessarily express or reflect the policies or opinions of, arXiv."*; source: `https://info.arxiv.org/brand/brand-guidelines.html`; arXiv® is a registered trademark held by arXiv and Cornell University; use of "arxiv" as a URL path segment to identify the data source is understood to fall within the permitted acknowledgment use, but any use of "arXiv" in the project name itself would require written authorization from arXiv | Legal compliance | arXiv is transitioning to an independent nonprofit (effective 2026-07-01, sources: `https://www.researchinformation.info/news/arxiv-moves-to-independence-from-cornell-university/` and `https://www.science.org/content/article/arxiv-pioneering-preprint-server-declares-independence-cornell`); the trademark situation may evolve after that date |
+
+## Expected Characteristics
+
+The weekly Atom XML file for cs.AI is expected to contain approximately 100 articles (1 in 10 of ~1000 articles per week have a `https://` URL in their comment).
+The file size is expected to be under 100 KB per week.
+The annual archive is expected to be under 5 MB per category.
+The 1-in-10 ratio is a best estimate based on observation of the cs.AI arxiv listing page; it should be verified against real pipeline output after the first week of operation.
+
+## Technical Choices
+
+**Data source:**
+The arxiv API at `https://export.arxiv.org/api/query` returns an Atom feed containing
+`<arxiv:comment>` per article when a comment is present.
+The endpoint redirects `http://` to `https://`; the pipeline must use `https://` directly.
+Querying by `cat:{category} AND submittedDate:[...]` retrieves all articles for the
+configured category and week without fetching PDFs or abstract pages.
+The API does not support field selection: every response includes the full
+`<summary>` (abstract), all `<author>` elements, PDF link, and category list regardless
+of what the caller needs; the pipeline discards everything except title, authors, primary category, link, published, updated,
+and comment.
+Live call confirmed 2026-05-16: `https://export.arxiv.org/api/query?search_query=cat:cs.AI&start=0&max_results=1&sortBy=submittedDate&sortOrder=descending`
+returns 3.1 KB for one article with all fields present.
+The API does not expose a flag or filter for articles with associated code repositories;
+this was confirmed both from the documentation at `https://info.arxiv.org/help/api/user-manual.html`
+and from the live response.
+Documentation at `https://info.arxiv.org/help/api/user-manual.html`.
+
+**Comment URL extraction:**
+`re.findall(r'https://\S+', comment)` returns a list of all non-overlapping `https://`
+URL matches in the comment string; `\S+` stops at whitespace, so two URLs separated
+by any whitespace or prose are captured independently — for example the comment
+`"Code: https://github.com/foo/bar demo: https://foo.github.io/"` yields both URLs.
+A second pass strips trailing punctuation characters (`.,;:)]>`) from each match to
+handle constructs like `available at https://github.com/foo/bar.` without removing
+path separators or query-string characters.
+
+**No database:**
+The single output artifact is an Atom XML file.
+A database would add schema design, migration handling, and artifact caching
+across workflow runs, all with no benefit when the output is a static text file.
+
+**Commit directly to `main`:**
+Atom XML is plain text; git delta-compresses successive weekly versions.
+The orphan-branch strategy deployment on GitHub Pages used in some similar projects
+is designed to keep binary files out of `main` history, which is not a concern here.
+
+**Fork configurability:**
+GitHub Actions repository variables (`${{ vars.ARXIV_CATEGORY_ID }}`
+and `${{ vars.ARXIV_CATEGORY_STRICT }}`) are set per repository and not inherited by forks.
+A fork sets `ARXIV_CATEGORY_ID` to the target category in its own Settings page.
+The workflow falls back to `cs.AI` when the variable is absent.
+The default value of `ARXIV_CATEGORY_STRICT`, if not set, is `false`.
+No code change is needed in the fork.
+
+**Docker for validation:**
+The server container (`ghcr.io/astral-sh/uv:python3.14-trixie-slim`) defined
+in `compose.yml` serves `docs/` via `python -m http.server`.
+`newsboat` is added to the same image so feed validation runs in an
+environment that is as close as possible between local development and CI.
+
+**GitHub Actions schedule:**
+The workflow runs daily at 06:00 UTC (`cron: '0 06 * * *'`).
+arxiv articles submitted the previous US business day appear on the API after 00:00 UTC,
+so a 06:00 UTC trigger captures all articles announced the previous day.
+
+## Deferred Features
+
+| Feature | Reason for Deferral |
+|---------|---------------------|
+| Scanning `<summary>` (abstract) for `https://` URLs | Some articles place code links only in the abstract and not in the comment; these are currently false negatives; adding abstract scanning would require defining precedence rules when both comment and abstract contain URLs, and would increase the false-positive rate from journal/DOI links that frequently appear in abstracts |
+| Domain allowlist for comment URL filtering | Restricting to known code hosts (github.com, gitlab.com, huggingface.co, zenodo.org, bitbucket.org) would reduce false positives from journal or institution URLs; deferred until the false-positive rate is measured on real data |
+| Multiple categories in one repository | One category per fork is sufficient; supporting multiple categories in one repository requires either multiple feed files (complicating the archive logic) or a merged feed (losing per-category subscriptions) |
+| Index feed listing all archived weeks | A subscribable index of past weeks would help readers discover older archives; deferred until the archive has accumulated several months of data |
+| `workflow_dispatch` with custom date range | Basic manual trigger is implemented (FR-012) but without date range parameters; running the workflow manually for a past week would allow backfilling gaps caused by runner outages; the custom date range input is deferred as it adds workflow complexity not needed for normal operation |
+
+## Abandoned Ideas
+
+| Idea | Reason for Abandonment |
+|------|------------------------|
+| Downloading PDFs to detect code links | PDFs contain code links more reliably than the comment field, but downloading 500-1000 PDFs per week requires gigabytes of temporary storage, hours of processing, and a PDF-to-text conversion step; the comment field heuristic achieves the same goal at negligible cost |
+| Scraping the arxiv listing page HTML | Scraping is fragile and against the arxiv terms of use; the API provides the same comment field in structured form |
+| Using the paperswithcode API or data export | paperswithcode.com shut down its public API and RSS feed in 2025 and the project cannot depend on an unavailable third-party service |
+| Storing the abstract in the feed article | The stated goal is minimal data (title and URLs only); abstracts add 300-500 bytes per article and are one click away on the arxiv abstract page |
+| Git LFS for archived weekly files | Atom XML is plain text compressing well under standard git; at approximately 5 MB per category per year (100 filtered articles per week × ~1 KB per article = ~100 KB per weekly feed × 52 weeks) there is no need for LFS |
+| Orphan branch for deployment | The orphan-branch strategy avoids binary files accumulating in `main` history; atom.xml is a text file so this concern does not apply |

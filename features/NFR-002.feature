@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: NFR-002 At least 5 seconds between consecutive arxiv API requests
 
   # Not tested via BDD.

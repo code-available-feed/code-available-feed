@@ -94,6 +94,7 @@ bash scripts/validate_atom_xml.sh
 │   ├── FR-011.feature          # Retry on API failure
 │   ├── FR-012.feature          # workflow_dispatch trigger (no BDD scenarios)
 │   ├── FR-013.feature          # Diagnostic logging
+│   ├── FR-014.feature          # Feed alternate link to the source GitHub repository
 │   ├── NFR-001.feature         # Python standard library only (no BDD scenarios)
 │   ├── NFR-002.feature         # API rate limiting (no BDD scenarios)
 │   ├── NFR-003.feature         # GitHub-hosted runner (no BDD scenarios)

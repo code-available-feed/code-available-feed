@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-008 Repository variable resolution
 
   Two repository variables control filtering: ARXIV_CATEGORY_ID (default

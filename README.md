@@ -64,7 +64,7 @@ bash scripts/validate_atom_xml.sh
 │               └── YYYY-WNN/
 │                   └── atom.xml        # Prior-week archives
 ├── features/
-│   ├── environment.py          # Behave hooks: skip @status-todo feature scenarios
+│   ├── environment.py          # Behave hooks: skip @status-todo scenarios; restore env vars after each
 │   ├── steps/                  # Step definitions (one file per feature group)
 │   ├── fixtures/               # Fixture data for determinism and field-extraction tests
 │   ├── FR-001.feature          # Fetch current ISO week from arxiv API
@@ -93,14 +93,19 @@ bash scripts/validate_atom_xml.sh
 │   ├── test_e2e_behave.sh      # Run BDD test suite inside Docker
 │   └── test_mypy.sh            # Run mypy type checking inside Docker
 └── src/
-    └── pipeline_feed.py        # Fetch arxiv API, filter, generate Atom 1.0 XML, archive
+    ├── __init__.py             # Package marker
+    ├── config.py               # Resolve ARXIV_CATEGORY_ID and ARXIV_CATEGORY_STRICT from env
+    └── pipeline_feed.py        # (planned) Fetch arxiv API, filter, generate Atom 1.0 XML, archive
 ```
 
 ## Components
 
-- **Feed pipeline** (`src/pipeline_feed.py`): pages the arxiv API in steps of 2000, applies the
-  inclusion filter (comment URL presence and optional primary-category strict match), generates
-  RFC 4287 Atom XML sorted by published date descending, archives the prior week's feed,
+- **Configuration** (`src/config.py`): resolves `ARXIV_CATEGORY_ID` (default `cs.AI`) and
+  `ARXIV_CATEGORY_STRICT` (default `false`; case-insensitive; only the literal `true` enables
+  strict mode) from the process environment
+- **Feed pipeline** (`src/pipeline_feed.py`, planned): pages the arxiv API in steps of 2000,
+  applies the inclusion filter (comment URL presence and optional primary-category strict match),
+  generates RFC 4287 Atom XML sorted by published date descending, archives the prior week's feed,
   and emits a unified diff to stdout when a prior feed exists
 - **Atom feed** (`docs/arxiv/{category}/atom.xml`): RFC 4287, UTF-8, deterministic byte output;
   one file per ISO calendar week; archived under `archive/YYYY-WNN/`

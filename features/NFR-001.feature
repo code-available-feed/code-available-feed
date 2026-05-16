@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: NFR-001 Pipeline imports only the Python standard library
 
   # Not tested via BDD.

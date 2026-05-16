@@ -174,6 +174,20 @@ def parse_entries(body: bytes) -> list[dict]:
     return entries
 
 
+def build_github_repo_url(github_repository: str) -> str:
+    """
+    Construct the GitHub repository URL from GITHUB_REPOSITORY.
+
+    Parameters:
+      github_repository: "owner/repo" as set by GITHUB_REPOSITORY
+
+    Returns:
+      https://github.com/{owner}/{repo}
+    """
+    owner, repo = github_repository.split("/", 1)
+    return f"https://github.com/{owner}/{repo}"
+
+
 def build_feed_url(github_repository: str, category_id: str) -> str:
     """
     Construct the canonical GitHub Pages URL for the feed.
@@ -238,6 +252,10 @@ def build_feed(
     link_self_elem = ET.SubElement(feed, f"{{{_ATOM_NS}}}link")
     link_self_elem.set("rel", "self")
     link_self_elem.set("href", feed_url)
+
+    link_alt_elem = ET.SubElement(feed, f"{{{_ATOM_NS}}}link")
+    link_alt_elem.set("rel", "alternate")
+    link_alt_elem.set("href", build_github_repo_url(github_repository))
 
     for article in sorted_articles:
         entry = ET.SubElement(feed, f"{{{_ATOM_NS}}}entry")

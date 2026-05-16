@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-014 Feed alternate link to the source GitHub repository
 
   The generated Atom feed includes a feed-level

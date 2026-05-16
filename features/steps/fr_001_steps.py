@@ -69,7 +69,7 @@ def step_run_pipeline(context):
         context.run_dir = pathlib.Path(tempfile.mkdtemp())
 
     result = subprocess.run(
-        ["python3", "-m", "src.pipeline_feed"],
+        ["python", "-m", "src.pipeline_feed"],
         cwd=str(context.run_dir),
         env=env,
         capture_output=True,

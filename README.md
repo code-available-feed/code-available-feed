@@ -35,6 +35,20 @@ This service was not reviewed or approved by, nor does it necessarily express or
 docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g)
 ```
 
+## One-time repository setup (GitHub)
+
+After forking or creating the repository, perform these steps once in the GitHub UI:
+
+1. **GitHub Pages**: go to Settings → Pages → Source, select "Deploy from a branch",
+   choose branch `main` and folder `/docs`, then click Save.
+   The feed becomes available at `https://{owner}.github.io/{repo}/arxiv/{category}/atom.xml`.
+
+2. **Category variable** (optional, defaults to `cs.AI`): go to Settings → Actions → Variables,
+   create a variable named `ARXIV_CATEGORY_ID` with the desired arxiv category (e.g. `cs.CV`).
+
+3. **Strict mode** (optional, defaults to `false`): create a variable named `ARXIV_CATEGORY_STRICT`
+   and set it to `true` to include only articles whose primary category matches `ARXIV_CATEGORY_ID`.
+
 ## Run the feed pipeline locally
 
 ```bash
@@ -55,7 +69,7 @@ bash scripts/validate_atom_xml.sh
 
 ```
 ├── compose.yml                 # Docker service: build from Dockerfile.server, mount repo at /app
-├── Dockerfile.server           # debian:trixie-slim + python3 + newsboat + behave + mypy (no pip)
+├── Dockerfile.server           # debian:trixie-slim + python (via python-is-python3) + newsboat + behave + mypy (no pip)
 ├── docs/
 │   └── arxiv/
 │       └── {category}/
@@ -116,8 +130,8 @@ bash scripts/validate_atom_xml.sh
   stdout diff logging (FR-013) is not yet implemented
 - **Atom feed** (`docs/arxiv/{category}/atom.xml`): RFC 4287, UTF-8, deterministic byte output;
   one file per ISO calendar week; archived under `archive/YYYY-WNN/`
-- **Docker container** (`Dockerfile.server`): `debian:trixie-slim` with `python3`, `newsboat`,
-  `python3-behave`, `python3-mypy`; no `pip install` step (stdlib only, NFR-001)
+- **Docker container** (`Dockerfile.server`): `debian:trixie-slim` with `python` (via `python-is-python3`),
+  `newsboat`, `python3-behave`, `python3-mypy`; no `pip install` step (stdlib only, NFR-001)
 - **GitHub Pages**: serves `docs/` from `main`; `ARXIV_CATEGORY_ID` controls both the API
   query parameter and the feed URL path
 

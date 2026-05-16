@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-007 GitHub Pages serving of the docs directory
 
   # Not tested via BDD.

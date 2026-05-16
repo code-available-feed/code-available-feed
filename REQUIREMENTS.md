@@ -116,9 +116,9 @@ No code change is needed in the fork.
 
 **Docker for validation:**
 `Dockerfile.server` builds from `debian:trixie-slim` and installs newsboat,
-python3, behave, and mypy via apt.
+python, behave, and mypy via apt.
 The compose `server` service builds from `Dockerfile.server`, overrides the
-default `CMD` with `python3 -m http.server 8000 --bind 0.0.0.0`, and mounts
+default `CMD` with `python -m http.server 8000 --bind 0.0.0.0`, and mounts
 the repository root at `/app`.
 Newsboat and the BDD test runner (behave) run inside the same container so
 the validation environment is identical between local development and CI.

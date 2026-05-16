@@ -96,7 +96,7 @@ bash scripts/validate_atom_xml.sh
     ├── __init__.py             # Package marker
     ├── config.py               # Resolve ARXIV_CATEGORY_ID and ARXIV_CATEGORY_STRICT from env
     ├── filter.py               # Article inclusion filter (comment URL presence + optional strict category match)
-    └── pipeline_feed.py        # (planned) Fetch arxiv API, filter, generate Atom 1.0 XML, archive
+    └── pipeline_feed.py        # Fetch arxiv API, filter, build Atom 1.0 XML; archiving and diff logging planned
 ```
 
 ## Components
@@ -107,9 +107,9 @@ bash scripts/validate_atom_xml.sh
 - **Inclusion filter** (`src/filter.py`): `include_article(primary_category, comment)` returns
   True when both conditions hold: (1) in strict mode the article's primary category matches
   `ARXIV_CATEGORY_ID` case-insensitively; (2) the comment contains at least one `https://` URL
-- **Feed pipeline** (`src/pipeline_feed.py`, planned): pages the arxiv API in steps of 2000,
-  applies the inclusion filter, generates RFC 4287 Atom XML sorted by published date descending,
-  archives the prior week's feed, and emits a unified diff to stdout when a prior feed exists
+- **Feed pipeline** (`src/pipeline_feed.py`): pages the arxiv API in steps of 2000,
+  applies the inclusion filter, generates RFC 4287 Atom XML sorted by published date descending;
+  archiving prior-week feeds (FR-005) and stdout diff logging (FR-013) are not yet implemented
 - **Atom feed** (`docs/arxiv/{category}/atom.xml`): RFC 4287, UTF-8, deterministic byte output;
   one file per ISO calendar week; archived under `archive/YYYY-WNN/`
 - **Docker container** (`Dockerfile.server`): `debian:trixie-slim` with `python3`, `newsboat`,

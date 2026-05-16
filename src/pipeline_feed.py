@@ -27,6 +27,10 @@ import src.filter
 _ATOM_NS = "http://www.w3.org/2005/Atom"
 _ARXIV_NS = "http://arxiv.org/schemas/atom"
 
+# Register the Atom namespace as the default so the serialiser writes
+# <feed xmlns="..."> rather than <ns0:feed xmlns:ns0="...">.
+ET.register_namespace("", _ATOM_NS)
+
 # NFR-002: minimum pause before every API request to respect arxiv rate limits.
 _MIN_REQUEST_INTERVAL_SECONDS: int = 5
 
@@ -170,6 +174,80 @@ def parse_entries(body: bytes) -> list[dict]:
     return entries
 
 
+def build_feed(
+    articles: list[dict],
+    category_id: str,
+    strict_mode: bool,
+    github_repository: str,
+) -> bytes:
+    """
+    Build an Atom 1.0 feed (RFC 4287) from collected articles.
+
+    Articles are sorted by published descending (newest first).
+    The feed-level updated element is set to the published date of the first
+    (newest) article so the value is stable across repeated runs with the same
+    input data (NFR-005).
+
+    Parameters:
+      articles:          list of article dicts as returned by parse_entries and
+                         filtered by include_article
+      category_id:       value of ARXIV_CATEGORY_ID (e.g. "cs.AI")
+      strict_mode:       resolved value of ARXIV_CATEGORY_STRICT
+      github_repository: value of GITHUB_REPOSITORY (format "owner/repo")
+
+    Returns:
+      UTF-8 encoded Atom XML bytes with an XML declaration.
+    """
+    sorted_articles = sorted(
+        articles, key=lambda a: a["published"], reverse=True
+    )
+
+    feed = ET.Element(f"{{{_ATOM_NS}}}feed")
+
+    title_elem = ET.SubElement(feed, f"{{{_ATOM_NS}}}title")
+    strict_str = str(strict_mode).lower()
+    title_elem.text = f"{category_id} strict={strict_str} {github_repository}"
+
+    if sorted_articles:
+        updated_elem = ET.SubElement(feed, f"{{{_ATOM_NS}}}updated")
+        updated_elem.text = sorted_articles[0]["published"]
+
+    for article in sorted_articles:
+        entry = ET.SubElement(feed, f"{{{_ATOM_NS}}}entry")
+
+        title_e = ET.SubElement(entry, f"{{{_ATOM_NS}}}title")
+        title_e.text = f"[{article['primary_category']}] {article['title']}"
+
+        for author_name in article["authors"]:
+            author_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}author")
+            name_elem = ET.SubElement(author_elem, f"{{{_ATOM_NS}}}name")
+            name_elem.text = author_name
+
+        cat_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}category")
+        cat_elem.set("term", article["primary_category"])
+        cat_elem.set("scheme", "http://arxiv.org/schemas/atom")
+
+        id_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}id")
+        id_elem.text = article["abstract_url"]
+
+        link_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}link")
+        link_elem.set("rel", "alternate")
+        link_elem.set("type", "text/html")
+        link_elem.set("href", article["abstract_url"])
+
+        pub_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}published")
+        pub_elem.text = article["published"]
+
+        upd_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}updated")
+        upd_elem.text = article["updated"]
+
+        content_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}content")
+        content_elem.set("type", "text")
+        content_elem.text = "\n".join(article["comment_urls"])
+
+    return ET.tostring(feed, encoding="UTF-8", xml_declaration=True)
+
+
 def fetch_all_articles(
     base_url: str,
     category_id: str,
@@ -263,6 +341,7 @@ def main() -> int:
         return 1
 
     category_id = src.config.resolve_category_id()
+    strict_mode = src.config.resolve_strict_mode()
     base_url = os.environ.get("ARXIV_API_BASE_URL", "https://export.arxiv.org")
     backoff_base_seconds = int(
         os.environ.get("RETRY_BACKOFF_BASE_SECONDS", "10")
@@ -306,17 +385,12 @@ def main() -> int:
         )
         return 1
 
-    # TODO(FR-004): replace this placeholder with a proper Atom 1.0 feed.
     category_lower = category_id.lower()
     output_dir = pathlib.Path("docs") / "arxiv" / category_lower
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "atom.xml"
-    output_path.write_text(
-        "<?xml version='1.0' encoding='UTF-8'?>\n"
-        f'<feed xmlns="http://www.w3.org/2005/Atom">\n'
-        "</feed>\n",
-        encoding="utf-8",
-    )
+    feed_bytes = build_feed(filtered, category_id, strict_mode, github_repository)
+    output_path.write_bytes(feed_bytes)
 
     return 0
 

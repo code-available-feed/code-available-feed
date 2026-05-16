@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-004 Atom 1.0 feed generation
 
   The pipeline generates an Atom 1.0 feed (RFC 4287) from the collected

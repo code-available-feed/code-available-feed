@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-012 workflow_dispatch trigger
 
   # Not tested via BDD.

@@ -38,3 +38,8 @@ Feature: FR-008 Repository variable resolution
     Given the environment variable ARXIV_CATEGORY_STRICT is unset
     When the configuration is resolved
     Then the resolved strict-mode flag is false
+
+  Scenario: ARXIV_CATEGORY_ID with an invalid format raises ValueError
+    Given the environment variable ARXIV_CATEGORY_ID is "../etc/passwd"
+    When the configuration category id is resolved
+    Then resolve_category_id raises ValueError

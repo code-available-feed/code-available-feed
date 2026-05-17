@@ -7,8 +7,15 @@ Feature: FR-006 No-change commit guard
   atom.xml to count <entry> elements and derive the ISO week from the newest
   <entry><published> date.
   The no-change byte comparison runs after newsboat validation (FR-010) has
-  already passed. The git commit invocation itself is part of the GitHub
-  Actions workflow and is not covered by BDD scenarios.
+  already passed.
+
+  Under the orphan-branch deployment model the constructed commit message
+  string serves two purposes: it is printed to stdout by the pipeline as a
+  log line, and it is reused as the commit message subject of the gh-pages
+  orphan commit produced by scripts/deploy_orphan.sh. The same
+  src/commit_message.py function is the single source of truth for both
+  uses. The git commit invocation itself is part of scripts/deploy_orphan.sh
+  and the GitHub Actions workflow and is not covered by BDD scenarios.
 
   Background:
     Given the environment variable ARXIV_CATEGORY_ID is "cs.AI"

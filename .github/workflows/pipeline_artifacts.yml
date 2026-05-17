@@ -9,6 +9,10 @@ permissions:
   contents: read
   actions: write
 
+concurrency:
+  group: pipeline-and-deploy
+  cancel-in-progress: false
+
 jobs:
   pipeline:
     runs-on: ubuntu-24.04
@@ -31,10 +35,28 @@ jobs:
           export BUILDKIT_PROGRESS=plain
           docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g)
 
-      - name: bash scripts/pipeline_artifacts.sh
+      - name: bash scripts/test_e2e_behave.sh
+        run: bash scripts/test_e2e_behave.sh
+
+      # NFR-007 exception (a): restoring repository branch state via
+      # `git fetch` + `git checkout` of another branch into the workflow
+      # checkout. This has no local equivalent because it operates on the
+      # workflow's pre-checked-out repository.
+      - name: restore docs/ from gh-pages branch
         run: |
-          set -eo pipefail
-          bash scripts/pipeline_artifacts.sh
+          git fetch origin gh-pages 2>/dev/null \
+            && git checkout origin/gh-pages -- docs/ 2>/dev/null \
+            || echo "No gh-pages branch yet, starting fresh"
+
+      - name: bash scripts/pipeline_artifacts.sh
+        run: bash scripts/pipeline_artifacts.sh
+
+      - name: upload arxiv-feeds artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: arxiv-feeds
+          path: docs/arxiv/
+          retention-days: 7
 
       - name: debug
         if: failure()

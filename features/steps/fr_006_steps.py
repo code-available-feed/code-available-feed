@@ -7,6 +7,7 @@ import xml.etree.ElementTree as ET
 
 from behave import given, then, when
 
+import src.commit_message
 import src.pipeline_feed
 
 _ATOM_NS = "http://www.w3.org/2005/Atom"
@@ -134,8 +135,8 @@ def step_atom_xml_with_entries(context, count, entries_word, published):
 
 @when("the commit message is constructed from the atom.xml")
 def step_construct_commit_message(context):
-    """Call build_commit_message and store the result."""
-    context.commit_message = src.pipeline_feed.build_commit_message(
+    """Call build_commit_message_from_bytes and store the result."""
+    context.commit_message = src.commit_message.build_commit_message_from_bytes(
         context.message_feed_bytes
     )
 

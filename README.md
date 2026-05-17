@@ -16,7 +16,7 @@ At the end of each calendar week the current feed is archived to
 `docs/arxiv/{category}/archive/YYYY-WNN/atom.xml` and the new week's data overwrites the live file.
 The generated XML is validated with newsboat before any commit is made.
 
-GitHub Pages serves `docs/` from the `main` branch; the feed URL is
+GitHub Pages serves `docs/` from the `gh-pages` orphan branch; the feed URL is
 `https://{owner}.github.io/{repo}/arxiv/{category}/atom.xml`
 (e.g. `https://marcindulak.github.io/code-available-feed/arxiv/cs.ai/atom.xml`).
 
@@ -35,19 +35,33 @@ This service was not reviewed or approved by, nor does it necessarily express or
 docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g)
 ```
 
-## One-time repository setup (GitHub)
+## GitHub Pages setup
 
-After forking or creating the repository, perform these steps once in the GitHub UI:
+1. Fork or create the repository and push to GitHub.
+2. Run the `pipeline_artifacts` and `deploy_orphan` workflows at least once
+   (manually via the Actions tab or wait for the daily schedule).
+   The first successful `deploy_orphan` run creates the `gh-pages` branch.
+3. In repository Settings → Pages, set Source to *Deploy from a branch*,
+   Branch to `gh-pages`, Folder to `/docs`.
 
-1. **GitHub Pages**: go to Settings → Pages → Source, select "Deploy from a branch",
-   choose branch `main` and folder `/docs`, then click Save.
-   The feed becomes available at `https://{owner}.github.io/{repo}/arxiv/{category}/atom.xml`.
+## Category and strict-mode variables (optional)
 
-2. **Category variable** (optional, defaults to `cs.AI`): go to Settings → Actions → Variables,
-   create a variable named `ARXIV_CATEGORY_ID` with the desired arxiv category (e.g. `cs.CV`).
+In Settings → Actions → Variables:
 
-3. **Strict mode** (optional, defaults to `false`): create a variable named `ARXIV_CATEGORY_STRICT`
+1. **Category variable** (defaults to `cs.AI`): create a variable named `ARXIV_CATEGORY_ID`
+   with the desired arxiv category (e.g. `cs.CV`).
+2. **Strict mode** (defaults to `false`): create a variable named `ARXIV_CATEGORY_STRICT`
    and set it to `true` to include only articles whose primary category matches `ARXIV_CATEGORY_ID`.
+
+## Rolling back a bad deploy
+
+The `gh-pages` branch is force-pushed on every successful `deploy_orphan` run, so its git
+history holds only the most recent orphan commit.
+The 7-day retention on the `arxiv-feeds` artifact is the de-facto rollback window: to restore
+a known-good feed, re-run `deploy_orphan` via `workflow_dispatch` while specifying an older
+successful `pipeline_artifacts` run.
+Beyond 7 days, recovery requires regenerating the feed from the current arxiv state, which
+produces the latest week's data but loses any per-day intermediate state.
 
 ## Run the feed pipeline locally
 
@@ -103,12 +117,16 @@ bash scripts/validate_atom_xml.sh
 │   ├── NFR-006.feature         # README arXiv disclaimer
 │   └── NFR-007.feature         # Local testability via scripts (no BDD scenarios)
 ├── scripts/
+│   ├── check_restored_atom_xml.sh # Post-restore well-formedness check on every docs/**/atom.xml
+│   ├── deploy_orphan.sh        # Force-push docs/ to the gh-pages orphan branch
+│   ├── pipeline_artifacts.sh   # End-to-end pipeline driver (restore-check + generation)
 │   ├── pipeline_feed.sh        # Run the feed pipeline inside Docker
 │   ├── validate_atom_xml.sh    # Validate atom.xml with newsboat inside Docker
 │   ├── test_e2e_behave.sh      # Run BDD test suite inside Docker
 │   └── test_mypy.sh            # Run mypy type checking inside Docker
 └── src/
     ├── __init__.py             # Package marker
+    ├── commit_message.py       # FR-006 commit message builder (CLI: python -m src.commit_message --filename ...)
     ├── config.py               # Resolve ARXIV_CATEGORY_ID and ARXIV_CATEGORY_STRICT from env
     ├── filter.py               # Article inclusion filter (comment URL presence + optional strict category match)
     └── pipeline_feed.py        # Fetch arxiv API, filter, build Atom 1.0 XML; archiving and diff logging planned
@@ -139,8 +157,9 @@ bash scripts/validate_atom_xml.sh
   one file per ISO calendar week; archived under `archive/YYYY-WNN/`
 - **Docker container** (`Dockerfile.server`): `debian:trixie-slim` with `python` (via `python-is-python3`),
   `newsboat`, `python3-behave`, `python3-mypy`; no `pip install` step (stdlib only, NFR-001)
-- **GitHub Pages**: serves `docs/` from `main`; `ARXIV_CATEGORY_ID` controls both the API
-  query parameter and the feed URL path
+- **GitHub Pages**: serves `docs/` from the `gh-pages` orphan branch
+  (force-pushed on each successful deploy by `scripts/deploy_orphan.sh`);
+  `ARXIV_CATEGORY_ID` controls both the API query parameter and the feed URL path
 
 # Running tests
 
@@ -160,3 +179,10 @@ bash scripts/test_mypy.sh
 
 See the `Abandoned Ideas` section of `REQUIREMENTS.md` for design-phase ideas considered and
 rejected before implementation began.
+
+**Direct commits to `main` for feed updates**: rejected after initial implementation in favour of
+the orphan-branch model.
+Committing `docs/arxiv/atom.xml` to `main` mixed generated content with source code and grew
+`main`'s git history unboundedly.
+The orphan-branch model keeps `main` clean and lets the deploy step force-push without
+accumulating history.

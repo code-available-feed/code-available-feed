@@ -21,6 +21,7 @@ import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 
+import src.commit_message
 import src.config
 import src.filter
 
@@ -359,30 +360,6 @@ def feeds_are_identical(
     return committed_bytes is not None and committed_bytes == generated_bytes
 
 
-def build_commit_message(feed_bytes: bytes) -> str:
-    """
-    Construct the git commit message for a weekly feed update.
-
-    Counts <entry> elements in feed_bytes, derives the ISO year and week from
-    the newest <entry><published> date, and formats the message as:
-    "Update YYYY-WNN feed (N article)" or "Update YYYY-WNN feed (N articles)".
-
-    Parameters:
-      feed_bytes: UTF-8 encoded Atom XML bytes of the generated feed
-    """
-    root = ET.fromstring(feed_bytes)
-    entries = root.findall(f"{{{_ATOM_NS}}}entry")
-    n = len(entries)
-    article_word = "article" if n == 1 else "articles"
-    newest_date = newest_published_date_from_feed(feed_bytes)
-    # newest_date is non-None here: build_commit_message is only called when
-    # the feed contains at least one entry.
-    entry_date = datetime.date.fromisoformat(newest_date[:10])
-    iso = entry_date.isocalendar()
-    week_str = f"{iso.year}-W{iso.week:02d}"
-    return f"Update {week_str} feed ({n} {article_word})"
-
-
 def fetch_all_articles(
     base_url: str,
     category_id: str,
@@ -536,7 +513,10 @@ def main() -> int:
     if feeds_are_identical(committed_bytes, feed_bytes):
         print("no change: feed unchanged", flush=True)
     else:
-        print(build_commit_message(feed_bytes), flush=True)
+        print(
+            src.commit_message.build_commit_message_from_bytes(feed_bytes),
+            flush=True,
+        )
 
     return 0
 

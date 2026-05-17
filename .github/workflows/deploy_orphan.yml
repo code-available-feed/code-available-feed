@@ -12,6 +12,10 @@ permissions:
   contents: write
   actions: read
 
+concurrency:
+  group: pipeline-and-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-24.04
@@ -34,32 +38,47 @@ jobs:
           export BUILDKIT_PROGRESS=plain
           docker compose build server --build-arg UID=$(id -u) --build-arg GID=$(id -g)
 
-      - name: bash scripts/validate_atom_xml.sh
+      # NFR-007 exception (b) + (c): download the artifact produced by the
+      # triggering pipeline_artifacts run, or (on workflow_dispatch) the
+      # latest successful pipeline_artifacts run. The if: conditional and
+      # the gh-CLI shell are inline because they depend on workflow event
+      # state that has no local equivalent.
+      - name: download arxiv-feeds artifact (from triggering pipeline_artifacts run)
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v7
+        with:
+          name: arxiv-feeds
+          path: docs/arxiv/
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: download arxiv-feeds artifact (latest, for workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -eo pipefail
-          bash scripts/validate_atom_xml.sh
+          RUN_ID=$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow pipeline_artifacts.yml \
+            --status success \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+          gh run download "$RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name arxiv-feeds \
+            --dir docs/arxiv/
+
+      # TODO(FR-010): bash scripts/validate_atom_xml.sh goes here once that
+      # script is updated to the correct feed path docs/arxiv/{category}/atom.xml.
+
+      - name: bash scripts/deploy_orphan.sh
+        run: bash scripts/deploy_orphan.sh
+        env:
+          ARXIV_CATEGORY_ID: ${{ vars.ARXIV_CATEGORY_ID || 'cs.AI' }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: debug
         if: failure()
         run: |
           docker ps -a | grep -v CONTAINER | cut -d' ' -f1 | xargs -I{} -r bash -c "docker container stats --no-stream {} ; docker logs {}"
-
-      - name: force-push docs/ to gh-pages orphan branch
-        # To deploy on GitHub Pages:
-        # Settings -> Pages -> Source: Deploy from a branch -> Branch: gh-pages / docs
-        run: |
-          set -eo pipefail
-          mkdir /tmp/orphan-deploy
-          cp -r docs /tmp/orphan-deploy/docs
-          cd /tmp/orphan-deploy
-          git init
-          git config user.email "marcindulak@users.noreply.github.com"
-          git config user.name "Marcin Dulak"
-          git checkout -b gh-pages
-          git add docs/
-          git commit --message "Deploy docs/ snapshot from main@${GITHUB_SHA}"
-          git remote add origin \
-            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git push --force origin gh-pages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

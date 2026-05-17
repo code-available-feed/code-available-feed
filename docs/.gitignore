@@ -1,0 +1,6 @@
+# docs/ is served from the gh-pages orphan branch by GitHub Pages.
+# Feed files (docs/arxiv/...) live on gh-pages, not on main.
+# Nothing under docs/ should be committed to main; this .gitignore
+# is the only tracked file in docs/ and ignores everything else.
+*
+!.gitignore

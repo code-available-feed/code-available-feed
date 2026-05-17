@@ -38,6 +38,11 @@ jobs:
       - name: bash scripts/test_e2e_behave.sh
         run: bash scripts/test_e2e_behave.sh
 
+      - name: debug
+        if: failure()
+        run: |
+          docker ps -a | grep -v CONTAINER | cut -d' ' -f1 | xargs -I{} -r bash -c "docker container stats --no-stream {} ; docker logs {}"
+
       # NFR-007 exception (a): restoring repository branch state via
       # `git fetch` + `git checkout` of another branch into the workflow
       # checkout. This has no local equivalent because it operates on the
@@ -50,6 +55,14 @@ jobs:
 
       - name: bash scripts/pipeline_artifacts.sh
         run: bash scripts/pipeline_artifacts.sh
+        env:
+          ARXIV_CATEGORY_ID: ${{ vars.ARXIV_CATEGORY_ID || 'cs.AI' }}
+          ARXIV_CATEGORY_STRICT: ${{ vars.ARXIV_CATEGORY_STRICT || 'false' }}
+
+      - name: debug
+        if: failure()
+        run: |
+          docker ps -a | grep -v CONTAINER | cut -d' ' -f1 | xargs -I{} -r bash -c "docker container stats --no-stream {} ; docker logs {}"
 
       - name: upload arxiv-feeds artifact
         uses: actions/upload-artifact@v7
@@ -57,8 +70,3 @@ jobs:
           name: arxiv-feeds
           path: docs/arxiv/
           retention-days: 7
-
-      - name: debug
-        if: failure()
-        run: |
-          docker ps -a | grep -v CONTAINER | cut -d' ' -f1 | xargs -I{} -r bash -c "docker container stats --no-stream {} ; docker logs {}"

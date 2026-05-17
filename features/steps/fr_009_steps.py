@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 
 from behave import given, then, when
 
-import src.config
+import src.utils
 import src.pipeline_feed
 
 _ATOM_NS = "http://www.w3.org/2005/Atom"
@@ -15,7 +15,7 @@ _ATOM_NS = "http://www.w3.org/2005/Atom"
 def step_construct_feed_self_url(context):
     """Call build_feed_url with the current env-var values and store the result."""
     github_repository = os.environ.get("GITHUB_REPOSITORY", "")
-    category_id = src.config.resolve_category_id()
+    category_id = src.utils.resolve_category_id()
     context.feed_self_url = src.pipeline_feed.build_feed_url(
         github_repository, category_id
     )

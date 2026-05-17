@@ -4,10 +4,12 @@ ENV USER=nonroot
 
 # Install base dependencies
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
     newsboat \
     procps \
     python-is-python3 \
-    python3
+    python3 \
+    tree
 
 # Install test dependencies
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \

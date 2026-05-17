@@ -6,7 +6,7 @@ created per scenario (via the Background step) and stopped in after_scenario.
 
 Response configuration is keyed by the integer value of the start query
 parameter.  Any start value absent from the response table uses the server
-defaults: HTTP 200, 100 entries, each with a comment URL.
+defaults: HTTP 200, 50 entries, each with a comment URL.
 """
 
 import http.server
@@ -80,7 +80,7 @@ class ArxivFixtureServer:
         # Maps start parameter value to (http_status, n_entries, all_have_url).
         self._response_table: dict[int, tuple[int, int, bool]] = {}
         self._default_status: int = 200
-        self._default_n_entries: int = 100
+        self._default_n_entries: int = 50
         self._default_all_have_comment_url: bool = True
 
         handler_class = self._make_handler()

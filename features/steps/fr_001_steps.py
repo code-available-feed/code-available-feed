@@ -26,7 +26,7 @@ def step_set_arxiv_api_base_url(context):
 
 @given("by default the fixture server returns entries that all have a comment URL")
 def step_fixture_default_comment_url(context):
-    # ArxivFixtureServer defaults to 100 entries, all with a comment URL.
+    # ArxivFixtureServer defaults to 50 entries, all with a comment URL.
     # This step is present in the Background to document the precondition.
     pass
 

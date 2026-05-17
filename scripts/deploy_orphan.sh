@@ -35,7 +35,7 @@ fi
 # Reconstruct the commit message subject inside the container, calling the
 # same Python module the pipeline uses. Single source of truth for FR-006.
 docker compose up server --detach --wait
-COMMIT_SUBJECT="$(docker compose exec --no-TTY server bash -ci "python -m src.commit_message --filename ${ATOM_PATH}")"
+COMMIT_SUBJECT="$(docker compose exec --no-TTY server bash -ci "python -c 'from src.utils import build_commit_message; import pathlib; print(build_commit_message(pathlib.Path(\"${ATOM_PATH}\")))'")"
 
 # Build the orphan commit in a temp dir on the host.
 mkdir /tmp/orphan-deploy
@@ -48,8 +48,6 @@ rm -f /tmp/orphan-deploy/docs/.gitignore
 
 cd /tmp/orphan-deploy
 git init
-git config user.email "marcindulak@users.noreply.github.com"
-git config user.name "Marcin Dulak"
 git checkout --orphan gh-pages
 git add docs/
 git commit --message "${COMMIT_SUBJECT}" \

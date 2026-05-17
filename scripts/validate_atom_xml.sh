@@ -4,20 +4,25 @@ set -Eeuo pipefail
 
 echo "Executing: $0"
 
-if [ ! -f docs/atom.xml ]; then
-    echo "docs/atom.xml not found. Run scripts/pipeline_feed.sh first." >&2
+# Resolve env, defaulting consistently with src/utils.py.
+ARXIV_CATEGORY_ID="${ARXIV_CATEGORY_ID:-cs.AI}"
+ARXIV_CATEGORY_ID_LOWER="$(echo "${ARXIV_CATEGORY_ID}" | tr '[:upper:]' '[:lower:]')"
+ATOM_PATH="docs/arxiv/${ARXIV_CATEGORY_ID_LOWER}/atom.xml"
+
+if [ ! -f "${ATOM_PATH}" ]; then
+    echo "${ATOM_PATH} not found. Run scripts/pipeline_feed.sh first." >&2
     exit 1
 fi
 
 docker compose up server --detach --wait
-docker compose exec server bash -ci "ls -al docs"
+docker compose exec server bash -ci "tree -D -s docs"
 # Start the HTTP server inside the server container serving docs/,
 # then validate that atom.xml is accessible and parseable by newsboat.
 docker compose exec server bash -ci "
     python -m http.server 8002 --bind 0.0.0.0 --directory /app/docs &
     HTTP_PID=\$!
     sleep 1
-    echo 'http://127.0.0.1:8002/atom.xml' > /tmp/atom_test_urls
+    echo 'http://127.0.0.1:8002/arxiv/${ARXIV_CATEGORY_ID_LOWER}/atom.xml' > /tmp/atom_test_urls
     LANG=C.UTF-8 newsboat \
         --url-file /tmp/atom_test_urls \
         --cache-file /tmp/atom_test_cache.db \

@@ -3,15 +3,18 @@ Pipeline entry point: fetch arxiv articles for the current ISO week and write
 docs/arxiv/{category}/atom.xml.
 
 Environment variables read by this module:
-  GITHUB_REPOSITORY          required; "owner/repo" (always set by GitHub Actions)
+  ARXIV_API_BASE_URL         optional; default "https://export.arxiv.org"
   ARXIV_CATEGORY_ID          optional; default "cs.AI"
   ARXIV_CATEGORY_STRICT      optional; "true" enables strict primary-category filter
-  ARXIV_API_BASE_URL         optional; default "https://export.arxiv.org"
+  ARXIV_MAX_RESULTS          optional; entries per API page; default 100
+  GITHUB_REPOSITORY          required; "owner/repo" (always set by GitHub Actions)
   PIPELINE_TODAY             optional; ISO date (YYYY-MM-DD) overrides the current UTC date
   RETRY_BACKOFF_BASE_SECONDS optional; seconds for exponential retry backoff; default 10
 """
 
 import datetime
+import json
+import logging
 import os
 import pathlib
 import re
@@ -21,9 +24,7 @@ import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 
-import src.commit_message
-import src.config
-import src.filter
+import src.utils
 
 _ATOM_NS = "http://www.w3.org/2005/Atom"
 _ARXIV_NS = "http://arxiv.org/schemas/atom"
@@ -38,6 +39,29 @@ _MIN_REQUEST_INTERVAL_SECONDS: int = 5
 # Characters stripped from the trailing end of each extracted comment URL.
 # These are common punctuation characters that surround URLs in prose text.
 _TRAILING_PUNCT: frozenset[str] = frozenset(".,;:)]>")
+
+_logger = logging.getLogger(__name__)
+
+
+class _UtcJsonFormatter(logging.Formatter):
+    """Format log records as single-line JSON objects with UTC timestamps."""
+
+    converter = time.gmtime
+
+    def format(self, record: logging.LogRecord) -> str:
+        """Return a JSON string with asctime, levelname, name, funcName, message."""
+        return json.dumps({
+            "asctime": self.formatTime(record, "%Y-%m-%dT%H:%M:%SZ"),
+            "levelname": record.levelname,
+            "name": record.name,
+            "funcName": record.funcName,
+            "message": record.getMessage(),
+        })
+
+
+def _is_not_error(record: logging.LogRecord) -> bool:
+    """Accept log records with level below ERROR (INFO and DEBUG only)."""
+    return record.levelno < logging.ERROR
 
 
 def compute_week_bounds(today: datetime.date) -> tuple[str, str]:
@@ -291,6 +315,7 @@ def build_feed(
         content_elem.set("type", "text")
         content_elem.text = "\n".join(article["comment_urls"])
 
+    ET.indent(feed, space="  ")
     return ET.tostring(feed, encoding="UTF-8", xml_declaration=True)
 
 
@@ -333,9 +358,11 @@ def archive_prior_week_feed(
     if newest_date is None:
         return
 
-    # RFC 3339 date strings start with YYYY-MM-DD; fromisoformat handles the
-    # date portion without needing to strip the time and timezone suffix.
-    entry_date = datetime.date.fromisoformat(newest_date[:10])
+    # Parse the full RFC 3339 timestamp as a timezone-aware datetime and
+    # convert to UTC before extracting the date.  fromisoformat handles the
+    # "Z" UTC suffix in Python 3.11+.
+    entry_dt = datetime.datetime.fromisoformat(newest_date)
+    entry_date = entry_dt.astimezone(datetime.timezone.utc).date()
     entry_iso = entry_date.isocalendar()
     today_iso = today.isocalendar()
 
@@ -345,19 +372,9 @@ def archive_prior_week_feed(
     archive_week = f"{entry_iso.year}-W{entry_iso.week:02d}"
     archive_dir = output_path.parent / "archive" / archive_week
     archive_dir.mkdir(parents=True, exist_ok=True)
-    (archive_dir / "atom.xml").write_bytes(feed_bytes)
-
-
-def feeds_are_identical(
-    committed_bytes: bytes | None, generated_bytes: bytes
-) -> bool:
-    """
-    Return True if committed_bytes equals generated_bytes.
-
-    Returns False when committed_bytes is None, which indicates that no prior
-    committed version exists (first pipeline run).
-    """
-    return committed_bytes is not None and committed_bytes == generated_bytes
+    archive_target = archive_dir / "atom.xml"
+    _logger.info("archiving %s to %s", output_path, archive_target)
+    archive_target.write_bytes(feed_bytes)
 
 
 def fetch_all_articles(
@@ -365,10 +382,11 @@ def fetch_all_articles(
     category_id: str,
     today: datetime.date,
     backoff_base_seconds: int,
+    max_results: int,
 ) -> list[dict]:
     """
     Fetch all arxiv articles for the ISO week that contains today, paginating
-    in steps of 2000.
+    in steps of max_results.
 
     NFR-002: sleeps _MIN_REQUEST_INTERVAL_SECONDS before every API request.
     FR-011: retries the first page up to 2 times with exponential backoff on
@@ -380,7 +398,6 @@ def fetch_all_articles(
     - zero results returned by the first page (signals an API issue)
     """
     monday, sunday = compute_week_bounds(today)
-    max_results = 2000
     max_retries_first_page = 2
     start = 0
     all_entries: list[dict] = []
@@ -389,7 +406,7 @@ def fetch_all_articles(
         url = build_api_url(
             base_url, category_id, monday, sunday, start, max_results
         )
-        print(url, flush=True)
+        _logger.info("requesting %s", url)
 
         # NFR-002: pause before every request, including the first.
         time.sleep(_MIN_REQUEST_INTERVAL_SECONDS)
@@ -410,8 +427,12 @@ def fetch_all_articles(
                     f" retries: HTTP {status}"
                 )
         else:
-            # Pagination pages: no retry; a failure here means the session is
-            # already partially complete and the error is unlikely transient.
+            # No retry for pagination pages (start > 0): the arxiv dataset is
+            # live and the result window may shift between requests — articles
+            # near page boundaries can be duplicated or silently dropped when
+            # the underlying dataset changes between page fetches.  A safe
+            # retry would require restarting from start=0, which this loop
+            # does not implement.
             status, body = _fetch_page(url)
             if status != 200:
                 raise RuntimeError(
@@ -420,7 +441,7 @@ def fetch_all_articles(
 
         entries = parse_entries(body)
         count = len(entries)
-        print(f"Fetched {count} results (start={start})", flush=True)
+        _logger.info("fetched %d results (start=%d)", count, start)
 
         if start == 0 and count == 0:
             # Zero results on the first page signals an API issue, not an
@@ -441,23 +462,41 @@ def fetch_all_articles(
     return all_entries
 
 
+def _setup_logging() -> None:
+    """Configure root logger: INFO and below go to stdout, ERROR and above to stderr, both as UTC JSON."""
+    formatter = _UtcJsonFormatter()
+
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    stdout_handler.setLevel(logging.INFO)
+    stdout_handler.addFilter(_is_not_error)
+    stdout_handler.setFormatter(formatter)
+
+    stderr_handler = logging.StreamHandler(sys.stderr)
+    stderr_handler.setLevel(logging.ERROR)
+    stderr_handler.setFormatter(formatter)
+
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    root.addHandler(stdout_handler)
+    root.addHandler(stderr_handler)
+
+
 def main() -> int:
     """Run the pipeline and return the process exit code."""
+    _setup_logging()
+
     github_repository = os.environ.get("GITHUB_REPOSITORY")
     if not github_repository:
-        print(
-            "Error: GITHUB_REPOSITORY is not set",
-            file=sys.stderr,
-            flush=True,
-        )
+        _logger.error("GITHUB_REPOSITORY is not set")
         return 1
 
-    category_id = src.config.resolve_category_id()
-    strict_mode = src.config.resolve_strict_mode()
     base_url = os.environ.get("ARXIV_API_BASE_URL", "https://export.arxiv.org")
+    category_id = src.utils.resolve_category_id()
+    strict_mode = src.utils.resolve_strict_mode()
     backoff_base_seconds = int(
         os.environ.get("RETRY_BACKOFF_BASE_SECONDS", "10")
     )
+    max_results = int(os.environ.get("ARXIV_MAX_RESULTS", "100"))
 
     today_override = os.environ.get("PIPELINE_TODAY")
     today: datetime.date
@@ -466,35 +505,38 @@ def main() -> int:
     else:
         today = datetime.datetime.now(datetime.timezone.utc).date()
 
+    _logger.info(
+        "pipeline starting: category=%s strict=%s today=%s",
+        category_id, strict_mode, today,
+    )
+
     try:
         articles = fetch_all_articles(
-            base_url, category_id, today, backoff_base_seconds
+            base_url, category_id, today, backoff_base_seconds, max_results
         )
     except RuntimeError as exc:
-        print(f"Error: {exc}", file=sys.stderr, flush=True)
+        _logger.error("%s", exc)
         return 1
+
+    _logger.info("fetched %d articles total", len(articles))
 
     filtered = [
         article
         for article in articles
-        if src.filter.include_article(
+        if src.utils.include_article(
             article["primary_category"],
             article["comment"],
+            abstract_url=article["abstract_url"],
+            published=article["published"],
+            title=article["title"],
         )
     ]
     n_filtered = len(filtered)
-    singular = n_filtered == 1
-    print(
-        f"{n_filtered} {'article' if singular else 'articles'} passed the filter",
-        flush=True,
-    )
+    article_word = "article" if n_filtered == 1 else "articles"
+    _logger.info("%d %s passed the filter", n_filtered, article_word)
 
     if n_filtered == 0:
-        print(
-            "Error: no articles passed the inclusion filter; aborting",
-            file=sys.stderr,
-            flush=True,
-        )
+        _logger.error("no articles passed the inclusion filter; aborting")
         return 1
 
     category_lower = category_id.lower()
@@ -502,20 +544,20 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "atom.xml"
 
-    # Capture committed bytes before any changes so the commit guard can
-    # compare the previously committed version with the generated feed.
-    committed_bytes = output_path.read_bytes() if output_path.exists() else None
+    # Capture the current file bytes before any changes for change detection.
+    prior_bytes = output_path.read_bytes() if output_path.exists() else None
 
     archive_prior_week_feed(output_path, today)
     feed_bytes = build_feed(filtered, category_id, strict_mode, github_repository)
-    output_path.write_bytes(feed_bytes)
 
-    if feeds_are_identical(committed_bytes, feed_bytes):
-        print("no change: feed unchanged", flush=True)
+    if prior_bytes is not None and prior_bytes == feed_bytes:
+        _logger.info("no change: feed unchanged")
     else:
-        print(
-            src.commit_message.build_commit_message_from_bytes(feed_bytes),
-            flush=True,
+        _logger.info("writing %s", output_path)
+        output_path.write_bytes(feed_bytes)
+        _logger.info(
+            "%s",
+            src.utils.build_commit_message_from_bytes(feed_bytes),
         )
 
     return 0

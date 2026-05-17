@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 
 from behave import given, then, when
 
-import src.config
+import src.utils
 import src.pipeline_feed
 
 _ATOM_NS = "http://www.w3.org/2005/Atom"
@@ -93,8 +93,8 @@ def step_one_article_any_fields(context):
 @when("the feed is generated")
 def step_generate_feed(context):
     """Call build_feed and store the result in context for Then steps."""
-    category_id = src.config.resolve_category_id()
-    strict_mode = src.config.resolve_strict_mode()
+    category_id = src.utils.resolve_category_id()
+    strict_mode = src.utils.resolve_strict_mode()
     github_repository = os.environ.get("GITHUB_REPOSITORY", "")
     feed_bytes = src.pipeline_feed.build_feed(
         context.articles, category_id, strict_mode, github_repository

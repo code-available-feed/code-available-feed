@@ -3,8 +3,8 @@ Feature: FR-001 Fetch the current ISO week from the arxiv API
 
   The pipeline fetches every article submitted to the configured arxiv category
   during the current ISO calendar week (Monday 00:00 UTC to Sunday 23:59 UTC).
-  It pages the arxiv API in steps of 2000 results and uses the configured
-  category id.
+  It pages the arxiv API in steps of ARXIV_MAX_RESULTS results (default 100)
+  and uses the configured category id.
 
   The scenarios run against a local fixture HTTP server (not export.arxiv.org).
   The pipeline points at the fixture via the ARXIV_API_BASE_URL environment
@@ -26,7 +26,7 @@ Feature: FR-001 Fetch the current ISO week from the arxiv API
     Then the fixture server received at least one request with path "/api/query"
     And the first request query string contains "search_query=cat:cs.AI+AND+submittedDate:[202605110000+TO+202605172359]"
     And the first request query string contains "start=0"
-    And the first request query string contains "max_results=2000"
+    And the first request query string contains "max_results=100"
 
   Scenario Outline: Date range covers the full current ISO week regardless of which weekday "today" is
     Given the environment variable PIPELINE_TODAY is "<today>"
@@ -47,19 +47,19 @@ Feature: FR-001 Fetch the current ISO week from the arxiv API
     Then the first request query string contains "sortBy=submittedDate"
     And the first request query string contains "sortOrder=descending"
 
-  Scenario: Pagination stops when a page returns fewer than 2000 entries
+  Scenario: Pagination stops when a page returns fewer than ARXIV_MAX_RESULTS entries
     Given the environment variable PIPELINE_TODAY is "2026-05-14"
-    And the fixture server returns 1000 entries for query parameter "start=0"
+    And the fixture server returns 50 entries for query parameter "start=0"
     When the pipeline runs to completion
     Then the fixture server received exactly 1 request
 
-  Scenario: Pagination continues when a page returns exactly 2000 entries
+  Scenario: Pagination continues when a page returns exactly ARXIV_MAX_RESULTS entries
     Given the environment variable PIPELINE_TODAY is "2026-05-14"
-    And the fixture server returns 2000 entries for query parameter "start=0"
-    And the fixture server returns 350 entries for query parameter "start=2000"
+    And the fixture server returns 100 entries for query parameter "start=0"
+    And the fixture server returns 50 entries for query parameter "start=100"
     When the pipeline runs to completion
     Then the fixture server received exactly 2 requests
-    And the second request query string contains "start=2000"
+    And the second request query string contains "start=100"
 
   Scenario: A 200 response with zero entries on the first page exits non-zero and no atom.xml is written
     Given the environment variable PIPELINE_TODAY is "2026-05-14"
@@ -70,8 +70,8 @@ Feature: FR-001 Fetch the current ISO week from the arxiv API
 
   Scenario: A 200 response with zero entries on a pagination page is treated as end-of-results and the pipeline succeeds
     Given the environment variable PIPELINE_TODAY is "2026-05-14"
-    And the fixture server returns 2000 entries for query parameter "start=0"
-    And the fixture server returns 0 entries for query parameter "start=2000"
+    And the fixture server returns 100 entries for query parameter "start=0"
+    And the fixture server returns 0 entries for query parameter "start=100"
     When the pipeline runs to completion
     Then the pipeline exit code is 0
     And the fixture server received exactly 2 requests

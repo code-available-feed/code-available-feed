@@ -30,10 +30,16 @@ ET.register_namespace("arxiv", _ARXIV_NS)
 
 def _build_atom_response(
     n_entries: int,
-    all_have_comment_url: bool,
+    n_have_comment_url: int,
     primary_category: str = "cs.AI",
 ) -> bytes:
-    """Return a minimal arxiv Atom XML body containing n_entries entries."""
+    """
+    Return a minimal arxiv Atom XML body containing n_entries entries.
+
+    The first n_have_comment_url entries include a comment field with an
+    https:// URL; the remainder do not.  Pass n_entries to give all entries
+    a comment URL; pass 0 to give none.
+    """
     root = ET.Element(f"{{{_ATOM_NS}}}feed")
 
     for i in range(n_entries):
@@ -64,7 +70,7 @@ def _build_atom_response(
             "2026-05-12T10:00:00Z"
         )
 
-        if all_have_comment_url:
+        if i < n_have_comment_url:
             ET.SubElement(entry, f"{{{_ARXIV_NS}}}comment").text = (
                 f"Code at https://github.com/fixture/repo-{i + 1}"
             )
@@ -91,13 +97,15 @@ class ArxivFixtureServer:
         self._lock = threading.Lock()
         # Raw request paths (including query strings), in arrival order.
         self._requests: list[str] = []
-        # Maps start parameter value to (http_status, n_entries, all_have_url).
-        self._response_table: dict[int, tuple[int, int, bool]] = {}
+        # Maps start parameter value to (http_status, n_entries, n_have_url).
+        self._response_table: dict[int, tuple[int, int, int]] = {}
         # Consumed in order before _response_table is consulted.
-        self._initial_responses: list[tuple[int, int, bool]] = []
+        self._initial_responses: list[tuple[int, int, int]] = []
         self._default_status: int = 200
         self._default_n_entries: int = 50
-        self._default_all_have_comment_url: bool = True
+        # Default: all entries have a comment URL (equals n_entries per request).
+        # A value of -1 is a sentinel meaning "use n_entries for this response".
+        self._default_n_have_comment_url: int = -1
         # Primary category applied to all generated entries.
         self._default_primary_category: str = "cs.AI"
 
@@ -122,20 +130,26 @@ class ArxivFixtureServer:
         start: int,
         status: int,
         n_entries: int,
-        all_have_comment_url: bool = True,
+        n_have_comment_url: int | None = None,
     ) -> None:
-        """Configure the response for a specific start parameter value."""
+        """
+        Configure the response for a specific start parameter value.
+
+        n_have_comment_url is the count of entries that include a comment
+        URL; defaults to n_entries (all entries get a URL) when not set.
+        """
+        actual = n_entries if n_have_comment_url is None else n_have_comment_url
         with self._lock:
-            self._response_table[start] = (status, n_entries, all_have_comment_url)
+            self._response_table[start] = (status, n_entries, actual)
 
     def set_initial_response_sequence(
-        self, responses: list[tuple[int, int, bool]]
+        self, responses: list[tuple[int, int, int]]
     ) -> None:
         """
         Set a sequence of responses to return for the first len(responses)
         requests, regardless of their start parameter value.
 
-        Each element is (http_status, n_entries, all_have_comment_url).
+        Each element is (http_status, n_entries, n_have_comment_url).
         Once the sequence is exhausted, subsequent requests fall through to
         the start-based response table and server defaults.
         """
@@ -146,16 +160,21 @@ class ArxivFixtureServer:
         self,
         status: int,
         n_entries: int,
-        all_have_comment_url: bool = True,
+        n_have_comment_url: int | None = None,
     ) -> None:
         """
         Override the default response returned when no explicit per-start
         configuration matches and the initial sequence is exhausted.
+
+        n_have_comment_url defaults to -1 (sentinel for "all entries") when
+        not set.
         """
         with self._lock:
             self._default_status = status
             self._default_n_entries = n_entries
-            self._default_all_have_comment_url = all_have_comment_url
+            self._default_n_have_comment_url = (
+                -1 if n_have_comment_url is None else n_have_comment_url
+            )
 
     def set_default_primary_category(self, primary_category: str) -> None:
         """
@@ -193,17 +212,19 @@ class ArxivFixtureServer:
                     if fixture._initial_responses:
                         # Consume the next response from the initial sequence
                         # before checking the start-based table.
-                        status, n, all_url = fixture._initial_responses.pop(0)
+                        status, n, n_url = fixture._initial_responses.pop(0)
                     elif start_val in fixture._response_table:
-                        status, n, all_url = fixture._response_table[start_val]
+                        status, n, n_url = fixture._response_table[start_val]
                     else:
                         status = fixture._default_status
                         n = fixture._default_n_entries
-                        all_url = fixture._default_all_have_comment_url
+                        n_url = fixture._default_n_have_comment_url
+                    # Sentinel -1 means "give all entries a comment URL".
+                    actual_n_url = n if n_url == -1 else n_url
                     primary_category = fixture._default_primary_category
 
                 if status == 200:
-                    body = _build_atom_response(n, all_url, primary_category)
+                    body = _build_atom_response(n, actual_n_url, primary_category)
                     self.send_response(200)
                     self.send_header(
                         "Content-Type",

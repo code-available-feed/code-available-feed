@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-013 Diagnostic logging to stdout
 
   The pipeline logs the API URL queried (with date bounds), the number of

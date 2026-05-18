@@ -13,6 +13,7 @@ Environment variables read by this module:
 """
 
 import datetime
+import difflib
 import json
 import logging
 import os
@@ -319,6 +320,24 @@ def build_feed(
     return ET.tostring(feed, encoding="UTF-8", xml_declaration=True)
 
 
+def print_unified_diff(
+    prior_bytes: bytes, new_bytes: bytes, label: str
+) -> None:
+    """
+    Compute a unified diff between prior_bytes and new_bytes and write it to
+    stdout directly (not through the JSON logger) so that diff header lines
+    appear as-is for human readers in the workflow log.
+
+    label is used as both the fromfile and tofile argument of unified_diff
+    (e.g. the output path string) so the +++ / --- headers identify the file.
+    """
+    prior_lines = prior_bytes.decode("utf-8").splitlines(keepends=True)
+    new_lines = new_bytes.decode("utf-8").splitlines(keepends=True)
+    for line in difflib.unified_diff(prior_lines, new_lines, fromfile=label, tofile=label):
+        sys.stdout.write(line)
+    sys.stdout.flush()
+
+
 def newest_published_date_from_feed(feed_bytes: bytes) -> str | None:
     """
     Parse an Atom feed and return the maximum <entry><published> date string.
@@ -444,7 +463,7 @@ def fetch_all_articles(
 
         entries = parse_entries(body)
         count = len(entries)
-        _logger.info("fetched %d results (start=%d)", count, start)
+        _logger.info("Fetched %d results (start=%d)", count, start)
 
         all_entries.extend(entries)
 
@@ -548,6 +567,11 @@ def main() -> int:
 
     archive_prior_week_feed(output_path, today)
     feed_bytes = build_feed(filtered, category_id, strict_mode, github_repository)
+
+    # FR-013: unified diff between prior and newly generated feed for
+    # diagnostic visibility in the workflow log.
+    if prior_bytes is not None:
+        print_unified_diff(prior_bytes, feed_bytes, str(output_path))
 
     if prior_bytes is not None and prior_bytes == feed_bytes:
         _logger.info("no change: feed unchanged")

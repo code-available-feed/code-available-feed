@@ -7,6 +7,12 @@ created per scenario (via the Background step) and stopped in after_scenario.
 Response configuration is keyed by the integer value of the start query
 parameter.  Any start value absent from the response table uses the server
 defaults: HTTP 200, 50 entries, each with a comment URL.
+
+An optional initial response sequence (set via set_initial_response_sequence)
+takes precedence over the start-based table for the first N requests,
+regardless of their start parameter values.  This supports retry-scenario
+testing where the same start=0 URL must return different statuses on
+successive calls.
 """
 
 import http.server
@@ -22,7 +28,11 @@ ET.register_namespace("", _ATOM_NS)
 ET.register_namespace("arxiv", _ARXIV_NS)
 
 
-def _build_atom_response(n_entries: int, all_have_comment_url: bool) -> bytes:
+def _build_atom_response(
+    n_entries: int,
+    all_have_comment_url: bool,
+    primary_category: str = "cs.AI",
+) -> bytes:
     """Return a minimal arxiv Atom XML body containing n_entries entries."""
     root = ET.Element(f"{{{_ATOM_NS}}}feed")
 
@@ -40,7 +50,7 @@ def _build_atom_response(n_entries: int, all_have_comment_url: bool) -> bytes:
         ET.SubElement(author, f"{{{_ATOM_NS}}}name").text = "Fixture Author"
 
         primary_cat = ET.SubElement(entry, f"{{{_ARXIV_NS}}}primary_category")
-        primary_cat.set("term", "cs.AI")
+        primary_cat.set("term", primary_category)
 
         link = ET.SubElement(entry, f"{{{_ATOM_NS}}}link")
         link.set("rel", "alternate")
@@ -71,6 +81,10 @@ class ArxivFixtureServer:
     The response_table maps integer start values to
     (http_status, n_entries, all_have_comment_url) tuples.  Requests whose
     start value is absent from the table use the server defaults.
+
+    An initial response sequence (if set) is consumed in arrival order before
+    the start-based table is consulted, enabling retry-scenario tests where
+    successive requests to the same URL must return different statuses.
     """
 
     def __init__(self) -> None:
@@ -79,9 +93,13 @@ class ArxivFixtureServer:
         self._requests: list[str] = []
         # Maps start parameter value to (http_status, n_entries, all_have_url).
         self._response_table: dict[int, tuple[int, int, bool]] = {}
+        # Consumed in order before _response_table is consulted.
+        self._initial_responses: list[tuple[int, int, bool]] = []
         self._default_status: int = 200
         self._default_n_entries: int = 50
         self._default_all_have_comment_url: bool = True
+        # Primary category applied to all generated entries.
+        self._default_primary_category: str = "cs.AI"
 
         handler_class = self._make_handler()
         self._http_server = http.server.HTTPServer(
@@ -110,6 +128,45 @@ class ArxivFixtureServer:
         with self._lock:
             self._response_table[start] = (status, n_entries, all_have_comment_url)
 
+    def set_initial_response_sequence(
+        self, responses: list[tuple[int, int, bool]]
+    ) -> None:
+        """
+        Set a sequence of responses to return for the first len(responses)
+        requests, regardless of their start parameter value.
+
+        Each element is (http_status, n_entries, all_have_comment_url).
+        Once the sequence is exhausted, subsequent requests fall through to
+        the start-based response table and server defaults.
+        """
+        with self._lock:
+            self._initial_responses = list(responses)
+
+    def set_default(
+        self,
+        status: int,
+        n_entries: int,
+        all_have_comment_url: bool = True,
+    ) -> None:
+        """
+        Override the default response returned when no explicit per-start
+        configuration matches and the initial sequence is exhausted.
+        """
+        with self._lock:
+            self._default_status = status
+            self._default_n_entries = n_entries
+            self._default_all_have_comment_url = all_have_comment_url
+
+    def set_default_primary_category(self, primary_category: str) -> None:
+        """
+        Set the arxiv primary category applied to all generated fixture entries.
+
+        Affects responses from the initial sequence, the start-based table,
+        and the server defaults.  Default value is "cs.AI".
+        """
+        with self._lock:
+            self._default_primary_category = primary_category
+
     def get_requests(self) -> list[str]:
         """Return a snapshot of all received request paths with query strings."""
         with self._lock:
@@ -133,15 +190,20 @@ class ArxivFixtureServer:
 
                 with fixture._lock:
                     fixture._requests.append(self.path)
-                    if start_val in fixture._response_table:
+                    if fixture._initial_responses:
+                        # Consume the next response from the initial sequence
+                        # before checking the start-based table.
+                        status, n, all_url = fixture._initial_responses.pop(0)
+                    elif start_val in fixture._response_table:
                         status, n, all_url = fixture._response_table[start_val]
                     else:
                         status = fixture._default_status
                         n = fixture._default_n_entries
                         all_url = fixture._default_all_have_comment_url
+                    primary_category = fixture._default_primary_category
 
                 if status == 200:
-                    body = _build_atom_response(n, all_url)
+                    body = _build_atom_response(n, all_url, primary_category)
                     self.send_response(200)
                     self.send_header(
                         "Content-Type",

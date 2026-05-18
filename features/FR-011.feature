@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-011 Retry on API failure
 
   If the first arxiv API request (start=0) returns a non-200 HTTP status the

@@ -1,8 +1,8 @@
-name: pipeline_artifacts
+name: pipeline_feed
 
 on:
   schedule:
-    - cron: '0 06 * * *' # Daily at 06:00 UTC
+    - cron: '0 02 * * *' # Daily at 02:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -29,11 +29,8 @@ jobs:
           df -h
           id
 
-      - name: docker compose build
-        run: |
-          set -eo pipefail
-          export BUILDKIT_PROGRESS=plain
-          docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g)
+      - name: bash scripts/build_docker_image.sh
+        run: bash scripts/build_docker_image.sh
 
       - name: bash scripts/test_e2e_behave.sh
         run: bash scripts/test_e2e_behave.sh
@@ -53,8 +50,8 @@ jobs:
             && git checkout origin/gh-pages -- docs/ 2>/dev/null \
             || echo "No gh-pages branch yet, starting fresh"
 
-      - name: bash scripts/pipeline_artifacts.sh
-        run: bash scripts/pipeline_artifacts.sh
+      - name: bash scripts/pipeline_feed.sh
+        run: bash scripts/pipeline_feed.sh
         env:
           ARXIV_CATEGORY_ID: ${{ vars.ARXIV_CATEGORY_ID || 'cs.AI' }}
           ARXIV_CATEGORY_STRICT: ${{ vars.ARXIV_CATEGORY_STRICT || 'false' }}

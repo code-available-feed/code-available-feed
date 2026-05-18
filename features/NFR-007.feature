@@ -16,8 +16,6 @@ Feature: NFR-007 Feed generation is fully testable locally using scripts
   #
   # Verification path:
   #   scripts/pipeline_feed.sh       - generate docs/arxiv/{category}/atom.xml
-  #   scripts/pipeline_artifacts.sh  - drive the pipeline end-to-end (restore
-  #                                    + generate + post-restore consistency check)
   #   scripts/validate_atom_xml.sh   - validate the generated feed with newsboat
   #   scripts/deploy_orphan.sh       - publish docs/ to the gh-pages orphan branch
   #   scripts/test_e2e_behave.sh     - run the full BDD test suite
@@ -36,7 +34,7 @@ Feature: NFR-007 Feed generation is fully testable locally using scripts
   # review of the workflow YAML.
   #
   # Local exercise of the pipeline covers both generation and deployment.
-  # `scripts/pipeline_artifacts.sh` runs locally inside Docker.
+  # `scripts/pipeline_feed.sh` runs locally inside Docker.
   # `scripts/deploy_orphan.sh` publishes to gh-pages using the developer's
   # pre-existing git authentication (SSH key, credential helper, or `gh`); CI
   # uses the ephemeral workflow `GITHUB_TOKEN`. No personal access token is

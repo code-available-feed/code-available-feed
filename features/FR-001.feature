@@ -61,11 +61,11 @@ Feature: FR-001 Fetch the current ISO week from the arxiv API
     Then the fixture server received exactly 2 requests
     And the second request query string contains "start=100"
 
-  Scenario: A 200 response with zero entries on the first page exits non-zero and no atom.xml is written
+  Scenario: A 200 response with zero entries on the first page exits zero and no atom.xml is written
     Given the environment variable PIPELINE_TODAY is "2026-05-14"
     And the fixture server responds with HTTP 200 and 0 entries to the first request
     When the pipeline runs to completion
-    Then the pipeline exit code is non-zero
+    Then the pipeline exit code is 0
     And no file "docs/arxiv/cs.ai/atom.xml" was written by this run
 
   Scenario: A 200 response with zero entries on a pagination page is treated as end-of-results and the pipeline succeeds

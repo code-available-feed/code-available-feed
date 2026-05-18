@@ -3,7 +3,7 @@ name: deploy_orphan
 on:
   workflow_run:
     workflows:
-      - pipeline_artifacts
+      - pipeline_feed
     types:
       - completed
   workflow_dispatch:
@@ -32,18 +32,15 @@ jobs:
           df -h
           id
 
-      - name: docker compose build
-        run: |
-          set -eo pipefail
-          export BUILDKIT_PROGRESS=plain
-          docker compose build server --build-arg UID=$(id -u) --build-arg GID=$(id -g)
+      - name: bash scripts/build_docker_image.sh
+        run: bash scripts/build_docker_image.sh
 
       # NFR-007 exception (b) + (c): download the artifact produced by the
-      # triggering pipeline_artifacts run, or (on workflow_dispatch) the
-      # latest successful pipeline_artifacts run. The if: conditional and
+      # triggering pipeline_feed run, or (on workflow_dispatch) the
+      # latest successful pipeline_feed run. The if: conditional and
       # the gh-CLI shell are inline because they depend on workflow event
       # state that has no local equivalent.
-      - name: download arxiv-feeds artifact (from triggering pipeline_artifacts run)
+      - name: download arxiv-feeds artifact (from triggering pipeline_feed run)
         if: github.event_name == 'workflow_run'
         uses: actions/download-artifact@v7
         with:
@@ -59,7 +56,7 @@ jobs:
         run: |
           RUN_ID=$(gh run list \
             --repo "$GITHUB_REPOSITORY" \
-            --workflow pipeline_artifacts.yml \
+            --workflow pipeline_feed.yml \
             --status success \
             --limit 1 \
             --json databaseId \

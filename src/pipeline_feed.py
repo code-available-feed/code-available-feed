@@ -9,7 +9,7 @@ Environment variables read by this module:
   ARXIV_MAX_RESULTS          optional; entries per API page; default 100
   GITHUB_REPOSITORY          required; "owner/repo" (always set by GitHub Actions)
   PIPELINE_TODAY             optional; ISO date (YYYY-MM-DD) overrides the current UTC date
-  RETRY_BACKOFF_BASE_SECONDS optional; seconds for exponential retry backoff; default 10
+  RETRY_BACKOFF_BASE_SECONDS optional; seconds for exponential retry backoff; default 30
 """
 
 import datetime
@@ -392,10 +392,13 @@ def fetch_all_articles(
     FR-011: retries the first page up to 2 times with exponential backoff on
     non-200 responses; exits immediately on non-200 for subsequent pages.
 
+    Returns an empty list when the first API page returns HTTP 200 with zero
+    entries; this is a valid result for the start of a new ISO week (Monday
+    before arxiv has processed any submissions) or a quiet category.
+
     Raises RuntimeError on unrecoverable errors:
     - all retries for the first page exhausted
     - non-200 on a pagination page
-    - zero results returned by the first page (signals an API issue)
     """
     monday, sunday = compute_week_bounds(today)
     max_retries_first_page = 2
@@ -443,14 +446,6 @@ def fetch_all_articles(
         count = len(entries)
         _logger.info("fetched %d results (start=%d)", count, start)
 
-        if start == 0 and count == 0:
-            # Zero results on the first page signals an API issue, not an
-            # empty week; the next daily run will retry the full week range.
-            raise RuntimeError(
-                "First API page returned zero entries; aborting to avoid"
-                " publishing an empty feed"
-            )
-
         all_entries.extend(entries)
 
         if count < max_results:
@@ -494,7 +489,7 @@ def main() -> int:
     category_id = src.utils.resolve_category_id()
     strict_mode = src.utils.resolve_strict_mode()
     backoff_base_seconds = int(
-        os.environ.get("RETRY_BACKOFF_BASE_SECONDS", "10")
+        os.environ.get("RETRY_BACKOFF_BASE_SECONDS", "30")
     )
     max_results = int(os.environ.get("ARXIV_MAX_RESULTS", "100"))
 
@@ -520,6 +515,10 @@ def main() -> int:
 
     _logger.info("fetched %d articles total", len(articles))
 
+    if len(articles) == 0:
+        _logger.info("no articles returned by the API for this period")
+        return 0
+
     filtered = [
         article
         for article in articles
@@ -536,8 +535,8 @@ def main() -> int:
     _logger.info("%d %s passed the filter", n_filtered, article_word)
 
     if n_filtered == 0:
-        _logger.error("no articles passed the inclusion filter; aborting")
-        return 1
+        _logger.info("no articles passed the inclusion filter for this period")
+        return 0
 
     category_lower = category_id.lower()
     output_dir = pathlib.Path("docs") / "arxiv" / category_lower

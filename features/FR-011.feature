@@ -1,5 +1,5 @@
 @status-todo
-Feature: FR-011 Retry on API failure and fail-loud on zero-result responses
+Feature: FR-011 Retry on API failure
 
   If the first arxiv API request (start=0) returns a non-200 HTTP status the
   pipeline retries it up to 2 times with exponential backoff (10 seconds after
@@ -9,7 +9,7 @@ Feature: FR-011 Retry on API failure and fail-loud on zero-result responses
   immediately without retrying.
 
   The base backoff duration is read from the environment variable
-  RETRY_BACKOFF_BASE_SECONDS, which defaults to "10" in production. All
+  RETRY_BACKOFF_BASE_SECONDS, which defaults to "30" in production. All
   scenarios set this variable to "0" to avoid wall-clock waits. The
   correctness of the 10-second default value is verified by code review.
 
@@ -52,13 +52,13 @@ Feature: FR-011 Retry on API failure and fail-loud on zero-result responses
     Then the pipeline exit code is non-zero
     And no file "docs/arxiv/cs.ai/atom.xml" was written by this run
 
-  Scenario: Zero articles after inclusion filtering exits non-zero and no atom.xml is written
+  Scenario: Zero articles after inclusion filtering exits zero and no atom.xml is written
     Given the environment variable RETRY_BACKOFF_BASE_SECONDS is "0"
     And the environment variable ARXIV_CATEGORY_STRICT is "true"
     And the fixture server responds with HTTP 200 and 5 entries to the first request
     And all 5 entries have primary category "cs.CV" and a comment URL
     When the pipeline runs to completion
-    Then the pipeline exit code is non-zero
+    Then the pipeline exit code is 0
     And no file "docs/arxiv/cs.ai/atom.xml" was written by this run
 
   Scenario: Unset GITHUB_REPOSITORY exits non-zero and no atom.xml is written

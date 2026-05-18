@@ -24,8 +24,8 @@ if [ ! -f "${PRIOR_ATOM_PATH}" ]; then
     echo "no prior ${PRIOR_ATOM_PATH} found; treating as first run" >&2
 fi
 
-# Post-restore consistency check on every restored atom.xml under docs/.
-bash scripts/check_restored_atom_xml.sh
+# Parse-only well-formedness check on every atom.xml under docs/.
+bash scripts/check_atom_xml.sh
 
 # TODO(FR-010): validate the newest docs/arxiv/<cat>/archive/YYYY-WNN/atom.xml
 # with newsboat (HTTP + feed-reader semantics) before any pipeline work begins,

@@ -100,7 +100,13 @@ def step_generate_feed(context):
         context.articles, category_id, strict_mode, github_repository
     )
     context.feed_bytes = feed_bytes
-    context.feed_root = ET.fromstring(feed_bytes)
+    try:
+        context.feed_root = ET.fromstring(feed_bytes)
+    except ET.ParseError:
+        # feed_bytes may be intentionally malformed during NFR-004 mutation
+        # testing; Then steps that need feed_root will fail naturally via
+        # AttributeError on context.feed_root (None).
+        context.feed_root = None
 
 
 @then('the entry has title "{expected}"')

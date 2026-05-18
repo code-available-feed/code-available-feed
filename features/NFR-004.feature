@@ -1,9 +1,12 @@
-@status-todo
+@status-done
 Feature: NFR-004 The Atom XML output is valid RFC 4287 and properly escaped
 
   All text content that could contain characters reserved in XML ("<", ">",
   "&", '"', "'") is XML-escaped. URL values in href attributes are not
   double-escaped.
+
+  Background:
+    Given the environment variable GITHUB_REPOSITORY is "owner/repo"
 
   Scenario: An ampersand in a title is escaped as "&amp;" in the output
     Given one input article with title "Foo & Bar: A Study"

@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: NFR-005 Byte-for-byte deterministic XML output for identical input
 
   The XML generator must produce byte-for-byte identical output for identical
@@ -11,18 +11,18 @@ Feature: NFR-005 Byte-for-byte deterministic XML output for identical input
   # single process inside the Docker container (NFR-007), so no two scenarios
   # write to the same path concurrently.
 
+  Background:
+    Given the environment variable ARXIV_CATEGORY_ID is "cs.AI"
+    And the environment variable GITHUB_REPOSITORY is "marcindulak/code-available-feed"
+
   Scenario: Two runs over the same input produce byte-identical output
     Given a fixed set of input articles loaded from "features/fixtures/articles_three.json"
-    And the environment variable ARXIV_CATEGORY_ID is "cs.AI"
-    And the environment variable GITHUB_REPOSITORY is "marcindulak/code-available-feed"
     When the feed generator runs and writes to "/tmp/run_a.xml"
     And the feed generator runs again and writes to "/tmp/run_b.xml"
     Then the SHA-256 hash of "/tmp/run_a.xml" equals the SHA-256 hash of "/tmp/run_b.xml"
 
   Scenario: Re-ordering input articles does not change the output (sort is deterministic)
     Given a fixed set of input articles loaded from "features/fixtures/articles_three.json"
-    And the environment variable ARXIV_CATEGORY_ID is "cs.AI"
-    And the environment variable GITHUB_REPOSITORY is "marcindulak/code-available-feed"
     When the feed generator runs and writes to "/tmp/run_in_order.xml"
     And the same input articles are shuffled into a different order
     And the feed generator runs and writes to "/tmp/run_shuffled.xml"

@@ -1,0 +1,32 @@
+[
+    {
+        "title": "Article Two With Code",
+        "authors": ["Carol White"],
+        "primary_category": "cs.AI",
+        "abstract_url": "https://arxiv.org/abs/0000.00002v1",
+        "published": "2026-05-14T11:00:00Z",
+        "updated": "2026-05-14T11:00:00Z",
+        "comment": "Demo: https://demo.example.com/two",
+        "comment_urls": ["https://demo.example.com/two"]
+    },
+    {
+        "title": "Article Three With Code",
+        "authors": ["Dave Brown"],
+        "primary_category": "cs.AI",
+        "abstract_url": "https://arxiv.org/abs/0000.00003v1",
+        "published": "2026-05-12T09:00:00Z",
+        "updated": "2026-05-12T09:00:00Z",
+        "comment": "Project: https://project.example.org/three",
+        "comment_urls": ["https://project.example.org/three"]
+    },
+    {
+        "title": "Article One With Code",
+        "authors": ["Alice Smith", "Bob Jones"],
+        "primary_category": "cs.AI",
+        "abstract_url": "https://arxiv.org/abs/0000.00001v1",
+        "published": "2026-05-13T10:00:00Z",
+        "updated": "2026-05-13T10:00:00Z",
+        "comment": "Code: https://github.com/alice/repo1",
+        "comment_urls": ["https://github.com/alice/repo1"]
+    }
+]

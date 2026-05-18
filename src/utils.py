@@ -19,6 +19,24 @@ _ATOM_NS = "http://www.w3.org/2005/Atom"
 _logger = logging.getLogger(__name__)
 
 
+def find_latest_archive_path(archive_dir: pathlib.Path) -> pathlib.Path | None:
+    """
+    Return atom.xml under the lexicographically latest YYYY-WNN subdirectory.
+
+    ISO 8601 week notation (zero-padded week number) makes lexicographic order
+    equal to calendar order, so a simple sort is sufficient.  Returns None when
+    archive_dir does not exist or contains no atom.xml files.
+    """
+    if not archive_dir.is_dir():
+        return None
+    week_dirs = sorted(d for d in archive_dir.iterdir() if d.is_dir())
+    for week_dir in reversed(week_dirs):
+        candidate = week_dir / "atom.xml"
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def build_commit_message(atom_xml_path: pathlib.Path) -> str:
     """Read the feed at atom_xml_path and return the commit message string."""
     return build_commit_message_from_bytes(atom_xml_path.read_bytes())

@@ -50,7 +50,8 @@ bash scripts/build_docker_image.sh
 Run the pipeline:
 
 ```bash
-ARXIV_CATEGORY_ID=cs.AI ARXIV_CATEGORY_STRICT=false GITHUB_REPOSITORY=marcindulak/code-available-feed-cs-ai bash scripts/pipeline_feed.sh
+ARXIV_CATEGORY_ID=cs.AI ARXIV_CATEGORY_STRICT=false \
+GITHUB_REPOSITORY=marcindulak/code-available-feed-cs-ai bash scripts/pipeline_feed.sh
 ```
 
 Validate the generated feed:
@@ -107,7 +108,7 @@ Beyond 7 days, recovery regenerates the feed from the current arXiv state.
 │   └── test_mypy.sh            # Run mypy type checking inside Docker
 └── src/
     ├── __init__.py             # Package marker
-    ├── utils.py                # Config resolution, article filter, commit message builder
+    ├── utils.py                # Config resolution, article filter, archive path lookup, commit message builder
     └── pipeline_feed.py        # Fetch, filter, build Atom XML, archive, emit JSON logs
 ```
 

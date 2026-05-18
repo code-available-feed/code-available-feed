@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-010 Newsboat validation of the generated feed
 
   A Docker-based validation step starts "python -m http.server" inside the

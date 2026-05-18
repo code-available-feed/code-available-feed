@@ -32,6 +32,8 @@ def before_scenario(context, scenario):
     context.articles = []
     context.fixture_server = None
     context.run_dir = None
+    context.validation_dir = None
+    context.validation_results = None
 
 
 def after_scenario(context, scenario):

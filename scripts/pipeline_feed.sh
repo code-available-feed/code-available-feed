@@ -33,10 +33,6 @@ fi
 # Parse-only well-formedness check on every pre-existing atom.xml under docs/.
 bash scripts/check_atom_xml.sh
 
-# TODO(FR-010): validate the newest docs/arxiv/<cat>/archive/YYYY-WNN/atom.xml
-# with newsboat (HTTP + feed-reader semantics) before any pipeline work begins,
-# to catch a corrupt previously-deployed feed early.
-
 docker compose up server --detach --wait
 docker compose exec server bash -ci "tree -D -s docs"
 docker compose exec \
@@ -55,5 +51,17 @@ docker compose exec --no-TTY server bash -ci "
     python -c 'import xml.etree.ElementTree as ET; ET.parse(\"docs/arxiv/${ARXIV_CATEGORY_ID_LOWER}/atom.xml\")'
 "
 
-# Full newsboat-based feed validation (FR-010 stopgap).
-bash scripts/validate_atom_xml.sh
+# Newsboat feed validation (FR-010): validate the current feed and the
+# lexicographically latest archive, if one exists.
+bash scripts/validate_atom_xml.sh --filename "docs/arxiv/${ARXIV_CATEGORY_ID_LOWER}/atom.xml"
+
+LATEST_ARCHIVE="$(docker compose exec --no-TTY server python -c "
+import pathlib, sys
+sys.path.insert(0, '/app')
+from src.utils import find_latest_archive_path
+result = find_latest_archive_path(pathlib.Path('docs/arxiv/${ARXIV_CATEGORY_ID_LOWER}/archive'))
+print(result if result is not None else '', end='')
+" 2>/dev/null)"
+if [ -n "${LATEST_ARCHIVE}" ]; then
+    bash scripts/validate_atom_xml.sh --filename "${LATEST_ARCHIVE}"
+fi

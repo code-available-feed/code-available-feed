@@ -277,10 +277,12 @@ def build_feed(
 
     link_self_elem = ET.SubElement(feed, f"{{{_ATOM_NS}}}link")
     link_self_elem.set("rel", "self")
+    link_self_elem.set("type", "application/atom+xml")
     link_self_elem.set("href", feed_url)
 
     link_alt_elem = ET.SubElement(feed, f"{{{_ATOM_NS}}}link")
     link_alt_elem.set("rel", "alternate")
+    link_alt_elem.set("type", "text/html")
     link_alt_elem.set("href", build_github_repo_url(github_repository))
 
     for article in sorted_articles:

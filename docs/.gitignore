@@ -1,6 +1,4 @@
-# docs/ is served from the gh-pages orphan branch by GitHub Pages.
-# Feed files (docs/arxiv/...) live on gh-pages, not on main.
-# Nothing under docs/ should be committed to main; this .gitignore
-# is the only tracked file in docs/ and ignores everything else.
-*
-!.gitignore
+# Generated feed files (docs/arxiv/...) live on gh-pages, not on main.
+# scripts/deploy_orphan.sh removes this file before committing to gh-pages,
+# so these ignore rules do not affect what is deployed.
+arxiv/

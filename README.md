@@ -11,9 +11,10 @@ The goal is to offer replacements for the "papers with code" web feed offered un
 To configure your own feed serving, fork this repository and set GitHub Actions variables.
 The feed for the desired arXiv category will be served on GitHub Pages.
 
-# Sorted list of available feeds
+# Available feeds
 
-- [https://marcindulak.github.io/code-available-feed-cs-ai/arxiv/cs.ai/atom.xml](https://marcindulak.github.io/code-available-feed-cs-ai/arxiv/cs.ai/atom.xml) - Computer Science - cs.AI - Artificial Intelligence (primary and secondary category matches)
+See [https://code-available-feed.github.io/code-available-feed](https://code-available-feed.github.io/code-available-feed) for the sorted list of available feeds.
+If you serve a feed using this project, consider making a pull request to add your feed to this list.
 
 # Usage examples
 
@@ -57,7 +58,7 @@ GITHUB_REPOSITORY=marcindulak/code-available-feed-cs-ai bash scripts/pipeline_fe
 Validate the generated feed:
 
 ```bash
-ARXIV_CATEGORY_ID=cs.AI bash scripts/validate_atom_xml.sh
+bash scripts/validate_atom_xml.sh --filename docs/arxiv/cs.ai/atom.xml
 ```
 
 ## Running tests

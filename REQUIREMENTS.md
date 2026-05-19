@@ -133,6 +133,7 @@ so a 02:00 UTC trigger captures all articles announced the previous day.
 | Multiple categories in one repository | One category per fork is sufficient; supporting multiple categories in one repository requires either multiple feed files (complicating the archive logic) or a merged feed (losing per-category subscriptions) |
 | Index feed listing all archived weeks | A subscribable index of past weeks would help readers discover older archives; deferred until the archive has accumulated several months of data |
 | `workflow_dispatch` with custom date range | Basic manual trigger is implemented (FR-012) but without date range parameters; running the workflow manually for a past week would allow backfilling gaps caused by runner outages; the custom date range input is deferred as it adds workflow complexity not needed for normal operation |
+| RelaxNG schema validation of generated Atom XML | `xmllint --relaxng` with the RFC 4287 schema would catch missing required Atom fields that Python's `xml.etree.ElementTree` and newsboat (libxml2 recovery mode) both silently accept; deferred because embedding the RFC 4287 XML RelaxNG schema requires either converting the compact `.rnc` from Appendix B (needs `trang` or `rnc2rng`, neither in the current apt dependencies) or sourcing a pre-converted `.rng` from a third party, adding supply-chain risk for a validation-only file |
 
 ## Abandoned Ideas
 

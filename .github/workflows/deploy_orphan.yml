@@ -34,23 +34,21 @@ jobs:
           id
 
       - name: bash scripts/build_docker_image.sh
+        timeout-minutes: 10
         run: bash scripts/build_docker_image.sh
 
-      # NFR-007 exception (b) + (c): download the artifact produced by the
-      # triggering pipeline_feed run, or (on workflow_dispatch) the
-      # latest successful pipeline_feed run. The if: conditional and
-      # the gh-CLI shell are inline because they depend on workflow event
-      # state that has no local equivalent.
-      - name: download arxiv-feeds artifact (from triggering pipeline_feed run)
+      - name: download arxiv-feed artifact (from triggering pipeline_feed run)
+        timeout-minutes: 10
         if: github.event_name == 'workflow_run'
         uses: actions/download-artifact@v7
         with:
-          name: arxiv-feeds
+          name: arxiv-feed
           path: docs/arxiv/
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: download arxiv-feeds artifact (latest, for workflow_dispatch)
+      - name: download arxiv-feed artifact (latest, for workflow_dispatch)
+        timeout-minutes: 10
         if: github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -64,11 +62,8 @@ jobs:
             --jq '.[0].databaseId')
           gh run download "$RUN_ID" \
             --repo "$GITHUB_REPOSITORY" \
-            --name arxiv-feeds \
+            --name arxiv-feed \
             --dir docs/arxiv/
-
-      # TODO(FR-010): bash scripts/validate_atom_xml.sh goes here once that
-      # script is updated to the correct feed path docs/arxiv/{category}/atom.xml.
 
       - name: git config --global user
         run: |
@@ -76,6 +71,7 @@ jobs:
           git config --global user.name "${{ github.actor }}"
 
       - name: bash scripts/deploy_orphan.sh
+        timeout-minutes: 10
         run: bash scripts/deploy_orphan.sh
         env:
           ARXIV_CATEGORY_ID: ${{ vars.ARXIV_CATEGORY_ID || 'cs.AI' }}

@@ -29,16 +29,13 @@ jobs:
           df -h
           id
 
-      - name: docker compose build
-        run: |
-          set -eo pipefail
-          export BUILDKIT_PROGRESS=plain
-          docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g)
+      - name: bash scripts/build_docker_image.sh
+        timeout-minutes: 10
+        run: bash scripts/build_docker_image.sh
 
       - name: bash scripts/test_e2e_behave.sh
-        run: |
-          set -eo pipefail
-          bash scripts/test_e2e_behave.sh
+        timeout-minutes: 20
+        run: bash scripts/test_e2e_behave.sh
 
       - name: debug
         if: failure()
@@ -46,6 +43,7 @@ jobs:
           docker ps -a | grep -v CONTAINER | cut -d' ' -f1 | xargs -I{} -r bash -c "docker container stats --no-stream {} ; docker logs {}"
 
       - name: bash scripts/test_mypy.sh
+        timeout-minutes: 10
         run: |
           set -eo pipefail
           bash scripts/test_mypy.sh

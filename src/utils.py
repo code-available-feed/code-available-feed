@@ -165,81 +165,29 @@ def resolve_continue_on_api_error() -> bool:
     return os.environ.get("ARXIV_CONTINUE_ON_API_ERROR", "").lower() == "true"
 
 
-def run_staleness_check(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
-    """
-    Resolve staleness check parameters from the environment and run the check.
-
-    Reads ARXIV_CATEGORY_ID, ARXIV_MAX_STALENESS_DAYS (default -1, disabled),
-    and PIPELINE_TODAY (default: current UTC date) from the environment.
-    The feed file is resolved as base_dir / "docs" / "arxiv" / {category} /
-    "atom.xml"; callers that run in a different working directory pass base_dir
-    explicitly instead of relying on the process cwd.
-
-    Returns 0 on success or when the check is disabled; returns 1 on invalid
-    configuration or when the feed is stale.
-
-    Parameters:
-      base_dir: root of the docs/ tree; defaults to the current working directory
-    """
-    try:
-        category_id = resolve_category_id()
-    except ValueError as exc:
-        _logger.error("%s", exc)
-        return 1
-
-    max_staleness_days_str = os.environ.get("ARXIV_MAX_STALENESS_DAYS", "-1")
-    try:
-        max_staleness_days = int(max_staleness_days_str)
-    except ValueError:
-        _logger.error(
-            "ARXIV_MAX_STALENESS_DAYS must be -1 or a positive integer, got: %r",
-            max_staleness_days_str,
-        )
-        return 1
-
-    if max_staleness_days != -1 and max_staleness_days < 1:
-        _logger.error(
-            "ARXIV_MAX_STALENESS_DAYS must be -1 or a positive integer, got: %d",
-            max_staleness_days,
-        )
-        return 1
-
-    today_override = os.environ.get("PIPELINE_TODAY")
-    if today_override:
-        today = datetime.date.fromisoformat(today_override)
-    else:
-        today = datetime.datetime.now(datetime.timezone.utc).date()
-
-    feed_path = base_dir / "docs" / "arxiv" / category_id.lower() / "atom.xml"
-
-    return check_feed_staleness(feed_path, today, max_staleness_days)
-
-
 def check_feed_staleness(
     atom_xml_path: pathlib.Path,
     today: datetime.date,
     max_staleness_days: int,
 ) -> int:
     """
-    Return 1 if the newest <entry><published> date in atom_xml_path is more
-    than max_staleness_days whole calendar days before today; return 0
-    otherwise.
+    Log the feed age and return 1 if the feed is stale; return 0 otherwise.
 
-    Pass max_staleness_days=-1 to skip the check unconditionally (returns 0).
-    Returns 0 when atom_xml_path does not exist or contains no <entry> elements
-    with a <published> date.  Callers must validate max_staleness_days before
-    calling: it must be -1 or a positive integer.
+    Always reads atom_xml_path (when it exists) and logs an INFO line with the
+    feed age, today's date, and the threshold.  Returns 0 immediately after
+    logging when max_staleness_days is -1 (check disabled).  Returns 0 when
+    atom_xml_path does not exist or contains no <entry> elements with a
+    <published> date.  Callers must validate max_staleness_days before calling:
+    it must be -1 or a positive integer.
 
     Parameters:
       atom_xml_path:      path to the Atom feed file to check
       today:              reference date (UTC) for the staleness comparison
-      max_staleness_days: -1 to skip; positive integer as the maximum age in
+      max_staleness_days: -1 to disable; positive integer as the maximum age in
                           days before the feed is considered stale
     """
-    if max_staleness_days == -1:
-        return 0
-
     if not atom_xml_path.exists():
+        _logger.info("feed file not found: %s", atom_xml_path)
         return 0
 
     feed_bytes = atom_xml_path.read_bytes()
@@ -251,6 +199,7 @@ def check_feed_staleness(
             published_dates.append(published_elem.text)
 
     if not published_dates:
+        _logger.info("feed has no entries: %s", atom_xml_path)
         return 0
 
     newest_date_str = max(published_dates)
@@ -258,6 +207,17 @@ def check_feed_staleness(
     entry_dt = datetime.datetime.fromisoformat(newest_date_str)
     entry_date = entry_dt.astimezone(datetime.timezone.utc).date()
     delta_days = (today - entry_date).days
+    threshold_str = "disabled" if max_staleness_days == -1 else f"{max_staleness_days} days"
+    _logger.info(
+        "feed age: %d days (newest entry: %s, today: %s, threshold: %s)",
+        delta_days,
+        entry_date,
+        today,
+        threshold_str,
+    )
+
+    if max_staleness_days == -1:
+        return 0
 
     if delta_days > max_staleness_days:
         _logger.error(

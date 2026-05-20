@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 
 from behave import given, then, when
 
-import src.utils
+import src.pipeline_feed
 
 _ATOM_NS = "http://www.w3.org/2005/Atom"
 
@@ -42,12 +42,12 @@ def step_create_minimal_feed(context, filepath, published_date):
 @when("the staleness check runs")
 def step_run_staleness_check(context):
     """
-    Call src.utils.run_staleness_check directly with context.run_dir as base_dir.
+    Call src.pipeline_feed.run_staleness_check directly with context.run_dir as base_dir.
     Stores the integer return code in context.staleness_returncode.
     """
     if context.run_dir is None:
         context.run_dir = pathlib.Path(tempfile.mkdtemp())
-    context.staleness_returncode = src.utils.run_staleness_check(context.run_dir)
+    context.staleness_returncode = src.pipeline_feed.run_staleness_check(context.run_dir)
 
 
 @then("the staleness check exits with code 0")

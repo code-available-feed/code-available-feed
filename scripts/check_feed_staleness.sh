@@ -23,9 +23,8 @@ docker compose exec \
     --env ARXIV_MAX_STALENESS_DAYS="${ARXIV_MAX_STALENESS_DAYS}" \
     --env PIPELINE_TODAY="${PIPELINE_TODAY}" \
     --no-TTY server python -c "
-import logging, sys
+import sys
 sys.path.insert(0, '/app')
-logging.basicConfig(level=logging.ERROR, format='%(levelname)s %(message)s')
-from src.utils import run_staleness_check
+from src.pipeline_feed import run_staleness_check
 sys.exit(run_staleness_check())
 "

@@ -1,12 +1,12 @@
 """Step definitions for FR-015: Graceful API error continuation and feed staleness alert."""
 
-import os
 import pathlib
-import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
 
 from behave import given, then, when
+
+import src.utils
 
 _ATOM_NS = "http://www.w3.org/2005/Atom"
 
@@ -42,39 +42,25 @@ def step_create_minimal_feed(context, filepath, published_date):
 @when("the staleness check runs")
 def step_run_staleness_check(context):
     """
-    Run src.check_feed_staleness as a subprocess in context.run_dir, capturing
-    stdout and stderr.  Stores the CompletedProcess in context.staleness_result.
+    Call src.utils.run_staleness_check directly with context.run_dir as base_dir.
+    Stores the integer return code in context.staleness_returncode.
     """
-    env = os.environ.copy()
-    env["PYTHONPATH"] = "/app"
     if context.run_dir is None:
         context.run_dir = pathlib.Path(tempfile.mkdtemp())
-    context.staleness_result = subprocess.run(
-        ["python", "-m", "src.check_feed_staleness"],
-        cwd=str(context.run_dir),
-        env=env,
-        capture_output=True,
-        text=True,
-    )
+    context.staleness_returncode = src.utils.run_staleness_check(context.run_dir)
 
 
 @then("the staleness check exits with code 0")
 def step_staleness_exits_zero(context):
-    """Assert that the staleness check subprocess exited with code 0."""
-    assert context.staleness_result.returncode == 0, (
-        f"Expected staleness check exit code 0, "
-        f"got {context.staleness_result.returncode}\n"
-        f"stdout: {context.staleness_result.stdout}\n"
-        f"stderr: {context.staleness_result.stderr}"
+    """Assert that run_staleness_check returned 0."""
+    assert context.staleness_returncode == 0, (
+        f"Expected staleness check return code 0, got {context.staleness_returncode}"
     )
 
 
 @then("the staleness check exits with non-zero code")
 def step_staleness_exits_nonzero(context):
-    """Assert that the staleness check subprocess exited with a non-zero code."""
-    assert context.staleness_result.returncode != 0, (
-        f"Expected staleness check non-zero exit code, "
-        f"got {context.staleness_result.returncode}\n"
-        f"stdout: {context.staleness_result.stdout}\n"
-        f"stderr: {context.staleness_result.stderr}"
+    """Assert that run_staleness_check returned a non-zero code."""
+    assert context.staleness_returncode != 0, (
+        f"Expected staleness check non-zero return code, got {context.staleness_returncode}"
     )

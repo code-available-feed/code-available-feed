@@ -165,6 +165,56 @@ def resolve_continue_on_api_error() -> bool:
     return os.environ.get("ARXIV_CONTINUE_ON_API_ERROR", "").lower() == "true"
 
 
+def run_staleness_check(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
+    """
+    Resolve staleness check parameters from the environment and run the check.
+
+    Reads ARXIV_CATEGORY_ID, ARXIV_MAX_STALENESS_DAYS (default -1, disabled),
+    and PIPELINE_TODAY (default: current UTC date) from the environment.
+    The feed file is resolved as base_dir / "docs" / "arxiv" / {category} /
+    "atom.xml"; callers that run in a different working directory pass base_dir
+    explicitly instead of relying on the process cwd.
+
+    Returns 0 on success or when the check is disabled; returns 1 on invalid
+    configuration or when the feed is stale.
+
+    Parameters:
+      base_dir: root of the docs/ tree; defaults to the current working directory
+    """
+    try:
+        category_id = resolve_category_id()
+    except ValueError as exc:
+        _logger.error("%s", exc)
+        return 1
+
+    max_staleness_days_str = os.environ.get("ARXIV_MAX_STALENESS_DAYS", "-1")
+    try:
+        max_staleness_days = int(max_staleness_days_str)
+    except ValueError:
+        _logger.error(
+            "ARXIV_MAX_STALENESS_DAYS must be -1 or a positive integer, got: %r",
+            max_staleness_days_str,
+        )
+        return 1
+
+    if max_staleness_days != -1 and max_staleness_days < 1:
+        _logger.error(
+            "ARXIV_MAX_STALENESS_DAYS must be -1 or a positive integer, got: %d",
+            max_staleness_days,
+        )
+        return 1
+
+    today_override = os.environ.get("PIPELINE_TODAY")
+    if today_override:
+        today = datetime.date.fromisoformat(today_override)
+    else:
+        today = datetime.datetime.now(datetime.timezone.utc).date()
+
+    feed_path = base_dir / "docs" / "arxiv" / category_id.lower() / "atom.xml"
+
+    return check_feed_staleness(feed_path, today, max_staleness_days)
+
+
 def check_feed_staleness(
     atom_xml_path: pathlib.Path,
     today: datetime.date,

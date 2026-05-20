@@ -1,6 +1,6 @@
 """Step definitions for FR-002: Article inclusion filter."""
 
-import src.utils
+import src.pipeline_feed
 from behave import given, then, when
 
 
@@ -33,7 +33,7 @@ def step_article_comment_element_state(context, element_state):
 
 @when("the inclusion filter is applied to the article")
 def step_apply_inclusion_filter(context):
-    context.article_included = src.utils.include_article(
+    context.article_included = src.pipeline_feed.include_article(
         context.article_primary_category,
         context.article_comment,
     )

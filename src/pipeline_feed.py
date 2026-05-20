@@ -1,6 +1,6 @@
 """
-Pipeline entry point: fetch arxiv articles for the current ISO week and write
-docs/arxiv/{category}/atom.xml.
+Pipeline entry point: fetch arxiv articles for the current ISO week, apply the
+inclusion filter, and write docs/arxiv/{category}/atom.xml.
 
 Environment variables read by this module:
   ARXIV_API_BASE_URL           optional; default "https://export.arxiv.org"
@@ -8,6 +8,7 @@ Environment variables read by this module:
   ARXIV_CATEGORY_STRICT        optional; "true" enables strict primary-category filter
   ARXIV_CONTINUE_ON_API_ERROR  optional; "true" exits 0 on API failure instead of 1
   ARXIV_MAX_RESULTS            optional; entries per API page; default 50
+  ARXIV_MAX_STALENESS_DAYS     optional; days before feed is considered stale; default -1 (disabled)
   GITHUB_REPOSITORY            required; "owner/repo" (always set by GitHub Actions)
   PIPELINE_TODAY               optional; ISO date (YYYY-MM-DD) overrides the current UTC date
   RETRY_BACKOFF_BASE_SECONDS   optional; seconds for exponential retry backoff; default 60
@@ -26,8 +27,6 @@ import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 
-import src.utils
-
 _ATOM_NS = "http://www.w3.org/2005/Atom"
 _ARXIV_NS = "http://arxiv.org/schemas/atom"
 
@@ -41,6 +40,13 @@ _MIN_REQUEST_INTERVAL_SECONDS: int = 5
 # Characters stripped from the trailing end of each extracted comment URL.
 # These are common punctuation characters that surround URLs in prose text.
 _TRAILING_PUNCT: frozenset[str] = frozenset(".,;:)]>")
+
+# Arxiv categories follow the pattern subject(-subsubject)?(.archive)?
+# e.g. cs.AI, cs.cv, astro-ph.HE, gr-qc. Letters only; no path separators,
+# whitespace, or directory-traversal sequences are permitted. This guards
+# against accidental misconfiguration and path-traversal values such as
+# "../etc/passwd" reaching the docs/arxiv/{category}/ filesystem path.
+_ARXIV_CATEGORY_PATTERN = re.compile(r"^[a-zA-Z]+(-[a-zA-Z]+)?(\.[a-zA-Z]+)?$")
 
 _logger = logging.getLogger(__name__)
 
@@ -64,6 +70,108 @@ class _UtcJsonFormatter(logging.Formatter):
 def _is_not_error(record: logging.LogRecord) -> bool:
     """Accept log records with level below ERROR (INFO and DEBUG only)."""
     return record.levelno < logging.ERROR
+
+
+# ---------------------------------------------------------------------------
+# Environment / configuration resolution
+# ---------------------------------------------------------------------------
+
+
+def resolve_category_id() -> str:
+    """Return ARXIV_CATEGORY_ID from the environment, defaulting to 'cs.AI'."""
+    value = os.environ.get("ARXIV_CATEGORY_ID", "cs.AI")
+    if not _ARXIV_CATEGORY_PATTERN.match(value):
+        raise ValueError(
+            f"ARXIV_CATEGORY_ID does not match arxiv category format: {value!r}"
+        )
+    return value
+
+
+def resolve_strict_mode() -> bool:
+    """
+    Return True when ARXIV_CATEGORY_STRICT is the case-insensitive literal
+    'true'; return False for any other value, including unset.
+    """
+    return os.environ.get("ARXIV_CATEGORY_STRICT", "").lower() == "true"
+
+
+def resolve_continue_on_api_error() -> bool:
+    """
+    Return True when ARXIV_CONTINUE_ON_API_ERROR is the case-insensitive
+    literal 'true'; return False for any other value, including unset.
+
+    Follows the same convention as resolve_strict_mode.
+    """
+    return os.environ.get("ARXIV_CONTINUE_ON_API_ERROR", "").lower() == "true"
+
+
+# ---------------------------------------------------------------------------
+# Article inclusion filter
+# ---------------------------------------------------------------------------
+
+
+def include_article(
+    primary_category: str,
+    comment: str | None,
+    abstract_url: str = "",
+    published: str = "",
+    title: str = "",
+) -> bool:
+    """
+    Return True if the article should be included in the feed.
+
+    Both conditions must hold:
+    1. Category condition: when strict mode is enabled, the article's primary
+       category must match the configured ARXIV_CATEGORY_ID (case-insensitive);
+       when strict mode is disabled, any primary category is accepted.
+    2. Comment URL condition: the arxiv:comment field must contain at least one
+       https:// URL; absent or empty comment fields are treated as no URL.
+
+    Reads ARXIV_CATEGORY_ID and ARXIV_CATEGORY_STRICT from the environment via
+    resolve_category_id and resolve_strict_mode.
+
+    Parameters:
+      primary_category: the article's primary arxiv category (e.g. "cs.AI")
+      comment:          the arxiv:comment field text, or None when absent
+      abstract_url:     arxiv abstract page URL; included in log output for traceability
+      published:        RFC 3339 first-publication date; included in log output for traceability
+      title:            article title; included in log output for traceability
+    """
+    category_id = resolve_category_id()
+    strict_mode = resolve_strict_mode()
+
+    if strict_mode and primary_category.lower() != category_id.lower():
+        _logger.info(
+            "rejected (strict category mismatch): primary=%s expected=%s"
+            " published=%s title=%s url=%s",
+            primary_category, category_id, published, title, abstract_url,
+        )
+        return False
+
+    if not comment:
+        _logger.info(
+            "rejected (no comment): primary=%s published=%s title=%s url=%s",
+            primary_category, published, title, abstract_url,
+        )
+        return False
+
+    if "https://" not in comment:
+        _logger.info(
+            "rejected (no comment URL): primary=%s published=%s title=%s url=%s",
+            primary_category, published, title, abstract_url,
+        )
+        return False
+
+    _logger.info(
+        "included: primary=%s published=%s title=%s url=%s",
+        primary_category, published, title, abstract_url,
+    )
+    return True
+
+
+# ---------------------------------------------------------------------------
+# API fetching and XML parsing
+# ---------------------------------------------------------------------------
 
 
 def compute_week_bounds(today: datetime.date) -> tuple[str, str]:
@@ -201,6 +309,11 @@ def parse_entries(body: bytes) -> list[dict]:
     return entries
 
 
+# ---------------------------------------------------------------------------
+# Feed building
+# ---------------------------------------------------------------------------
+
+
 def build_github_repo_url(github_repository: str) -> str:
     """
     Construct the GitHub repository URL from GITHUB_REPOSITORY.
@@ -323,6 +436,52 @@ def build_feed(
     return ET.tostring(feed, encoding="UTF-8", xml_declaration=True)
 
 
+def build_commit_message_from_bytes(feed_bytes: bytes) -> str:
+    """
+    Construct the commit message string from raw Atom feed bytes.
+
+    Counts <entry> elements in feed_bytes, derives the ISO year and week from
+    the newest <entry><published> date, and formats the message as:
+    "Update YYYY-WNN feed (N article)" or "Update YYYY-WNN feed (N articles)".
+
+    Callers must ensure feed_bytes contains at least one <entry>; passing a
+    feed with no entries raises ValueError.
+    """
+    root = ET.fromstring(feed_bytes)
+    entries = root.findall(f"{{{_ATOM_NS}}}entry")
+    n = len(entries)
+    if n == 0:
+        raise ValueError(
+            "build_commit_message: feed contains no <entry> elements"
+        )
+    article_word = "article" if n == 1 else "articles"
+    published_dates: list[str] = []
+    for entry in entries:
+        published_elem = entry.find(f"{{{_ATOM_NS}}}published")
+        if published_elem is not None and published_elem.text:
+            published_dates.append(published_elem.text)
+    # RFC 3339 dates with the same format sort lexicographically by chronology.
+    newest_date = max(published_dates)
+    # Parse the full RFC 3339 timestamp as a timezone-aware datetime and
+    # convert to UTC before extracting the date.  fromisoformat handles the
+    # "Z" UTC suffix in Python 3.11+.
+    entry_dt = datetime.datetime.fromisoformat(newest_date)
+    entry_date = entry_dt.astimezone(datetime.timezone.utc).date()
+    iso = entry_date.isocalendar()
+    week_str = f"{iso.year}-W{iso.week:02d}"
+    return f"Update {week_str} feed ({n} {article_word})"
+
+
+def build_commit_message(atom_xml_path: pathlib.Path) -> str:
+    """Read the feed at atom_xml_path and return the commit message string."""
+    return build_commit_message_from_bytes(atom_xml_path.read_bytes())
+
+
+# ---------------------------------------------------------------------------
+# Diff output
+# ---------------------------------------------------------------------------
+
+
 def print_unified_diff(
     prior_bytes: bytes, new_bytes: bytes, label: str
 ) -> None:
@@ -339,6 +498,11 @@ def print_unified_diff(
     for line in difflib.unified_diff(prior_lines, new_lines, fromfile=label, tofile=label):
         sys.stdout.write(line)
     sys.stdout.flush()
+
+
+# ---------------------------------------------------------------------------
+# Archive and staleness
+# ---------------------------------------------------------------------------
 
 
 def newest_published_date_from_feed(feed_bytes: bytes) -> str | None:
@@ -397,6 +561,94 @@ def archive_prior_week_feed(
     archive_target = archive_dir / "atom.xml"
     _logger.info("archiving %s to %s", output_path, archive_target)
     archive_target.write_bytes(feed_bytes)
+
+
+def find_latest_archive_path(archive_dir: pathlib.Path) -> pathlib.Path | None:
+    """
+    Return atom.xml under the lexicographically latest YYYY-WNN subdirectory.
+
+    ISO 8601 week notation (zero-padded week number) makes lexicographic order
+    equal to calendar order, so a simple sort is sufficient.  Returns None when
+    archive_dir does not exist or contains no atom.xml files.
+    """
+    if not archive_dir.is_dir():
+        return None
+    week_dirs = sorted(d for d in archive_dir.iterdir() if d.is_dir())
+    for week_dir in reversed(week_dirs):
+        candidate = week_dir / "atom.xml"
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def check_feed_staleness(
+    atom_xml_path: pathlib.Path,
+    today: datetime.date,
+    max_staleness_days: int,
+) -> int:
+    """
+    Log the feed age and return 1 if the feed is stale; return 0 otherwise.
+
+    Always reads atom_xml_path (when it exists) and logs an INFO line with the
+    feed age, today's date, and the threshold.  Returns 0 immediately after
+    logging when max_staleness_days is -1 (check disabled).  Returns 0 when
+    atom_xml_path does not exist or contains no <entry> elements with a
+    <published> date.  Callers must validate max_staleness_days before calling:
+    it must be -1 or a positive integer.
+
+    Parameters:
+      atom_xml_path:      path to the Atom feed file to check
+      today:              reference date (UTC) for the staleness comparison
+      max_staleness_days: -1 to disable; positive integer as the maximum age in
+                          days before the feed is considered stale
+    """
+    if not atom_xml_path.exists():
+        _logger.info("feed file not found: %s", atom_xml_path)
+        return 0
+
+    feed_bytes = atom_xml_path.read_bytes()
+    root = ET.fromstring(feed_bytes)
+    published_dates: list[str] = []
+    for entry in root.findall(f"{{{_ATOM_NS}}}entry"):
+        published_elem = entry.find(f"{{{_ATOM_NS}}}published")
+        if published_elem is not None and published_elem.text:
+            published_dates.append(published_elem.text)
+
+    if not published_dates:
+        _logger.info("feed has no entries: %s", atom_xml_path)
+        return 0
+
+    newest_date_str = max(published_dates)
+    # fromisoformat handles the "Z" UTC suffix in Python 3.11+.
+    entry_dt = datetime.datetime.fromisoformat(newest_date_str)
+    entry_date = entry_dt.astimezone(datetime.timezone.utc).date()
+    delta_days = (today - entry_date).days
+    threshold_str = "disabled" if max_staleness_days == -1 else f"{max_staleness_days} days"
+    _logger.info(
+        "feed age: %d days (newest entry: %s, today: %s, threshold: %s)",
+        delta_days,
+        entry_date,
+        today,
+        threshold_str,
+    )
+
+    if max_staleness_days == -1:
+        return 0
+
+    if delta_days > max_staleness_days:
+        _logger.error(
+            "feed is stale: newest entry %s is %d days old (threshold: %d days)",
+            newest_date_str,
+            delta_days,
+            max_staleness_days,
+        )
+        return 1
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Pagination and article fetching
+# ---------------------------------------------------------------------------
 
 
 def fetch_all_articles(
@@ -483,6 +735,11 @@ def fetch_all_articles(
     return all_entries
 
 
+# ---------------------------------------------------------------------------
+# Entry points
+# ---------------------------------------------------------------------------
+
+
 def _setup_logging() -> None:
     """Configure root logger: INFO and below go to stdout, ERROR and above to stderr, both as UTC JSON."""
     formatter = _UtcJsonFormatter()
@@ -521,7 +778,7 @@ def run_staleness_check(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
     _setup_logging()
 
     try:
-        category_id = src.utils.resolve_category_id()
+        category_id = resolve_category_id()
     except ValueError as exc:
         _logger.error("%s", exc)
         return 1
@@ -551,7 +808,7 @@ def run_staleness_check(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
 
     feed_path = base_dir / "docs" / "arxiv" / category_id.lower() / "atom.xml"
 
-    return src.utils.check_feed_staleness(feed_path, today, max_staleness_days)
+    return check_feed_staleness(feed_path, today, max_staleness_days)
 
 
 def main() -> int:
@@ -564,8 +821,8 @@ def main() -> int:
         return 1
 
     base_url = os.environ.get("ARXIV_API_BASE_URL", "https://export.arxiv.org")
-    category_id = src.utils.resolve_category_id()
-    strict_mode = src.utils.resolve_strict_mode()
+    category_id = resolve_category_id()
+    strict_mode = resolve_strict_mode()
     backoff_base_seconds = int(
         os.environ.get("RETRY_BACKOFF_BASE_SECONDS", "60")
     )
@@ -583,7 +840,7 @@ def main() -> int:
         category_id, strict_mode, today,
     )
 
-    continue_on_api_error = src.utils.resolve_continue_on_api_error()
+    continue_on_api_error = resolve_continue_on_api_error()
 
     try:
         articles = fetch_all_articles(
@@ -605,7 +862,7 @@ def main() -> int:
     filtered = [
         article
         for article in articles
-        if src.utils.include_article(
+        if include_article(
             article["primary_category"],
             article["comment"],
             abstract_url=article["abstract_url"],
@@ -644,7 +901,7 @@ def main() -> int:
         output_path.write_bytes(feed_bytes)
         _logger.info(
             "%s",
-            src.utils.build_commit_message_from_bytes(feed_bytes),
+            build_commit_message_from_bytes(feed_bytes),
         )
 
     return 0

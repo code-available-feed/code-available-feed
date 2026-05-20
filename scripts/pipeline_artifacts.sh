@@ -9,7 +9,6 @@ for marker in compose.yml src docs; do
     [ -e "${marker}" ] || { echo "$0: must be run from repo root (missing: ${marker})" >&2; exit 1; }
 done
 
-# Resolve env, defaulting consistently with src/utils.py.
 # Export so child scripts (e.g. pipeline_feed.sh, validate_atom_xml.sh) inherit the values.
 export ARXIV_CATEGORY_ID="${ARXIV_CATEGORY_ID:-cs.AI}"
 ARXIV_CATEGORY_ID_LOWER="$(echo "${ARXIV_CATEGORY_ID}" | tr '[:upper:]' '[:lower:]')"

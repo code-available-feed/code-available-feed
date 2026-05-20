@@ -8,13 +8,12 @@ import pathlib
 from behave import given, then, when
 
 import src.pipeline_feed
-import src.utils
 
 
 def _run_feed_and_write(context, path: str) -> None:
     """Call build_feed with context.articles and write the bytes to path."""
-    category_id = src.utils.resolve_category_id()
-    strict_mode = src.utils.resolve_strict_mode()
+    category_id = src.pipeline_feed.resolve_category_id()
+    strict_mode = src.pipeline_feed.resolve_strict_mode()
     github_repository = os.environ.get("GITHUB_REPOSITORY", "")
     feed_bytes = src.pipeline_feed.build_feed(
         context.articles, category_id, strict_mode, github_repository
@@ -71,8 +70,8 @@ def step_shuffle_articles(context) -> None:
 @when("the feed generator runs")
 def step_feed_generator_runs(context) -> None:
     """Generate the feed from context.articles and store the bytes in context.feed_bytes."""
-    category_id = src.utils.resolve_category_id()
-    strict_mode = src.utils.resolve_strict_mode()
+    category_id = src.pipeline_feed.resolve_category_id()
+    strict_mode = src.pipeline_feed.resolve_strict_mode()
     github_repository = os.environ.get("GITHUB_REPOSITORY", "")
     context.feed_bytes = src.pipeline_feed.build_feed(
         context.articles, category_id, strict_mode, github_repository

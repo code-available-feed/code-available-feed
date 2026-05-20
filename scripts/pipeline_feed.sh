@@ -9,7 +9,6 @@ for marker in compose.yml src docs; do
     [ -e "${marker}" ] || { echo "$0: must be run from repo root (missing: ${marker})" >&2; exit 1; }
 done
 
-# Resolve env, defaulting consistently with src/utils.py.
 # Export so child scripts (e.g. validate_atom_xml.sh) inherit the values.
 export ARXIV_API_BASE_URL="${ARXIV_API_BASE_URL:-https://export.arxiv.org}"
 export ARXIV_CATEGORY_ID="${ARXIV_CATEGORY_ID:-cs.AI}"
@@ -69,7 +68,7 @@ bash scripts/validate_atom_xml.sh --filename "docs/arxiv/${ARXIV_CATEGORY_ID_LOW
 LATEST_ARCHIVE="$(docker compose exec --no-TTY server python -c "
 import pathlib, sys
 sys.path.insert(0, '/app')
-from src.utils import find_latest_archive_path
+from src.pipeline_feed import find_latest_archive_path
 result = find_latest_archive_path(pathlib.Path('docs/arxiv/${ARXIV_CATEGORY_ID_LOWER}/archive'))
 print(result if result is not None else '', end='')
 " 2>/dev/null)"

@@ -4,7 +4,7 @@ import os
 
 from behave import given, then, when
 
-import src.utils
+import src.pipeline_feed
 
 
 @given('the environment variable {name} is ""')
@@ -32,8 +32,8 @@ def step_unset_env_var(context, name):
 
 @when("the configuration is resolved")
 def step_resolve_config(context):
-    context.resolved_category_id = src.utils.resolve_category_id()
-    context.resolved_strict_mode = src.utils.resolve_strict_mode()
+    context.resolved_category_id = src.pipeline_feed.resolve_category_id()
+    context.resolved_strict_mode = src.pipeline_feed.resolve_strict_mode()
 
 
 @then('the resolved category id is "{expected}"')
@@ -58,7 +58,7 @@ def step_resolve_category_id_only(context):
     # scenario exercises only the category-id validation path.
     context.resolve_exception = None
     try:
-        context.resolved_category_id = src.utils.resolve_category_id()
+        context.resolved_category_id = src.pipeline_feed.resolve_category_id()
     except Exception as exc:
         context.resolve_exception = exc
 

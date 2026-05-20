@@ -100,13 +100,13 @@ Beyond 7 days, recovery regenerates the feed from the current arXiv state.
 │               └── YYYY-WNN/
 │                   └── atom.xml
 ├── features/
-│   ├── environment.py            # Behave hooks: skip @status-todo scenarios; restore env vars after each
+│   ├── environment.py            # Behave hooks: skip @status-todo scenarios, restore envs
 │   ├── fixtures/                 # Fixture data for determinism and field-extraction tests
 │   └── steps/                    # Step definitions (one file per feature group)
 ├── scripts/
 │   ├── build_docker_image.sh     # Build the server Docker image
 │   ├── check_atom_xml.sh         # Parse-only XML well-formedness check on every docs/**/atom.xml
-│   ├── check_feed_staleness.sh   # Fail if the newest feed entry exceeds ARXIV_MAX_STALENESS_DAYS
+│   ├── check_feed_staleness.sh   # Fail if the feed recently has no new items
 │   ├── deploy_orphan.sh          # Force-push docs/ to the gh-pages orphan branch
 │   ├── pipeline_feed.sh          # Generate and validate feed inside Docker
 │   ├── validate_atom_xml.sh      # Validate atom.xml with newsboat inside Docker
@@ -114,14 +114,8 @@ Beyond 7 days, recovery regenerates the feed from the current arXiv state.
 │   └── test_mypy.sh              # Run mypy type checking inside Docker
 └── src/
     ├── __init__.py               # Package marker
-    ├── check_feed_staleness.py   # Staleness check entry point (ARXIV_MAX_STALENESS_DAYS)
-    ├── utils.py                  # Config resolution, article filter, archive path lookup, commit message builder, staleness check
-    └── pipeline_feed.py          # Fetch, filter, build Atom XML, archive, emit JSON logs
+    └── pipeline_feed.py          # All feed creation and management logic
 ```
-
-`src/pipeline_feed.py` pages the arXiv API, applies the article code availability inclusion filter, writes RFC 4287 Atom XML sorted by published date descending, and archives the prior week's feed at the new week start.
-Diagnostic output is UTC JSON (INFO to stdout, ERROR to stderr).
-`Dockerfile.server` provides Python, newsboat, behave, and mypy via `apt` with no `pip install`.
 
 # Abandoned ideas
 

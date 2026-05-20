@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 
 from behave import given, then, when
 
-import src.utils
+import src.pipeline_feed
 
 _ATOM_NS = "http://www.w3.org/2005/Atom"
 
@@ -176,7 +176,7 @@ def step_run_validation(context):
     category_lower = "cs.ai"
     current_feed = docs_dir / "arxiv" / category_lower / "atom.xml"
     archive_dir = docs_dir / "arxiv" / category_lower / "archive"
-    latest_archive = src.utils.find_latest_archive_path(archive_dir)
+    latest_archive = src.pipeline_feed.find_latest_archive_path(archive_dir)
 
     context.validation_results = []
     context.validation_rc = 0

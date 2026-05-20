@@ -40,11 +40,11 @@ def step_fixture_503_second_request(context):
     """
     Configure the fixture server to return 503 for the pagination request.
 
-    The second request uses start=ARXIV_MAX_RESULTS (default 100), which is
+    The second request uses start=ARXIV_MAX_RESULTS (default 50), which is
     the pagination offset after a first page that returns exactly max_results
     entries (so the pipeline expects more pages to follow).
     """
-    max_results = int(os.environ.get("ARXIV_MAX_RESULTS", "100"))
+    max_results = int(os.environ.get("ARXIV_MAX_RESULTS", "50"))
     context.fixture_server.set_response(
         start=max_results, status=503, n_entries=0
     )

@@ -11,7 +11,7 @@ permissions:
   actions: write
 
 jobs:
-  keepalive:
+  enable_workflows:
     runs-on: ubuntu-24.04
     steps:
       - name: Re-enable workflows disabled by inactivity

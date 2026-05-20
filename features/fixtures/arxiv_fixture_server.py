@@ -6,7 +6,7 @@ created per scenario (via the Background step) and stopped in after_scenario.
 
 Response configuration is keyed by the integer value of the start query
 parameter.  Any start value absent from the response table uses the server
-defaults: HTTP 200, 50 entries, each with a comment URL.
+defaults: HTTP 200, 10 entries, each with a comment URL.
 
 An optional initial response sequence (set via set_initial_response_sequence)
 takes precedence over the start-based table for the first N requests,
@@ -102,7 +102,7 @@ class ArxivFixtureServer:
         # Consumed in order before _response_table is consulted.
         self._initial_responses: list[tuple[int, int, int]] = []
         self._default_status: int = 200
-        self._default_n_entries: int = 50
+        self._default_n_entries: int = 10
         # Default: all entries have a comment URL (equals n_entries per request).
         # A value of -1 is a sentinel meaning "use n_entries for this response".
         self._default_n_have_comment_url: int = -1

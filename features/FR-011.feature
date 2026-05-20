@@ -2,16 +2,16 @@
 Feature: FR-011 Retry on API failure
 
   If the first arxiv API request (start=0) returns a non-200 HTTP status the
-  pipeline retries it up to 2 times with exponential backoff (10 seconds after
-  the first failure, 20 seconds after the second failure). If all retries fail
-  the pipeline exits non-zero and no commit is made. A non-200 response on any
-  subsequent pagination request (start>0) causes the pipeline to exit
-  immediately without retrying.
+  pipeline retries it with exponential backoff (N × RETRY_BACKOFF_BASE_SECONDS
+  seconds before the N-th retry). If all retries are exhausted the pipeline
+  exits non-zero and no commit is made. A non-200 response on any subsequent
+  pagination request (start>0) causes the pipeline to exit immediately without
+  retrying.
 
   The base backoff duration is read from the environment variable
-  RETRY_BACKOFF_BASE_SECONDS, which defaults to "30" in production. All
-  scenarios set this variable to "0" to avoid wall-clock waits. The
-  correctness of the 10-second default value is verified by code review.
+  RETRY_BACKOFF_BASE_SECONDS. All scenarios set this variable to "0" to avoid
+  wall-clock waits. The correctness of the default value and retry count are
+  verified by code review.
 
   Background:
     Given the local arxiv fixture server is running
@@ -45,7 +45,7 @@ Feature: FR-011 Retry on API failure
     Then the pipeline exit code is non-zero
     And no file "docs/arxiv/cs.ai/atom.xml" was written by this run
 
-  Scenario: Three consecutive 503s exit non-zero and no atom.xml is written
+  Scenario: All retries exhausted by consecutive 503s exit non-zero and no atom.xml is written
     Given the environment variable RETRY_BACKOFF_BASE_SECONDS is "0"
     And the fixture server responds with HTTP 503 to every request
     When the pipeline runs to completion

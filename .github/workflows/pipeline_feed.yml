@@ -3,7 +3,7 @@ name: pipeline_feed
 on:
   schedule:
     - cron: '0 02 * * *' # Daily at 02:00 UTC
-    - cron: '0 06 * * *' # Daily at 06:00 UTC
+    - cron: '0 20 * * *' # Daily at 20:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -54,7 +54,7 @@ jobs:
             || echo "No gh-pages branch yet, starting fresh"
 
       - name: bash scripts/pipeline_feed.sh
-        timeout-minutes: 20      
+        timeout-minutes: 20
         run: bash scripts/pipeline_feed.sh
         env:
           ARXIV_CATEGORY_ID: ${{ vars.ARXIV_CATEGORY_ID || 'cs.AI' }}

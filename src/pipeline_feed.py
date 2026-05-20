@@ -9,7 +9,7 @@ Environment variables read by this module:
   ARXIV_MAX_RESULTS          optional; entries per API page; default 50
   GITHUB_REPOSITORY          required; "owner/repo" (always set by GitHub Actions)
   PIPELINE_TODAY             optional; ISO date (YYYY-MM-DD) overrides the current UTC date
-  RETRY_BACKOFF_BASE_SECONDS optional; seconds for exponential retry backoff; default 30
+  RETRY_BACKOFF_BASE_SECONDS optional; seconds for exponential retry backoff; default 60
 """
 
 import datetime
@@ -410,7 +410,7 @@ def fetch_all_articles(
     in steps of max_results.
 
     NFR-002: sleeps _MIN_REQUEST_INTERVAL_SECONDS before every API request.
-    FR-011: retries the first page up to 5 times with exponential backoff on
+    FR-011: retries the first page up to max_retries_first_page times with exponential backoff on
     non-200 responses; exits immediately on non-200 for subsequent pages.
 
     Returns an empty list when the first API page returns HTTP 200 with zero
@@ -422,7 +422,7 @@ def fetch_all_articles(
     - non-200 on a pagination page
     """
     monday, sunday = compute_week_bounds(today)
-    max_retries_first_page = 5
+    max_retries_first_page = 3
     start = 0
     all_entries: list[dict] = []
 
@@ -514,7 +514,7 @@ def main() -> int:
     category_id = src.utils.resolve_category_id()
     strict_mode = src.utils.resolve_strict_mode()
     backoff_base_seconds = int(
-        os.environ.get("RETRY_BACKOFF_BASE_SECONDS", "30")
+        os.environ.get("RETRY_BACKOFF_BASE_SECONDS", "60")
     )
     max_results = int(os.environ.get("ARXIV_MAX_RESULTS", "50"))
 

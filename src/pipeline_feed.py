@@ -3,13 +3,14 @@ Pipeline entry point: fetch arxiv articles for the current ISO week and write
 docs/arxiv/{category}/atom.xml.
 
 Environment variables read by this module:
-  ARXIV_API_BASE_URL         optional; default "https://export.arxiv.org"
-  ARXIV_CATEGORY_ID          optional; default "cs.AI"
-  ARXIV_CATEGORY_STRICT      optional; "true" enables strict primary-category filter
-  ARXIV_MAX_RESULTS          optional; entries per API page; default 50
-  GITHUB_REPOSITORY          required; "owner/repo" (always set by GitHub Actions)
-  PIPELINE_TODAY             optional; ISO date (YYYY-MM-DD) overrides the current UTC date
-  RETRY_BACKOFF_BASE_SECONDS optional; seconds for exponential retry backoff; default 60
+  ARXIV_API_BASE_URL           optional; default "https://export.arxiv.org"
+  ARXIV_CATEGORY_ID            optional; default "cs.AI"
+  ARXIV_CATEGORY_STRICT        optional; "true" enables strict primary-category filter
+  ARXIV_CONTINUE_ON_API_ERROR  optional; "true" exits 0 on API failure instead of 1
+  ARXIV_MAX_RESULTS            optional; entries per API page; default 50
+  GITHUB_REPOSITORY            required; "owner/repo" (always set by GitHub Actions)
+  PIPELINE_TODAY               optional; ISO date (YYYY-MM-DD) overrides the current UTC date
+  RETRY_BACKOFF_BASE_SECONDS   optional; seconds for exponential retry backoff; default 60
 """
 
 import datetime
@@ -530,11 +531,16 @@ def main() -> int:
         category_id, strict_mode, today,
     )
 
+    continue_on_api_error = src.utils.resolve_continue_on_api_error()
+
     try:
         articles = fetch_all_articles(
             base_url, category_id, today, backoff_base_seconds, max_results
         )
     except RuntimeError as exc:
+        if continue_on_api_error:
+            _logger.info("API failure, skipping feed update: %s", exc)
+            return 0
         _logger.error("%s", exc)
         return 1
 

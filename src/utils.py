@@ -153,3 +153,68 @@ def resolve_strict_mode() -> bool:
     'true'; return False for any other value, including unset.
     """
     return os.environ.get("ARXIV_CATEGORY_STRICT", "").lower() == "true"
+
+
+def resolve_continue_on_api_error() -> bool:
+    """
+    Return True when ARXIV_CONTINUE_ON_API_ERROR is the case-insensitive
+    literal 'true'; return False for any other value, including unset.
+
+    Follows the same convention as resolve_strict_mode.
+    """
+    return os.environ.get("ARXIV_CONTINUE_ON_API_ERROR", "").lower() == "true"
+
+
+def check_feed_staleness(
+    atom_xml_path: pathlib.Path,
+    today: datetime.date,
+    max_staleness_days: int,
+) -> int:
+    """
+    Return 1 if the newest <entry><published> date in atom_xml_path is more
+    than max_staleness_days whole calendar days before today; return 0
+    otherwise.
+
+    Pass max_staleness_days=-1 to skip the check unconditionally (returns 0).
+    Returns 0 when atom_xml_path does not exist or contains no <entry> elements
+    with a <published> date.  Callers must validate max_staleness_days before
+    calling: it must be -1 or a positive integer.
+
+    Parameters:
+      atom_xml_path:      path to the Atom feed file to check
+      today:              reference date (UTC) for the staleness comparison
+      max_staleness_days: -1 to skip; positive integer as the maximum age in
+                          days before the feed is considered stale
+    """
+    if max_staleness_days == -1:
+        return 0
+
+    if not atom_xml_path.exists():
+        return 0
+
+    feed_bytes = atom_xml_path.read_bytes()
+    root = ET.fromstring(feed_bytes)
+    published_dates: list[str] = []
+    for entry in root.findall(f"{{{_ATOM_NS}}}entry"):
+        published_elem = entry.find(f"{{{_ATOM_NS}}}published")
+        if published_elem is not None and published_elem.text:
+            published_dates.append(published_elem.text)
+
+    if not published_dates:
+        return 0
+
+    newest_date_str = max(published_dates)
+    # fromisoformat handles the "Z" UTC suffix in Python 3.11+.
+    entry_dt = datetime.datetime.fromisoformat(newest_date_str)
+    entry_date = entry_dt.astimezone(datetime.timezone.utc).date()
+    delta_days = (today - entry_date).days
+
+    if delta_days > max_staleness_days:
+        _logger.error(
+            "feed is stale: newest entry %s is %d days old (threshold: %d days)",
+            newest_date_str,
+            delta_days,
+            max_staleness_days,
+        )
+        return 1
+    return 0

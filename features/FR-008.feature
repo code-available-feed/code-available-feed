@@ -2,10 +2,12 @@
 Feature: FR-008 Repository variable resolution
 
   Two repository variables control filtering: ARXIV_CATEGORY_ID (default
-  "cs.AI") and ARXIV_CATEGORY_STRICT (default "false"). The strict-mode value
-  parsing is case-insensitive: only the value "true" (any casing) enables
-  strict mode; any other value, including empty string or unset variable,
-  disables it.
+  "cs.AI") and ARXIV_CATEGORY_STRICT (default "false"). Two additional
+  variables control error handling and staleness alerting:
+  ARXIV_CONTINUE_ON_API_ERROR (default "false") and ARXIV_MAX_STALENESS_DAYS
+  (default "-1"). All boolean-like variables follow the same convention: only
+  the case-insensitive literal "true" enables the mode; any other value
+  including empty string or unset disables it.
 
   Scenario: ARXIV_CATEGORY_ID defaults to "cs.AI" when the environment variable is unset
     Given the environment variable ARXIV_CATEGORY_ID is unset

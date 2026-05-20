@@ -32,6 +32,10 @@ See the points below to understand this setup!
 
    b. `ARXIV_CATEGORY_STRICT` (defaults to `false`): set to `true` to restrict to only articles whose primary category matches `ARXIV_CATEGORY_ID`.
 
+   c. `ARXIV_CONTINUE_ON_API_ERROR` (defaults to `true` in the workflow): set to `false` to fail the workflow immediately on any arXiv API error instead of continuing silently.
+
+   d. `ARXIV_MAX_STALENESS_DAYS` (defaults to `5` in the workflow): number of days without a new feed entry before the workflow fails with a staleness alert. Set to `-1` to disable the check. Raise this value for low-volume categories where multi-day gaps without new articles are normal.
+
 3. Run the `pipeline_feed` workflow at least once (via the Actions tab or wait for the daily schedule).
    The first successful `deploy_orphan` run creates the `gh-pages` branch.
 
@@ -100,17 +104,19 @@ Beyond 7 days, recovery regenerates the feed from the current arXiv state.
 │   ├── fixtures/                 # Fixture data for determinism and field-extraction tests
 │   └── steps/                    # Step definitions (one file per feature group)
 ├── scripts/
-│   ├── build_docker_image.sh   # Build the server Docker image
-│   ├── check_atom_xml.sh       # Parse-only XML well-formedness check on every docs/**/atom.xml
-│   ├── deploy_orphan.sh        # Force-push docs/ to the gh-pages orphan branch
-│   ├── pipeline_feed.sh        # Generate and validate feed inside Docker
-│   ├── validate_atom_xml.sh    # Validate atom.xml with newsboat inside Docker
-│   ├── test_e2e_behave.sh      # Run BDD test suite inside Docker
-│   └── test_mypy.sh            # Run mypy type checking inside Docker
+│   ├── build_docker_image.sh     # Build the server Docker image
+│   ├── check_atom_xml.sh         # Parse-only XML well-formedness check on every docs/**/atom.xml
+│   ├── check_feed_staleness.sh   # Fail if the newest feed entry exceeds ARXIV_MAX_STALENESS_DAYS
+│   ├── deploy_orphan.sh          # Force-push docs/ to the gh-pages orphan branch
+│   ├── pipeline_feed.sh          # Generate and validate feed inside Docker
+│   ├── validate_atom_xml.sh      # Validate atom.xml with newsboat inside Docker
+│   ├── test_e2e_behave.sh        # Run BDD test suite inside Docker
+│   └── test_mypy.sh              # Run mypy type checking inside Docker
 └── src/
-    ├── __init__.py             # Package marker
-    ├── utils.py                # Config resolution, article filter, archive path lookup, commit message builder
-    └── pipeline_feed.py        # Fetch, filter, build Atom XML, archive, emit JSON logs
+    ├── __init__.py               # Package marker
+    ├── check_feed_staleness.py   # Staleness check entry point (ARXIV_MAX_STALENESS_DAYS)
+    ├── utils.py                  # Config resolution, article filter, archive path lookup, commit message builder, staleness check
+    └── pipeline_feed.py          # Fetch, filter, build Atom XML, archive, emit JSON logs
 ```
 
 `src/pipeline_feed.py` pages the arXiv API, applies the article code availability inclusion filter, writes RFC 4287 Atom XML sorted by published date descending, and archives the prior week's feed at the new week start.

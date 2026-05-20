@@ -3,6 +3,7 @@ name: pipeline_feed
 on:
   schedule:
     - cron: '0 02 * * *' # Daily at 02:00 UTC
+    - cron: '0 10 * * *' # Daily at 10:00 UTC
     - cron: '0 20 * * *' # Daily at 20:00 UTC
   workflow_dispatch:
 
@@ -59,6 +60,19 @@ jobs:
         env:
           ARXIV_CATEGORY_ID: ${{ vars.ARXIV_CATEGORY_ID || 'cs.AI' }}
           ARXIV_CATEGORY_STRICT: ${{ vars.ARXIV_CATEGORY_STRICT || 'false' }}
+          ARXIV_CONTINUE_ON_API_ERROR: ${{ vars.ARXIV_CONTINUE_ON_API_ERROR || 'true' }}
+
+      - name: debug
+        if: failure()
+        run: |
+          docker ps -a | grep -v CONTAINER | cut -d' ' -f1 | xargs -I{} -r bash -c "docker container stats --no-stream {} ; docker logs {}"
+
+      - name: bash scripts/check_feed_staleness.sh
+        timeout-minutes: 5
+        run: bash scripts/check_feed_staleness.sh
+        env:
+          ARXIV_CATEGORY_ID: ${{ vars.ARXIV_CATEGORY_ID || 'cs.AI' }}
+          ARXIV_MAX_STALENESS_DAYS: ${{ vars.ARXIV_MAX_STALENESS_DAYS || '5' }}
 
       - name: debug
         if: failure()

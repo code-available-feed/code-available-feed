@@ -4,30 +4,47 @@ Local fixture HTTP server that mimics the arxiv Atom API for BDD tests.
 Runs in a daemon thread inside the behave process.  One server instance is
 created per scenario (via the Background step) and stopped in after_scenario.
 
-Response configuration is keyed by the integer value of the start query
-parameter.  Any start value absent from the response table uses the server
-defaults: HTTP 200, 10 entries, each with a comment URL.
+Response resolution order for each incoming request:
 
-An optional initial response sequence (set via set_initial_response_sequence)
-takes precedence over the start-based table for the first N requests,
-regardless of their start parameter values.  This supports retry-scenario
-testing where the same start=0 URL must return different statuses on
-successive calls.
+1.  If an initial response sequence is configured, the next element is
+    consumed regardless of the start query parameter.
+2.  Else if the start value is present in the response table, that entry
+    is used.
+3.  Else the server default response is used.
+
+The initial sequence supports retry-scenario tests where the same start=0
+URL must return different statuses on successive calls.
 """
 
 import http.server
 import io
 import threading
+import typing
 import urllib.parse
 import xml.etree.ElementTree as ET
 
 from atom_ns import ARXIV_NS, ATOM_NS
 
 
+class Response(typing.NamedTuple):
+    """One response policy: HTTP status, entry count, and how many of those entries carry a comment URL."""
+
+    status: int
+    n_entries: int
+    n_have_comment_url: int
+
+
+def _resolve_n_have_comment_url(
+    n_entries: int, n_have_comment_url: int | None
+) -> int:
+    """Return n_entries when the caller passed None, otherwise the explicit value."""
+    return n_entries if n_have_comment_url is None else n_have_comment_url
+
+
 def _build_atom_response(
     n_entries: int,
     n_have_comment_url: int,
-    primary_category: str = "cs.AI",
+    primary_category: str,
 ) -> bytes:
     """
     Return a minimal arxiv Atom XML body containing n_entries entries.
@@ -76,39 +93,81 @@ def _build_atom_response(
     return buf.getvalue()
 
 
+class _FixtureHTTPServer(http.server.HTTPServer):
+    """HTTPServer carrying a reference to its owning ArxivFixtureServer.
+
+    The handler reads this attribute via self.server.fixture so that the
+    handler class can live at module level instead of being defined as a
+    closure over the fixture instance.
+    """
+
+    fixture: "ArxivFixtureServer"
+
+
+class _FixtureRequestHandler(http.server.BaseHTTPRequestHandler):
+    """Handle GET requests by consulting the fixture's response policy."""
+
+    server: _FixtureHTTPServer  # narrowed type for self.server
+
+    def do_GET(self) -> None:
+        """Serve one Atom XML response based on the fixture's resolution order."""
+        parsed = urllib.parse.urlparse(self.path)
+        params = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+        start_val = int(params.get("start", ["0"])[0])
+
+        response, primary_category = self.server.fixture._next_response(
+            self.path, start_val
+        )
+
+        if response.status == 200:
+            body = _build_atom_response(
+                response.n_entries,
+                response.n_have_comment_url,
+                primary_category,
+            )
+            self.send_response(200)
+            self.send_header(
+                "Content-Type", "application/atom+xml; charset=utf-8"
+            )
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        else:
+            self.send_response(response.status)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+    def log_message(self, format: str, *args: object) -> None:
+        """Suppress default request logging to keep test output clean."""
+        return
+
+
 class ArxivFixtureServer:
     """
     Local HTTP server that mimics the arxiv API for BDD tests.
 
-    The response_table maps integer start values to
-    (http_status, n_entries, all_have_comment_url) tuples.  Requests whose
-    start value is absent from the table use the server defaults.
-
-    An initial response sequence (if set) is consumed in arrival order before
-    the start-based table is consulted, enabling retry-scenario tests where
-    successive requests to the same URL must return different statuses.
+    Resolution order per request is documented at module level: initial
+    response sequence first, then start-keyed table, then the single
+    default response.  The primary category applied to generated entries
+    is a server-wide setting (default "cs.AI").
     """
 
-    def __init__(self) -> None:
-        self._lock = threading.Lock()
-        # Raw request paths (including query strings), in arrival order.
-        self._requests: list[str] = []
-        # Maps start parameter value to (http_status, n_entries, n_have_url).
-        self._response_table: dict[int, tuple[int, int, int]] = {}
-        # Consumed in order before _response_table is consulted.
-        self._initial_responses: list[tuple[int, int, int]] = []
-        self._default_status: int = 200
-        self._default_n_entries: int = 10
-        # Default: all entries have a comment URL (equals n_entries per request).
-        # A value of -1 is a sentinel meaning "use n_entries for this response".
-        self._default_n_have_comment_url: int = -1
-        # Primary category applied to all generated entries.
-        self._default_primary_category: str = "cs.AI"
+    _DEFAULT_RESPONSE = Response(status=200, n_entries=10, n_have_comment_url=10)
+    _DEFAULT_PRIMARY_CATEGORY = "cs.AI"
 
-        handler_class = self._make_handler()
-        self._http_server = http.server.HTTPServer(
-            ("127.0.0.1", 0), handler_class
+    def __init__(self) -> None:
+        """Start the fixture server on an ephemeral localhost port in a daemon thread."""
+        self._lock = threading.Lock()
+        self._requests: list[str] = []
+        self._response_table: dict[int, Response] = {}
+        self._initial_responses: list[Response] = []
+        self._default: Response = self._DEFAULT_RESPONSE
+        self._primary_category: str = self._DEFAULT_PRIMARY_CATEGORY
+
+        self._http_server = _FixtureHTTPServer(
+            ("127.0.0.1", 0), _FixtureRequestHandler
         )
+        self._http_server.fixture = self
         self._port: int = self._http_server.server_address[1]
         self._thread = threading.Thread(
             target=self._http_server.serve_forever,
@@ -131,12 +190,18 @@ class ArxivFixtureServer:
         """
         Configure the response for a specific start parameter value.
 
-        n_have_comment_url is the count of entries that include a comment
-        URL; defaults to n_entries (all entries get a URL) when not set.
+        n_have_comment_url defaults to n_entries (all entries get a URL)
+        when not set.
         """
-        actual = n_entries if n_have_comment_url is None else n_have_comment_url
+        response = Response(
+            status=status,
+            n_entries=n_entries,
+            n_have_comment_url=_resolve_n_have_comment_url(
+                n_entries, n_have_comment_url
+            ),
+        )
         with self._lock:
-            self._response_table[start] = (status, n_entries, actual)
+            self._response_table[start] = response
 
     def set_initial_response_sequence(
         self, responses: list[tuple[int, int, int]]
@@ -147,10 +212,13 @@ class ArxivFixtureServer:
 
         Each element is (http_status, n_entries, n_have_comment_url).
         Once the sequence is exhausted, subsequent requests fall through to
-        the start-based response table and server defaults.
+        the start-based response table and the server default.
         """
         with self._lock:
-            self._initial_responses = list(responses)
+            self._initial_responses = [
+                Response(status=s, n_entries=n, n_have_comment_url=u)
+                for s, n, u in responses
+            ]
 
     def set_default(
         self,
@@ -159,28 +227,31 @@ class ArxivFixtureServer:
         n_have_comment_url: int | None = None,
     ) -> None:
         """
-        Override the default response returned when no explicit per-start
-        configuration matches and the initial sequence is exhausted.
+        Override the default response returned when neither the initial
+        sequence nor the per-start table matches.
 
-        n_have_comment_url defaults to -1 (sentinel for "all entries") when
-        not set.
+        n_have_comment_url defaults to n_entries (all entries get a URL)
+        when not set.
         """
+        response = Response(
+            status=status,
+            n_entries=n_entries,
+            n_have_comment_url=_resolve_n_have_comment_url(
+                n_entries, n_have_comment_url
+            ),
+        )
         with self._lock:
-            self._default_status = status
-            self._default_n_entries = n_entries
-            self._default_n_have_comment_url = (
-                -1 if n_have_comment_url is None else n_have_comment_url
-            )
+            self._default = response
 
     def set_default_primary_category(self, primary_category: str) -> None:
         """
         Set the arxiv primary category applied to all generated fixture entries.
 
         Affects responses from the initial sequence, the start-based table,
-        and the server defaults.  Default value is "cs.AI".
+        and the server default.  Default value is "cs.AI".
         """
         with self._lock:
-            self._default_primary_category = primary_category
+            self._primary_category = primary_category
 
     def get_requests(self) -> list[str]:
         """Return a snapshot of all received request paths with query strings."""
@@ -191,51 +262,21 @@ class ArxivFixtureServer:
         """Shut down the HTTP server thread."""
         self._http_server.shutdown()
 
-    def _make_handler(self) -> type:
-        """Return a BaseHTTPRequestHandler subclass closed over this instance."""
-        fixture = self
+    def _next_response(
+        self, request_path: str, start_val: int
+    ) -> tuple[Response, str]:
+        """
+        Record the request and return (response, primary_category) under lock.
 
-        class _Handler(http.server.BaseHTTPRequestHandler):
-            def do_GET(self) -> None:
-                parsed = urllib.parse.urlparse(self.path)
-                params = urllib.parse.parse_qs(
-                    parsed.query, keep_blank_values=True
-                )
-                start_val = int(params.get("start", ["0"])[0])
-
-                with fixture._lock:
-                    fixture._requests.append(self.path)
-                    if fixture._initial_responses:
-                        # Consume the next response from the initial sequence
-                        # before checking the start-based table.
-                        status, n, n_url = fixture._initial_responses.pop(0)
-                    elif start_val in fixture._response_table:
-                        status, n, n_url = fixture._response_table[start_val]
-                    else:
-                        status = fixture._default_status
-                        n = fixture._default_n_entries
-                        n_url = fixture._default_n_have_comment_url
-                    # Sentinel -1 means "give all entries a comment URL".
-                    actual_n_url = n if n_url == -1 else n_url
-                    primary_category = fixture._default_primary_category
-
-                if status == 200:
-                    body = _build_atom_response(n, actual_n_url, primary_category)
-                    self.send_response(200)
-                    self.send_header(
-                        "Content-Type",
-                        "application/atom+xml; charset=utf-8",
-                    )
-                    self.send_header("Content-Length", str(len(body)))
-                    self.end_headers()
-                    self.wfile.write(body)
-                else:
-                    self.send_response(status)
-                    self.send_header("Content-Length", "0")
-                    self.end_headers()
-
-            def log_message(self, format: str, *args: object) -> None:
-                # Suppress default request logging to keep test output clean.
-                pass
-
-        return _Handler
+        The initial sequence has highest precedence (consumed once per
+        request), then the start-keyed table, then the default.
+        """
+        with self._lock:
+            self._requests.append(request_path)
+            if self._initial_responses:
+                response = self._initial_responses.pop(0)
+            elif start_val in self._response_table:
+                response = self._response_table[start_val]
+            else:
+                response = self._default
+            return response, self._primary_category

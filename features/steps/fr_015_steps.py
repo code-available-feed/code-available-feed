@@ -30,6 +30,7 @@ def step_create_minimal_feed(context, filepath, published_date):
         abstract_url="https://arxiv.org/abs/0000.00000v1",
         published=published_date,
         updated=published_date,
+        abstract="",
         comment=None,
         comment_urls=["https://example.com/"],
     )

@@ -35,6 +35,7 @@ def _article_from_fields(fields: dict) -> src.pipeline_feed.Article:
         abstract_url=fields.get("abstract_url", ""),
         published=fields.get("published", ""),
         updated=fields.get("updated", ""),
+        abstract=fields.get("abstract", ""),
         comment=fields.get("comment", None),
         comment_urls=fields.get("comment_urls", []),
     )

@@ -31,7 +31,7 @@ def step_entry_with_table(context):
     Supported element paths:
       atom:title, atom:author[N]/atom:name, arxiv:primary_category/@term,
       atom:link[@rel='alternate'][@type='text/html']/@href,
-      atom:id, atom:published, atom:updated, arxiv:comment.
+      atom:id, atom:published, atom:updated, atom:summary, arxiv:comment.
     """
     entry = _make_entry()
     # Collect indexed author names so they can be inserted in document order
@@ -68,6 +68,8 @@ def step_entry_with_table(context):
             ET.SubElement(entry, f"{{{ATOM_NS}}}published").text = value
         elif element_path == "atom:updated":
             ET.SubElement(entry, f"{{{ATOM_NS}}}updated").text = value
+        elif element_path == "atom:summary":
+            ET.SubElement(entry, f"{{{ATOM_NS}}}summary").text = value
         elif element_path == "arxiv:comment":
             ET.SubElement(entry, f"{{{ARXIV_NS}}}comment").text = value
         else:
@@ -184,6 +186,14 @@ def step_recorded_abstract_url_no_prefix(context, prefix):
     actual = context.extracted_article.abstract_url
     assert not actual.startswith(prefix), (
         f"Expected abstract URL not to start with {prefix!r}, got {actual!r}"
+    )
+
+
+@then('the recorded abstract is "{expected}"')
+def step_recorded_abstract(context, expected):
+    actual = context.extracted_article.abstract
+    assert actual == expected, (
+        f"Expected abstract {expected!r}, got {actual!r}"
     )
 
 

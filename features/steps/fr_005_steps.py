@@ -26,6 +26,7 @@ def _build_minimal_feed(published: str) -> bytes:
         abstract_url="https://arxiv.org/abs/0000.00000v1",
         published=published,
         updated=published,
+        abstract="",
         comment=None,
         comment_urls=["https://example.com/"],
     )

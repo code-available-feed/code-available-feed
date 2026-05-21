@@ -44,6 +44,7 @@ def step_any_nonempty_article_set(context) -> None:
             abstract_url="https://arxiv.org/abs/0000.00000v1",
             published="2026-05-12T11:30:00Z",
             updated="2026-05-12T11:30:00Z",
+            abstract="",
             comment="Code: https://example.com/",
             comment_urls=["https://example.com/"],
         )

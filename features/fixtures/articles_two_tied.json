@@ -6,6 +6,7 @@
         "abstract_url": "https://arxiv.org/abs/0000.00010v1",
         "published": "2026-05-14T11:00:00Z",
         "updated": "2026-05-14T11:00:00Z",
+        "abstract": "Abstract for article alpha.",
         "comment": "Code: https://code.example.com/alice/alpha",
         "comment_urls": ["https://code.example.com/alice/alpha"]
     },
@@ -16,6 +17,7 @@
         "abstract_url": "https://arxiv.org/abs/0000.00011v1",
         "published": "2026-05-14T11:00:00Z",
         "updated": "2026-05-14T11:00:00Z",
+        "abstract": "Abstract for article beta.",
         "comment": "Demo: https://demo.example.com/beta",
         "comment_urls": ["https://demo.example.com/beta"]
     }

@@ -4,35 +4,38 @@ Feature: FR-003 Per-article field extraction from the arxiv API response
   For each article that passes the inclusion filter the pipeline records: the
   title, all author names in document order, the primary category, the arxiv
   abstract page URL (https), the first publication date, the latest version
-  date, and all "https://" URLs from the comment in order of appearance with
-  characters from the trailing-punctuation strip set stripped from each URL.
+  date, the abstract text (from atom:summary), and all "https://" URLs from
+  the comment in order of appearance with characters from the
+  trailing-punctuation strip set stripped from each URL.
 
   Scenario: Extract all recorded fields from a representative API entry
     Given an arxiv API entry with:
-      | element                                                    | value                                                         |
-      | atom:title                                                 | Entity-Consistent Video Generation                            |
-      | atom:author[0]/atom:name                                   | Alice Example                                                 |
-      | atom:author[1]/atom:name                                   | Bob Sample                                                    |
-      | arxiv:primary_category/@term                               | cs.CV                                                         |
-      | atom:link[@rel='alternate'][@type='text/html']/@href       | https://arxiv.org/abs/2605.15199v1                            |
-      | atom:id                                                    | http://arxiv.org/abs/2605.15199v1                             |
-      | atom:published                                             | 2026-05-12T11:30:00Z                                          |
-      | atom:updated                                               | 2026-05-12T11:30:00Z                                          |
-      | arxiv:comment                                              | Code: https://github.com/foo/bar demo: https://foo.github.io/ |
+      | element                                                    | value                                                                   |
+      | atom:title                                                 | Entity-Consistent Video Generation                                      |
+      | atom:author[0]/atom:name                                   | Alice Example                                                           |
+      | atom:author[1]/atom:name                                   | Bob Sample                                                              |
+      | arxiv:primary_category/@term                               | cs.CV                                                                   |
+      | atom:link[@rel='alternate'][@type='text/html']/@href       | https://arxiv.org/abs/0000.00001v1                                      |
+      | atom:id                                                    | http://arxiv.org/abs/0000.00001v1                                       |
+      | atom:published                                             | 2026-05-12T11:30:00Z                                                    |
+      | atom:updated                                               | 2026-05-12T11:30:00Z                                                    |
+      | atom:summary                                               | We propose a method for entity-consistent video generation.             |
+      | arxiv:comment                                              | Code: https://code.example.com/foo/bar demo: https://demo.example.com/ |
     When the pipeline extracts article fields
     Then the recorded title is "Entity-Consistent Video Generation"
     And the recorded authors in order are "Alice Example" then "Bob Sample"
     And the recorded primary category is "cs.CV"
-    And the recorded abstract page URL is "https://arxiv.org/abs/2605.15199v1"
+    And the recorded abstract page URL is "https://arxiv.org/abs/0000.00001v1"
     And the recorded published date is "2026-05-12T11:30:00Z"
     And the recorded updated date is "2026-05-12T11:30:00Z"
-    And the recorded comment URLs in order are "https://github.com/foo/bar" then "https://foo.github.io/"
+    And the recorded abstract is "We propose a method for entity-consistent video generation."
+    And the recorded comment URLs in order are "https://code.example.com/foo/bar" then "https://demo.example.com/"
 
   Scenario: Abstract page URL is taken from the alternate-type link, not the id element
-    Given an arxiv API entry whose atom:id is "http://arxiv.org/abs/2605.15199v1"
-    And the same entry has atom:link rel "alternate" type "text/html" with href "https://arxiv.org/abs/2605.15199v1"
+    Given an arxiv API entry whose atom:id is "http://arxiv.org/abs/0000.00000v1"
+    And the same entry has atom:link rel "alternate" type "text/html" with href "https://arxiv.org/abs/0000.00000v1"
     When the pipeline extracts article fields
-    Then the recorded abstract page URL is "https://arxiv.org/abs/2605.15199v1"
+    Then the recorded abstract page URL is "https://arxiv.org/abs/0000.00000v1"
     And the recorded abstract page URL does not start with "http://"
 
   Scenario Outline: Each character in the trailing-punctuation strip set is stripped from a single comment URL

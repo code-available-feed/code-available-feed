@@ -41,6 +41,7 @@ def step_apply_inclusion_filter(context):
         abstract_url="",
         published="",
         updated="",
+        abstract="",
         comment=context.article_comment,
         comment_urls=src.pipeline_feed.extract_comment_urls(context.article_comment),
     )

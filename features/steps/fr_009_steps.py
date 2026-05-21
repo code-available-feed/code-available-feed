@@ -37,6 +37,7 @@ def step_one_article_with_abstract_url(context, abstract_url):
             abstract_url=abstract_url,
             published="2026-05-12T11:30:00Z",
             updated="2026-05-12T11:30:00Z",
+            abstract="",
             comment=None,
             comment_urls=["https://example.com/"],
         )

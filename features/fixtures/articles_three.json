@@ -6,6 +6,7 @@
         "abstract_url": "https://arxiv.org/abs/0000.00002v1",
         "published": "2026-05-14T11:00:00Z",
         "updated": "2026-05-14T11:00:00Z",
+        "abstract": "Abstract for article two.",
         "comment": "Demo: https://demo.example.com/two",
         "comment_urls": ["https://demo.example.com/two"]
     },
@@ -16,6 +17,7 @@
         "abstract_url": "https://arxiv.org/abs/0000.00003v1",
         "published": "2026-05-12T09:00:00Z",
         "updated": "2026-05-12T09:00:00Z",
+        "abstract": "Abstract for article three.",
         "comment": "Project: https://project.example.org/three",
         "comment_urls": ["https://project.example.org/three"]
     },
@@ -26,7 +28,8 @@
         "abstract_url": "https://arxiv.org/abs/0000.00001v1",
         "published": "2026-05-13T10:00:00Z",
         "updated": "2026-05-13T10:00:00Z",
-        "comment": "Code: https://github.com/alice/repo1",
-        "comment_urls": ["https://github.com/alice/repo1"]
+        "abstract": "Abstract for article one.",
+        "comment": "Code: https://code.example.com/alice/repo1",
+        "comment_urls": ["https://code.example.com/alice/repo1"]
     }
 ]

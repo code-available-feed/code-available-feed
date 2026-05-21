@@ -82,6 +82,9 @@ def _build_atom_response(
         ET.SubElement(entry, f"{{{ATOM_NS}}}updated").text = (
             "2026-05-12T10:00:00Z"
         )
+        ET.SubElement(entry, f"{{{ATOM_NS}}}summary").text = (
+            f"Abstract text for fixture article {i + 1}."
+        )
 
         if i < n_have_comment_url:
             ET.SubElement(entry, f"{{{ARXIV_NS}}}comment").text = (

@@ -61,6 +61,7 @@ class Article(typing.NamedTuple):
     abstract_url: str
     published: str
     updated: str
+    abstract: str
     comment: str | None
     comment_urls: list[str]
 
@@ -306,6 +307,7 @@ def parse_entries(body: bytes) -> list[Article]:
       atom:link[@rel='alternate'][@type='text/html']   -> abstract_url
       atom:published                                   -> published
       atom:updated                                     -> updated
+      atom:summary (or "" if absent)                   -> abstract
       arxiv:comment (or None if absent)                -> comment
       comment_urls is computed from comment by extract_comment_urls.
     """
@@ -343,6 +345,9 @@ def parse_entries(body: bytes) -> list[Article]:
         updated_elem = entry.find(f"{{{_ATOM_NS}}}updated")
         updated = updated_elem.text if updated_elem is not None else ""
 
+        abstract_elem = entry.find(f"{{{_ATOM_NS}}}summary")
+        abstract = abstract_elem.text if abstract_elem is not None else ""
+
         comment_elem = entry.find(f"{{{_ARXIV_NS}}}comment")
         comment: str | None = (
             comment_elem.text if comment_elem is not None else None
@@ -356,6 +361,7 @@ def parse_entries(body: bytes) -> list[Article]:
                 abstract_url=abstract_url,
                 published=published or "",
                 updated=updated or "",
+                abstract=abstract or "",
                 comment=comment,
                 comment_urls=extract_comment_urls(comment),
             )

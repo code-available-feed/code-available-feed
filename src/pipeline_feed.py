@@ -105,6 +105,28 @@ def resolve_continue_on_api_error() -> bool:
     return os.environ.get("ARXIV_CONTINUE_ON_API_ERROR", "").lower() == "true"
 
 
+def _validate_staleness_days(value: str) -> int:
+    """
+    Parse ARXIV_MAX_STALENESS_DAYS as an integer and validate the range.
+
+    Accepts -1 (disabled) and any positive integer.  Raises ValueError for
+    any other input, including 0, negative integers other than -1, and
+    non-integer strings.  The error message names the variable and quotes
+    the offending value so the caller can log it directly.
+    """
+    try:
+        parsed = int(value)
+    except ValueError:
+        raise ValueError(
+            f"ARXIV_MAX_STALENESS_DAYS must be -1 or a positive integer, got: {value!r}"
+        )
+    if parsed != -1 and parsed < 1:
+        raise ValueError(
+            f"ARXIV_MAX_STALENESS_DAYS must be -1 or a positive integer, got: {parsed}"
+        )
+    return parsed
+
+
 # ---------------------------------------------------------------------------
 # Article inclusion filter
 # ---------------------------------------------------------------------------
@@ -587,7 +609,8 @@ def check_feed_staleness(
     max_staleness_days: int,
 ) -> int:
     """
-    Log the feed age and return 1 if the feed is stale; return 0 otherwise.
+    Log the feed age and return 1 when the newest entry is more than
+    max_staleness_days calendar days old; return 0 otherwise.
 
     Always reads atom_xml_path (when it exists) and logs an INFO line with the
     feed age, today's date, and the threshold.  Returns 0 immediately after
@@ -599,8 +622,9 @@ def check_feed_staleness(
     Parameters:
       atom_xml_path:      path to the Atom feed file to check
       today:              reference date (UTC) for the staleness comparison
-      max_staleness_days: -1 to disable; positive integer as the maximum age in
-                          days before the feed is considered stale
+      max_staleness_days: -1 to disable; positive integer N means the feed is
+                          considered stale when its newest entry is strictly
+                          more than N calendar days old (age == N still passes)
     """
     if not atom_xml_path.exists():
         _logger.info("feed file not found: %s", atom_xml_path)
@@ -655,7 +679,7 @@ def fetch_all_articles(
     base_url: str,
     category_id: str,
     today: datetime.date,
-    backoff_base_seconds: int,
+    backoff_base_seconds: float,
     max_results: int,
 ) -> list[dict]:
     """
@@ -696,7 +720,7 @@ def fetch_all_articles(
                     break
                 wait_seconds = (retry_number + 1) * backoff_base_seconds
                 _logger.info(
-                    "retry %d of %d after HTTP %d: waiting %d s then re-requesting %s",
+                    "retry %d of %d after HTTP %d: waiting %s s then re-requesting %s",
                     retry_number + 1, max_retries_first_page, status, wait_seconds, url,
                 )
                 time.sleep(wait_seconds)
@@ -754,6 +778,13 @@ def _setup_logging() -> None:
     stderr_handler.setFormatter(formatter)
 
     root = logging.getLogger()
+    # Clear any previously installed handlers so repeated in-process calls
+    # (e.g. from BDD step definitions invoking main() per scenario) do not
+    # accumulate duplicate handlers that emit each log record N times after
+    # N scenarios.  Also rebinds the handlers to the current sys.stdout /
+    # sys.stderr, which matters when behave or contextlib.redirect_* has
+    # swapped the streams between calls.
+    root.handlers.clear()
     root.setLevel(logging.INFO)
     root.addHandler(stdout_handler)
     root.addHandler(stderr_handler)
@@ -785,19 +816,9 @@ def run_staleness_check(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
 
     max_staleness_days_str = os.environ.get("ARXIV_MAX_STALENESS_DAYS", "-1")
     try:
-        max_staleness_days = int(max_staleness_days_str)
-    except ValueError:
-        _logger.error(
-            "ARXIV_MAX_STALENESS_DAYS must be -1 or a positive integer, got: %r",
-            max_staleness_days_str,
-        )
-        return 1
-
-    if max_staleness_days != -1 and max_staleness_days < 1:
-        _logger.error(
-            "ARXIV_MAX_STALENESS_DAYS must be -1 or a positive integer, got: %d",
-            max_staleness_days,
-        )
+        max_staleness_days = _validate_staleness_days(max_staleness_days_str)
+    except ValueError as exc:
+        _logger.error("%s", exc)
         return 1
 
     today_override = os.environ.get("PIPELINE_TODAY")
@@ -811,8 +832,16 @@ def run_staleness_check(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
     return check_feed_staleness(feed_path, today, max_staleness_days)
 
 
-def main() -> int:
-    """Run the pipeline and return the process exit code."""
+def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
+    """
+    Run the pipeline and return the process exit code.
+
+    The docs/ tree is resolved relative to base_dir so callers that run in a
+    different working directory (e.g. BDD step definitions invoking main()
+    in-process against a temporary directory) pass base_dir explicitly
+    rather than relying on the process cwd.  The default keeps the existing
+    behaviour for the shell script entry point.
+    """
     _setup_logging()
 
     github_repository = os.environ.get("GITHUB_REPOSITORY")
@@ -823,7 +852,7 @@ def main() -> int:
     base_url = os.environ.get("ARXIV_API_BASE_URL", "https://export.arxiv.org")
     category_id = resolve_category_id()
     strict_mode = resolve_strict_mode()
-    backoff_base_seconds = int(
+    backoff_base_seconds = float(
         os.environ.get("RETRY_BACKOFF_BASE_SECONDS", "60")
     )
     max_results = int(os.environ.get("ARXIV_MAX_RESULTS", "50"))
@@ -879,7 +908,7 @@ def main() -> int:
         return 0
 
     category_lower = category_id.lower()
-    output_dir = pathlib.Path("docs") / "arxiv" / category_lower
+    output_dir = base_dir / "docs" / "arxiv" / category_lower
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "atom.xml"
 

@@ -21,11 +21,7 @@ import threading
 import urllib.parse
 import xml.etree.ElementTree as ET
 
-_ATOM_NS = "http://www.w3.org/2005/Atom"
-_ARXIV_NS = "http://arxiv.org/schemas/atom"
-
-ET.register_namespace("", _ATOM_NS)
-ET.register_namespace("arxiv", _ARXIV_NS)
+from atom_ns import ARXIV_NS, ATOM_NS
 
 
 def _build_atom_response(
@@ -40,39 +36,39 @@ def _build_atom_response(
     https:// URL; the remainder do not.  Pass n_entries to give all entries
     a comment URL; pass 0 to give none.
     """
-    root = ET.Element(f"{{{_ATOM_NS}}}feed")
+    root = ET.Element(f"{{{ATOM_NS}}}feed")
 
     for i in range(n_entries):
-        entry = ET.SubElement(root, f"{{{_ATOM_NS}}}entry")
+        entry = ET.SubElement(root, f"{{{ATOM_NS}}}entry")
 
-        ET.SubElement(entry, f"{{{_ATOM_NS}}}id").text = (
+        ET.SubElement(entry, f"{{{ATOM_NS}}}id").text = (
             f"http://arxiv.org/abs/fixture.{i + 1:06d}v1"
         )
-        ET.SubElement(entry, f"{{{_ATOM_NS}}}title").text = (
+        ET.SubElement(entry, f"{{{ATOM_NS}}}title").text = (
             f"Fixture Article {i + 1}"
         )
 
-        author = ET.SubElement(entry, f"{{{_ATOM_NS}}}author")
-        ET.SubElement(author, f"{{{_ATOM_NS}}}name").text = "Fixture Author"
+        author = ET.SubElement(entry, f"{{{ATOM_NS}}}author")
+        ET.SubElement(author, f"{{{ATOM_NS}}}name").text = "Fixture Author"
 
-        primary_cat = ET.SubElement(entry, f"{{{_ARXIV_NS}}}primary_category")
+        primary_cat = ET.SubElement(entry, f"{{{ARXIV_NS}}}primary_category")
         primary_cat.set("term", primary_category)
 
-        link = ET.SubElement(entry, f"{{{_ATOM_NS}}}link")
+        link = ET.SubElement(entry, f"{{{ATOM_NS}}}link")
         link.set("rel", "alternate")
         link.set("type", "text/html")
         link.set("href", f"https://arxiv.org/abs/fixture.{i + 1:06d}v1")
 
-        ET.SubElement(entry, f"{{{_ATOM_NS}}}published").text = (
+        ET.SubElement(entry, f"{{{ATOM_NS}}}published").text = (
             "2026-05-12T10:00:00Z"
         )
-        ET.SubElement(entry, f"{{{_ATOM_NS}}}updated").text = (
+        ET.SubElement(entry, f"{{{ATOM_NS}}}updated").text = (
             "2026-05-12T10:00:00Z"
         )
 
         if i < n_have_comment_url:
-            ET.SubElement(entry, f"{{{_ARXIV_NS}}}comment").text = (
-                f"Code at https://github.com/fixture/repo-{i + 1}"
+            ET.SubElement(entry, f"{{{ARXIV_NS}}}comment").text = (
+                f"Code at https://code.example.com/fixture/repo-{i + 1}"
             )
 
     buf = io.BytesIO()

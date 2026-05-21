@@ -13,7 +13,7 @@ Feature: FR-005 Weekly storage path and week-rollover archive
     Given the local arxiv fixture server is running
     And the environment variable ARXIV_API_BASE_URL points at the fixture server
     And the environment variable ARXIV_CATEGORY_ID is "cs.AI"
-    And the environment variable GITHUB_REPOSITORY is "marcindulak/code-available-feed"
+    And the environment variable GITHUB_REPOSITORY is "owner/code-available-feed"
     And the environment variable PIPELINE_TODAY is "2026-05-14"
     And by default the fixture server returns entries that all have a comment URL
 

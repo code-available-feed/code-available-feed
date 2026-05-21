@@ -5,8 +5,6 @@ import tempfile
 
 from behave import given, then
 
-_ATOM_NS = "http://www.w3.org/2005/Atom"
-
 # A minimal valid Atom feed used as "known previous content" in diff scenarios.
 # It contains no entries so it differs from any pipeline output that includes
 # at least one article, guaranteeing the unified diff produces --- and +++ lines.

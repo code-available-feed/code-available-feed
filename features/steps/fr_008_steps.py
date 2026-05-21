@@ -69,3 +69,48 @@ def step_resolve_category_id_raises_value_error(context):
         "Expected resolve_category_id to raise ValueError, got "
         f"{type(context.resolve_exception).__name__}: {context.resolve_exception!r}"
     )
+
+
+@when("the continue-on-api-error flag is resolved")
+def step_resolve_continue_on_api_error(context):
+    context.resolved_continue_on_api_error = (
+        src.pipeline_feed.resolve_continue_on_api_error()
+    )
+
+
+@then("the resolved continue-on-api-error flag is {expected}")
+def step_resolved_continue_on_api_error(context, expected):
+    expected_bool = expected == "true"
+    assert context.resolved_continue_on_api_error == expected_bool, (
+        f"Expected continue-on-api-error {expected_bool}, "
+        f"got {context.resolved_continue_on_api_error}"
+    )
+
+
+@when("the staleness days configuration is resolved")
+def step_resolve_staleness_days(context):
+    # _validate_staleness_days raises ValueError on invalid input; the Then
+    # step asserts on the captured outcome (parsed value or exception type).
+    context.staleness_exception = None
+    context.staleness_parsed = None
+    value = os.environ.get("ARXIV_MAX_STALENESS_DAYS", "-1")
+    try:
+        context.staleness_parsed = src.pipeline_feed._validate_staleness_days(value)
+    except ValueError as exc:
+        context.staleness_exception = exc
+
+
+@then("ARXIV_MAX_STALENESS_DAYS is accepted")
+def step_staleness_accepted(context):
+    assert context.staleness_exception is None, (
+        f"Expected ARXIV_MAX_STALENESS_DAYS to be accepted, got exception: "
+        f"{context.staleness_exception!r}"
+    )
+
+
+@then("ARXIV_MAX_STALENESS_DAYS is rejected with ValueError")
+def step_staleness_rejected(context):
+    assert isinstance(context.staleness_exception, ValueError), (
+        "Expected ARXIV_MAX_STALENESS_DAYS to raise ValueError, got "
+        f"{type(context.staleness_exception).__name__}: {context.staleness_exception!r}"
+    )

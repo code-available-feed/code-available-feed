@@ -5,8 +5,7 @@ Feature: FR-003 Per-article field extraction from the arxiv API response
   title, all author names in document order, the primary category, the arxiv
   abstract page URL (https), the first publication date, the latest version
   date, and all "https://" URLs from the comment in order of appearance with
-  trailing punctuation characters from the set ".,;:)]>" stripped from each
-  URL.
+  characters from the trailing-punctuation strip set stripped from each URL.
 
   Scenario: Extract all recorded fields from a representative API entry
     Given an arxiv API entry with:
@@ -58,7 +57,7 @@ Feature: FR-003 Per-article field extraction from the arxiv API response
     Then the recorded comment URLs in order are:
       | https://example.com/x |
 
-  Scenario: Two URLs separated by prose are both recorded with punctuation stripped
+  Scenario: Two URLs separated by text are both recorded with punctuation stripped
     Given an article whose comment is "https://a.example/path, and https://b.example/"
     When the pipeline extracts the comment URLs
     Then the recorded comment URLs in order are:

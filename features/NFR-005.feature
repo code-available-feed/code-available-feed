@@ -13,7 +13,7 @@ Feature: NFR-005 Byte-for-byte deterministic XML output for identical input
 
   Background:
     Given the environment variable ARXIV_CATEGORY_ID is "cs.AI"
-    And the environment variable GITHUB_REPOSITORY is "marcindulak/code-available-feed"
+    And the environment variable GITHUB_REPOSITORY is "owner/code-available-feed"
 
   Scenario: Two runs over the same input produce byte-identical output
     Given a fixed set of input articles loaded from "features/fixtures/articles_three.json"

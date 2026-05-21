@@ -12,8 +12,7 @@ Feature: FR-012 workflow_dispatch trigger
   # There is no separate code path: a manually triggered run executes the
   # same pipeline script as a scheduled run. The only locally testable thing
   # would be parsing the workflow YAML and asserting that "workflow_dispatch"
-  # appears under "on:". That is trivial config inspection and CLAUDE.md
-  # explicitly excludes it.
+  # appears under "on:".
   #
   # Verification path: the maintainer pressing "Run workflow" in the GitHub
   # Actions UI is itself the verification.

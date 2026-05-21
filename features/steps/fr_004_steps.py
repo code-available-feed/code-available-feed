@@ -6,8 +6,7 @@ import xml.etree.ElementTree as ET
 from behave import given, then, when
 
 import src.pipeline_feed
-
-_ATOM_NS = "http://www.w3.org/2005/Atom"
+from atom_ns import ATOM_NS
 
 
 def _parse_authors(value: str) -> list[str]:
@@ -22,7 +21,7 @@ def _parse_urls(value: str) -> list[str]:
 
 def _get_entry(context) -> ET.Element:
     """Return the first entry element from the generated feed."""
-    entries = context.feed_root.findall(f"{{{_ATOM_NS}}}entry")
+    entries = context.feed_root.findall(f"{{{ATOM_NS}}}entry")
     assert entries, "No entries found in generated feed"
     return entries[0]
 
@@ -111,7 +110,7 @@ def step_generate_feed(context):
 @then('the entry has title "{expected}"')
 def step_entry_has_title(context, expected):
     entry = _get_entry(context)
-    title_elem = entry.find(f"{{{_ATOM_NS}}}title")
+    title_elem = entry.find(f"{{{ATOM_NS}}}title")
     assert title_elem is not None, "No title element in entry"
     assert title_elem.text == expected, (
         f"Expected title {expected!r}, got {title_elem.text!r}"
@@ -125,8 +124,8 @@ def step_entry_has_authors_two(context, first, second):
     entry = _get_entry(context)
     names = [
         name_elem.text
-        for author_elem in entry.findall(f"{{{_ATOM_NS}}}author")
-        for name_elem in [author_elem.find(f"{{{_ATOM_NS}}}name")]
+        for author_elem in entry.findall(f"{{{ATOM_NS}}}author")
+        for name_elem in [author_elem.find(f"{{{ATOM_NS}}}name")]
         if name_elem is not None
     ]
     expected = [first, second]
@@ -140,7 +139,7 @@ def step_entry_has_authors_two(context, first, second):
 )
 def step_entry_has_category(context, term, scheme):
     entry = _get_entry(context)
-    cat_elem = entry.find(f"{{{_ATOM_NS}}}category")
+    cat_elem = entry.find(f"{{{ATOM_NS}}}category")
     assert cat_elem is not None, "No category element in entry"
     actual_term = cat_elem.get("term")
     actual_scheme = cat_elem.get("scheme")
@@ -155,7 +154,7 @@ def step_entry_has_category(context, term, scheme):
 @then('the entry has id "{expected}"')
 def step_entry_has_id(context, expected):
     entry = _get_entry(context)
-    id_elem = entry.find(f"{{{_ATOM_NS}}}id")
+    id_elem = entry.find(f"{{{ATOM_NS}}}id")
     assert id_elem is not None, "No id element in entry"
     assert id_elem.text == expected, (
         f"Expected id {expected!r}, got {id_elem.text!r}"
@@ -165,7 +164,7 @@ def step_entry_has_id(context, expected):
 @then('the entry has link rel "{rel}" type "{media_type}" with href "{href}"')
 def step_entry_has_link(context, rel, media_type, href):
     entry = _get_entry(context)
-    for link_elem in entry.findall(f"{{{_ATOM_NS}}}link"):
+    for link_elem in entry.findall(f"{{{ATOM_NS}}}link"):
         if (
             link_elem.get("rel") == rel
             and link_elem.get("type") == media_type
@@ -183,7 +182,7 @@ def step_entry_has_link(context, rel, media_type, href):
 @then('the entry has published "{expected}"')
 def step_entry_has_published(context, expected):
     entry = _get_entry(context)
-    pub_elem = entry.find(f"{{{_ATOM_NS}}}published")
+    pub_elem = entry.find(f"{{{ATOM_NS}}}published")
     assert pub_elem is not None, "No published element in entry"
     assert pub_elem.text == expected, (
         f"Expected published {expected!r}, got {pub_elem.text!r}"
@@ -193,7 +192,7 @@ def step_entry_has_published(context, expected):
 @then('the entry has updated "{expected}"')
 def step_entry_has_updated(context, expected):
     entry = _get_entry(context)
-    upd_elem = entry.find(f"{{{_ATOM_NS}}}updated")
+    upd_elem = entry.find(f"{{{ATOM_NS}}}updated")
     assert upd_elem is not None, "No updated element in entry"
     assert upd_elem.text == expected, (
         f"Expected updated {expected!r}, got {upd_elem.text!r}"
@@ -203,7 +202,7 @@ def step_entry_has_updated(context, expected):
 @then('the entry has content type "text" with value "{expected}"')
 def step_entry_has_content_text(context, expected):
     entry = _get_entry(context)
-    content_elem = entry.find(f"{{{_ATOM_NS}}}content")
+    content_elem = entry.find(f"{{{ATOM_NS}}}content")
     assert content_elem is not None, "No content element in entry"
     actual_type = content_elem.get("type")
     assert actual_type == "text", (
@@ -221,10 +220,10 @@ def step_entry_has_content_text(context, expected):
     ' "{first}" then "{second}" then "{third}"'
 )
 def step_entry_published_dates_three(context, first, second, third):
-    entries = context.feed_root.findall(f"{{{_ATOM_NS}}}entry")
+    entries = context.feed_root.findall(f"{{{ATOM_NS}}}entry")
     assert len(entries) == 3, f"Expected 3 entries, got {len(entries)}"
     dates = [
-        entry.find(f"{{{_ATOM_NS}}}published").text for entry in entries
+        entry.find(f"{{{ATOM_NS}}}published").text for entry in entries
     ]
     expected = [first, second, third]
     assert dates == expected, (
@@ -234,7 +233,7 @@ def step_entry_published_dates_three(context, first, second, third):
 
 @then('the feed-level title element value is "{expected}"')
 def step_feed_level_title(context, expected):
-    title_elem = context.feed_root.find(f"{{{_ATOM_NS}}}title")
+    title_elem = context.feed_root.find(f"{{{ATOM_NS}}}title")
     assert title_elem is not None, "No title element in feed"
     assert title_elem.text == expected, (
         f"Expected feed title {expected!r}, got {title_elem.text!r}"
@@ -243,7 +242,7 @@ def step_feed_level_title(context, expected):
 
 @then('the feed-level updated element value is "{expected}"')
 def step_feed_level_updated(context, expected):
-    updated_elem = context.feed_root.find(f"{{{_ATOM_NS}}}updated")
+    updated_elem = context.feed_root.find(f"{{{ATOM_NS}}}updated")
     assert updated_elem is not None, "No updated element in feed"
     assert updated_elem.text == expected, (
         f"Expected feed updated {expected!r}, got {updated_elem.text!r}"

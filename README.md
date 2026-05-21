@@ -34,7 +34,7 @@ See the points below to understand this setup!
 
    c. `ARXIV_CONTINUE_ON_API_ERROR` (defaults to `true` in the workflow): set to `false` to fail the workflow immediately on any arXiv API error instead of continuing silently.
 
-   d. `ARXIV_MAX_STALENESS_DAYS` (defaults to `5` in the workflow): number of days without a new feed entry before the workflow fails with a staleness alert. Set to `-1` to disable the check. Raise this value for low-volume categories where multi-day gaps without new articles are normal.
+   d. `ARXIV_MAX_STALENESS_DAYS` (defaults to `5` in the workflow): the workflow fails with a staleness alert when the newest feed entry is more than this many calendar days old (e.g. with the default of `5`, an age of `5` days passes and `6` days fails). Set to `-1` to disable the check. Raise this value for low-volume categories where multi-day gaps without new articles are normal.
 
 3. Run the `pipeline_feed` workflow at least once (via the Actions tab or wait for the daily schedule).
    The first successful `deploy_orphan` run creates the `gh-pages` branch.

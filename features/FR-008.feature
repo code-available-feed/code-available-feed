@@ -45,3 +45,48 @@ Feature: FR-008 Repository variable resolution
     Given the environment variable ARXIV_CATEGORY_ID is "../etc/passwd"
     When the configuration category id is resolved
     Then resolve_category_id raises ValueError
+
+  Scenario Outline: ARXIV_CONTINUE_ON_API_ERROR enables continue mode only for the case-insensitive literal "true"
+    Given the environment variable ARXIV_CONTINUE_ON_API_ERROR is "<value>"
+    When the continue-on-api-error flag is resolved
+    Then the resolved continue-on-api-error flag is <expected>
+
+    Examples:
+      | value | expected |
+      | true  | true     |
+      | True  | true     |
+      | TRUE  | true     |
+      | false | false    |
+      | False | false    |
+      |       | false    |
+      | yes   | false    |
+      | 1     | false    |
+      | on    | false    |
+
+  Scenario: ARXIV_CONTINUE_ON_API_ERROR defaults to false when the environment variable is unset
+    Given the environment variable ARXIV_CONTINUE_ON_API_ERROR is unset
+    When the continue-on-api-error flag is resolved
+    Then the resolved continue-on-api-error flag is false
+
+  Scenario Outline: ARXIV_MAX_STALENESS_DAYS accepts -1 (disabled) and positive integers
+    Given the environment variable ARXIV_MAX_STALENESS_DAYS is "<value>"
+    When the staleness days configuration is resolved
+    Then ARXIV_MAX_STALENESS_DAYS is accepted
+
+    Examples:
+      | value |
+      | -1    |
+      | 1     |
+      | 5     |
+
+  Scenario Outline: ARXIV_MAX_STALENESS_DAYS rejects zero, negatives other than -1, and non-integers
+    Given the environment variable ARXIV_MAX_STALENESS_DAYS is "<value>"
+    When the staleness days configuration is resolved
+    Then ARXIV_MAX_STALENESS_DAYS is rejected with ValueError
+
+    Examples:
+      | value      |
+      | 0          |
+      | -2         |
+      | notanumber |
+      | 1.5        |

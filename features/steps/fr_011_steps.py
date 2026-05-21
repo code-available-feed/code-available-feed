@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 
 from behave import given, then
 
-_ATOM_NS = "http://www.w3.org/2005/Atom"
+from atom_ns import ATOM_NS
 
 
 @given("the fixture server responds with HTTP 503 to the first request")
@@ -83,7 +83,7 @@ def step_generated_atom_xml_has_n_entries(context, n):
         f"pipeline stderr: {context.pipeline_result.stderr}"
     )
     root = ET.fromstring(feed_path.read_bytes())
-    entries = root.findall(f"{{{_ATOM_NS}}}entry")
+    entries = root.findall(f"{{{ATOM_NS}}}entry")
     assert len(entries) == n, (
         f"Expected {n} entries in atom.xml, got {len(entries)}"
     )

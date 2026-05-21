@@ -16,7 +16,7 @@ Feature: FR-001 Fetch the current ISO week from the arxiv API
     Given the local arxiv fixture server is running
     And the environment variable ARXIV_API_BASE_URL points at the fixture server
     And the environment variable ARXIV_CATEGORY_ID is "cs.AI"
-    And the environment variable GITHUB_REPOSITORY is "marcindulak/code-available-feed"
+    And the environment variable GITHUB_REPOSITORY is "owner/code-available-feed"
     And by default the fixture server returns entries that all have a comment URL
     And no "docs/arxiv/cs.ai/atom.xml" file exists in a fresh temporary directory
 

@@ -13,7 +13,7 @@ Feature: FR-006 No-change commit guard
   string serves two purposes: it is printed to stdout by the pipeline as a
   log line, and it is reused as the commit message subject of the gh-pages
   orphan commit produced by scripts/deploy_orphan.sh. The same
-  src/commit_message.py function is the single source of truth for both
+  src/pipeline_feed.py function build_commit_message_from_bytes is the single source of truth for both
   uses. The git commit invocation itself is part of scripts/deploy_orphan.sh
   and the GitHub Actions workflow and is not covered by BDD scenarios.
 

@@ -8,7 +8,7 @@ Feature: FR-004 Atom 1.0 feed generation
 
   Background:
     Given the environment variable ARXIV_CATEGORY_ID is "cs.AI"
-    And the environment variable GITHUB_REPOSITORY is "marcindulak/code-available-feed"
+    And the environment variable GITHUB_REPOSITORY is "owner/code-available-feed"
 
   Scenario: Each entry contains the required Atom elements in the required form
     Given one input article with:
@@ -55,8 +55,8 @@ Feature: FR-004 Atom 1.0 feed generation
   Scenario: A same-week revision does not change article position and feed updated uses published not updated
     Given three input articles:
       | title   | authors      | primary_category | abstract_url                              | published            | updated              | comment_urls              |
-      | Paper A | Test Author  | cs.AI            | https://arxiv.org/abs/0001.00001v1        | 2026-05-10T08:00:00Z | 2026-05-10T08:00:00Z | https://example.com/a     |
-      | Paper B | Test Author  | cs.AI            | https://arxiv.org/abs/0001.00002v1        | 2026-05-14T15:00:00Z | 2026-05-15T10:00:00Z | https://example.com/b     |
+      | Paper A | Test Author  | cs.AI            | https://arxiv.org/abs/0001.00001v1        | 2026-05-10T08:00:00Z | 2026-05-17T08:00:00Z | https://example.com/a     |
+      | Paper B | Test Author  | cs.AI            | https://arxiv.org/abs/0001.00002v1        | 2026-05-14T15:00:00Z | 2026-05-16T10:00:00Z | https://example.com/b     |
       | Paper C | Test Author  | cs.AI            | https://arxiv.org/abs/0001.00003v1        | 2026-05-12T09:00:00Z | 2026-05-12T09:00:00Z | https://example.com/c     |
     When the feed is generated
     Then the entry published dates in document order are "2026-05-14T15:00:00Z" then "2026-05-12T09:00:00Z" then "2026-05-10T08:00:00Z"
@@ -71,9 +71,9 @@ Feature: FR-004 Atom 1.0 feed generation
     Then the feed-level title element value is "<expected_title>"
 
     Examples:
-      | category | strict | repository                      | expected_title                                          |
-      | cs.AI    | false  | marcindulak/code-available-feed | cs.AI strict=false marcindulak/code-available-feed     |
-      | cs.CV    | true   | exampleuser/my-fork             | cs.CV strict=true exampleuser/my-fork                  |
+      | category | strict | repository                | expected_title                               |
+      | cs.AI    | false  | owner/code-available-feed | cs.AI strict=false owner/code-available-feed |
+      | cs.CV    | true   | exampleuser/my-fork       | cs.CV strict=true exampleuser/my-fork        |
 
   Scenario: Top-level feed updated is the newest article published date
     Given three input articles:

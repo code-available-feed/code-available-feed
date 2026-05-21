@@ -1,32 +1,39 @@
 """Step definitions for FR-005: Weekly storage path and week-rollover archive."""
 
-import io
 import pathlib
 import tempfile
-import xml.etree.ElementTree as ET
 
 from behave import given, then
 
-_ATOM_NS = "http://www.w3.org/2005/Atom"
-
-# Register the default namespace so the serialiser writes <feed xmlns="...">
-# rather than <ns0:feed xmlns:ns0="...">.
-ET.register_namespace("", _ATOM_NS)
+import src.pipeline_feed
 
 
 def _build_minimal_feed(published: str) -> bytes:
     """
-    Return minimal Atom XML bytes with one <entry> at the given published date.
+    Return Atom XML bytes for a one-entry feed at the given published date.
+
+    Delegates to src.pipeline_feed.build_feed so the bytes match the
+    production feed format exactly; previously this helper hand-built XML
+    that diverged from the production output.
 
     Parameters:
       published: RFC 3339 date string, e.g. "2026-05-08T12:00:00Z"
     """
-    root = ET.Element(f"{{{_ATOM_NS}}}feed")
-    entry = ET.SubElement(root, f"{{{_ATOM_NS}}}entry")
-    ET.SubElement(entry, f"{{{_ATOM_NS}}}published").text = published
-    buf = io.BytesIO()
-    ET.ElementTree(root).write(buf, encoding="UTF-8", xml_declaration=True)
-    return buf.getvalue()
+    article = {
+        "title": "Test Article",
+        "authors": ["Test Author"],
+        "primary_category": "cs.AI",
+        "abstract_url": "https://arxiv.org/abs/0000.00000v1",
+        "published": published,
+        "updated": published,
+        "comment_urls": ["https://example.com/"],
+    }
+    return src.pipeline_feed.build_feed(
+        [article],
+        category_id="cs.AI",
+        strict_mode=False,
+        github_repository="owner/code-available-feed",
+    )
 
 
 @given('an existing "{filepath}" whose newest entry published date is "{published}"')

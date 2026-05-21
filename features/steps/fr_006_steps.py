@@ -1,57 +1,71 @@
 """Step definitions for FR-006: No-change commit guard."""
 
-import io
 import pathlib
 import tempfile
-import xml.etree.ElementTree as ET
 
 from behave import given, then, when
 
 import src.pipeline_feed
 
-_ATOM_NS = "http://www.w3.org/2005/Atom"
+_MINIMAL_ARTICLE_BASE = {
+    "title": "Test Article",
+    "authors": ["Test Author"],
+    "primary_category": "cs.AI",
+    "abstract_url": "https://arxiv.org/abs/0000.00000v1",
+    "comment_urls": ["https://example.com/"],
+}
 
-# Register the default namespace so the serialiser writes <feed xmlns="...">
-# rather than <ns0:feed xmlns:ns0="...">.
-ET.register_namespace("", _ATOM_NS)
+
+def _build_feed_bytes(articles: list[dict]) -> bytes:
+    """Serialize articles to Atom XML via src.pipeline_feed.build_feed."""
+    return src.pipeline_feed.build_feed(
+        articles,
+        category_id="cs.AI",
+        strict_mode=False,
+        github_repository="owner/code-available-feed",
+    )
 
 
 def _build_minimal_atom_feed() -> bytes:
-    """Return minimal Atom XML bytes with one entry, for commit-guard tests."""
-    root = ET.Element(f"{{{_ATOM_NS}}}feed")
-    entry = ET.SubElement(root, f"{{{_ATOM_NS}}}entry")
-    ET.SubElement(entry, f"{{{_ATOM_NS}}}published").text = "2026-05-14T15:00:00Z"
-    buf = io.BytesIO()
-    ET.ElementTree(root).write(buf, encoding="UTF-8", xml_declaration=True)
-    return buf.getvalue()
+    """Return Atom XML bytes for a single-entry minimal feed used by commit-guard tests."""
+    article = {
+        **_MINIMAL_ARTICLE_BASE,
+        "published": "2026-05-14T15:00:00Z",
+        "updated": "2026-05-14T15:00:00Z",
+    }
+    return _build_feed_bytes([article])
 
 
 def _build_feed_for_message(n: int, newest_published: str) -> bytes:
     """
     Return Atom XML bytes with n entries.
 
-    The first entry carries newest_published; additional entries carry an
-    earlier placeholder date so newest_published_date_from_feed returns the
-    correct maximum.
+    The first article carries newest_published (and equal updated); any
+    additional articles carry the static "2026-01-01T00:00:00Z" date.  build_feed
+    sorts by published descending, so the first article stays at the top of
+    the serialized output and build_commit_message_from_bytes reads it as
+    the newest entry.
 
     Parameters:
       n:                number of entries to include
       newest_published: RFC 3339 date string for the newest entry
     """
-    root = ET.Element(f"{{{_ATOM_NS}}}feed")
-    entry = ET.SubElement(root, f"{{{_ATOM_NS}}}entry")
-    ET.SubElement(entry, f"{{{_ATOM_NS}}}published").text = newest_published
+    articles = [
+        {
+            **_MINIMAL_ARTICLE_BASE,
+            "published": newest_published,
+            "updated": newest_published,
+        }
+    ]
     for _ in range(1, n):
-        extra = ET.SubElement(root, f"{{{_ATOM_NS}}}entry")
-        ET.SubElement(extra, f"{{{_ATOM_NS}}}published").text = "2026-01-01T00:00:00Z"
-    buf = io.BytesIO()
-    ET.ElementTree(root).write(buf, encoding="UTF-8", xml_declaration=True)
-    return buf.getvalue()
-
-
-# ---------------------------------------------------------------------------
-# Commit-guard scenarios (scenarios 1-3)
-# ---------------------------------------------------------------------------
+        articles.append(
+            {
+                **_MINIMAL_ARTICLE_BASE,
+                "published": "2026-01-01T00:00:00Z",
+                "updated": "2026-01-01T00:00:00Z",
+            }
+        )
+    return _build_feed_bytes(articles)
 
 
 @given('an existing "{filepath}" file with known content')
@@ -115,21 +129,10 @@ def step_commit_guard_reports(context, expected):
     )
 
 
-# ---------------------------------------------------------------------------
-# Commit message scenarios (scenarios 4-6)
-# ---------------------------------------------------------------------------
-
-
-@given(
-    'an atom.xml containing {count:d} {entries_word} whose newest published'
-    ' date is "{published}"'
-)
-def step_atom_xml_with_entries(context, count, entries_word, published):
-    """
-    Build an Atom feed with count entries; the first entry has the given
-    published date.  entries_word ("entry" or "entries") is accepted but
-    ignored — the count drives entry generation.
-    """
+@given('an atom.xml containing {count:d} entry whose newest published date is "{published}"')
+@given('an atom.xml containing {count:d} entries whose newest published date is "{published}"')
+def step_atom_xml_with_entries(context, count, published):
+    """Build an Atom feed with count entries; the first entry has the given published date."""
     context.message_feed_bytes = _build_feed_for_message(count, published)
 
 

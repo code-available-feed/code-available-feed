@@ -2,7 +2,7 @@
 Feature: FR-002 Article inclusion filter
 
   An article is included in the feed if and only if both conditions hold:
-  (1) the primary-category condition controlled by ARXIV_CATEGORY_STRICT,
+  (1) belongs to the primary-category (behavior controlled by ARXIV_CATEGORY_STRICT),
   (2) its arxiv:comment field contains at least one "https://" URL.
 
   Background:
@@ -67,4 +67,5 @@ Feature: FR-002 Article inclusion filter
       | configured | article_primary | outcome  |
       | cs.AI      | cs.ai           | included |
       | cs.ai      | CS.AI           | included |
+      | cS.Ai      | CS.AI           | included |      
       | cs.AI      | cs.cv           | excluded |

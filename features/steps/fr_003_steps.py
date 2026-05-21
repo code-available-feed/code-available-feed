@@ -6,19 +6,17 @@ import xml.etree.ElementTree as ET
 from behave import given, then, when
 
 import src.pipeline_feed
-
-_ATOM_NS = "http://www.w3.org/2005/Atom"
-_ARXIV_NS = "http://arxiv.org/schemas/atom"
+from atom_ns import ARXIV_NS, ATOM_NS
 
 
 def _make_entry() -> ET.Element:
     """Return an empty <entry> element in the Atom namespace."""
-    return ET.Element(f"{{{_ATOM_NS}}}entry")
+    return ET.Element(f"{{{ATOM_NS}}}entry")
 
 
 def _serialise_entry(entry: ET.Element) -> bytes:
     """Wrap entry in a <feed> root and return UTF-8 Atom XML bytes."""
-    root = ET.Element(f"{{{_ATOM_NS}}}feed")
+    root = ET.Element(f"{{{ATOM_NS}}}feed")
     root.append(entry)
     buf = io.BytesIO()
     ET.ElementTree(root).write(buf, encoding="UTF-8", xml_declaration=True)
@@ -45,7 +43,7 @@ def step_entry_with_table(context):
         value = row["value"]
 
         if element_path == "atom:title":
-            ET.SubElement(entry, f"{{{_ATOM_NS}}}title").text = value
+            ET.SubElement(entry, f"{{{ATOM_NS}}}title").text = value
         elif (
             element_path.startswith("atom:author[")
             and "/atom:name" in element_path
@@ -54,32 +52,32 @@ def step_entry_with_table(context):
             idx = int(element_path[len("atom:author["):bracket_end])
             author_names[idx] = value
         elif element_path == "arxiv:primary_category/@term":
-            elem = ET.SubElement(entry, f"{{{_ARXIV_NS}}}primary_category")
+            elem = ET.SubElement(entry, f"{{{ARXIV_NS}}}primary_category")
             elem.set("term", value)
         elif (
             element_path
             == "atom:link[@rel='alternate'][@type='text/html']/@href"
         ):
-            link = ET.SubElement(entry, f"{{{_ATOM_NS}}}link")
+            link = ET.SubElement(entry, f"{{{ATOM_NS}}}link")
             link.set("rel", "alternate")
             link.set("type", "text/html")
             link.set("href", value)
         elif element_path == "atom:id":
-            ET.SubElement(entry, f"{{{_ATOM_NS}}}id").text = value
+            ET.SubElement(entry, f"{{{ATOM_NS}}}id").text = value
         elif element_path == "atom:published":
-            ET.SubElement(entry, f"{{{_ATOM_NS}}}published").text = value
+            ET.SubElement(entry, f"{{{ATOM_NS}}}published").text = value
         elif element_path == "atom:updated":
-            ET.SubElement(entry, f"{{{_ATOM_NS}}}updated").text = value
+            ET.SubElement(entry, f"{{{ATOM_NS}}}updated").text = value
         elif element_path == "arxiv:comment":
-            ET.SubElement(entry, f"{{{_ARXIV_NS}}}comment").text = value
+            ET.SubElement(entry, f"{{{ARXIV_NS}}}comment").text = value
         else:
             raise ValueError(
                 f"Unsupported element path in step table: {element_path!r}"
             )
 
     for idx in sorted(author_names):
-        author_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}author")
-        ET.SubElement(author_elem, f"{{{_ATOM_NS}}}name").text = (
+        author_elem = ET.SubElement(entry, f"{{{ATOM_NS}}}author")
+        ET.SubElement(author_elem, f"{{{ATOM_NS}}}name").text = (
             author_names[idx]
         )
 
@@ -90,7 +88,7 @@ def step_entry_with_table(context):
 def step_entry_with_id(context, id_text):
     """Create a minimal entry with only an id element."""
     entry = _make_entry()
-    ET.SubElement(entry, f"{{{_ATOM_NS}}}id").text = id_text
+    ET.SubElement(entry, f"{{{ATOM_NS}}}id").text = id_text
     context.api_entry = entry
 
 
@@ -100,7 +98,7 @@ def step_entry_with_id(context, id_text):
 )
 def step_entry_add_link(context, rel, media_type, href):
     """Append a link element to the entry already in context.api_entry."""
-    link = ET.SubElement(context.api_entry, f"{{{_ATOM_NS}}}link")
+    link = ET.SubElement(context.api_entry, f"{{{ATOM_NS}}}link")
     link.set("rel", rel)
     link.set("type", media_type)
     link.set("href", href)
@@ -119,8 +117,8 @@ def step_article_comment_for_url_extraction(context, comment):
 def step_entry_published_updated(context, published, updated):
     """Create a minimal entry with only published and updated elements."""
     entry = _make_entry()
-    ET.SubElement(entry, f"{{{_ATOM_NS}}}published").text = published
-    ET.SubElement(entry, f"{{{_ATOM_NS}}}updated").text = updated
+    ET.SubElement(entry, f"{{{ATOM_NS}}}published").text = published
+    ET.SubElement(entry, f"{{{ATOM_NS}}}updated").text = updated
     context.api_entry = entry
 
 

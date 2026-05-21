@@ -12,12 +12,12 @@ Feature: FR-014 Feed alternate link to the source GitHub repository
     Then the GitHub repo URL is "<expected_url>"
 
     Examples:
-      | repository                          | expected_url                                         |
-      | marcindulak/code-available-feed     | https://github.com/marcindulak/code-available-feed   |
-      | exampleuser/my-fork                 | https://github.com/exampleuser/my-fork               |
+      | repository                | expected_url                                 |
+      | owner/code-available-feed | https://github.com/owner/code-available-feed |
+      | exampleuser/my-fork       | https://github.com/exampleuser/my-fork       |
 
   Scenario: Feed alternate link points to the GitHub repository
-    Given the environment variable GITHUB_REPOSITORY is "marcindulak/code-available-feed"
+    Given the environment variable GITHUB_REPOSITORY is "owner/code-available-feed"
     And the environment variable ARXIV_CATEGORY_ID is "cs.AI"
     When the feed is generated
-    Then the feed-level link element with rel "alternate" has href "https://github.com/marcindulak/code-available-feed"
+    Then the feed-level link element with rel "alternate" has href "https://github.com/owner/code-available-feed"

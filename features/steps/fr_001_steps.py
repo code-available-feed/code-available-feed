@@ -1,14 +1,25 @@
 """Step definitions for FR-001: Fetch the current ISO week from the arxiv API."""
 
+import contextlib
+import io
 import os
 import pathlib
-import subprocess
 import tempfile
+import typing
 import urllib.parse
 
 from behave import given, then, when
 
+import src.pipeline_feed
 from fixtures.arxiv_fixture_server import ArxivFixtureServer
+
+
+class PipelineResult(typing.NamedTuple):
+    """In-process replacement for subprocess.CompletedProcess used by BDD steps."""
+
+    returncode: int
+    stdout: str
+    stderr: str
 
 
 @given("the local arxiv fixture server is running")
@@ -61,21 +72,27 @@ def step_fixture_respond_to_first_request(context, status, n_entries):
 
 @when("the pipeline runs to completion")
 def step_run_pipeline(context):
-    env = os.environ.copy()
-    # Ensure the pipeline subprocess can find src/ regardless of cwd.
-    env["PYTHONPATH"] = "/app"
+    """
+    Invoke src.pipeline_feed.main() in-process against a temporary base_dir.
 
+    Capturing stdout/stderr via contextlib.redirect_* works because
+    _setup_logging() clears prior handlers on every call (see
+    src/pipeline_feed.py); the new handlers bind to the redirected streams.
+    """
     if context.run_dir is None:
         context.run_dir = pathlib.Path(tempfile.mkdtemp())
-
-    result = subprocess.run(
-        ["python", "-m", "src.pipeline_feed"],
-        cwd=str(context.run_dir),
-        env=env,
-        capture_output=True,
-        text=True,
+    stdout_buf = io.StringIO()
+    stderr_buf = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(stdout_buf), contextlib.redirect_stderr(stderr_buf):
+            returncode = src.pipeline_feed.main(base_dir=context.run_dir)
+    except SystemExit as exc:
+        returncode = exc.code if isinstance(exc.code, int) else 1
+    context.pipeline_result = PipelineResult(
+        returncode=returncode,
+        stdout=stdout_buf.getvalue(),
+        stderr=stderr_buf.getvalue(),
     )
-    context.pipeline_result = result
 
 
 @then('the fixture server received at least one request with path "{path}"')
@@ -101,18 +118,11 @@ def step_first_request_query_contains(context, substring):
 
 
 @then("the fixture server received exactly {n:d} request")
-def step_fixture_received_exactly_n_request_singular(context, n):
-    requests = context.fixture_server.get_requests()
-    assert len(requests) == n, (
-        f"Expected {n} request, got {len(requests)}: {requests}"
-    )
-
-
 @then("the fixture server received exactly {n:d} requests")
 def step_fixture_received_exactly_n_requests(context, n):
     requests = context.fixture_server.get_requests()
     assert len(requests) == n, (
-        f"Expected {n} requests, got {len(requests)}: {requests}"
+        f"Expected {n} request(s), got {len(requests)}: {requests}"
     )
 
 

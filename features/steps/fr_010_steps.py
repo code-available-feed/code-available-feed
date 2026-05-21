@@ -11,8 +11,7 @@ import xml.etree.ElementTree as ET
 from behave import given, then, when
 
 import src.pipeline_feed
-
-_ATOM_NS = "http://www.w3.org/2005/Atom"
+from atom_ns import ATOM_NS
 
 # A minimal valid Atom 1.0 feed with one entry.  Must have exactly one entry
 # so that newsboat's print-unread count equals 1 after reload.
@@ -24,11 +23,11 @@ _VALID_ATOM_XML = """\
   <updated>2026-05-12T10:00:00Z</updated>
   <entry>
     <title>Test Article</title>
-    <id>https://arxiv.org/abs/2605.00001v1</id>
-    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2605.00001v1"/>
+    <id>https://arxiv.org/abs/0000.00001v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/0000.00001v1"/>
     <published>2026-05-12T10:00:00Z</published>
     <updated>2026-05-12T10:00:00Z</updated>
-    <content type="text">https://github.com/test/repo</content>
+    <content type="text">https://code.example.com/test/repo</content>
   </entry>
 </feed>
 """
@@ -42,11 +41,11 @@ This feed is corrupted.
 <feed xmlns="http://www.w3.org/2005/Atom">
   <entry>
     <title>Malformed Article</title>
-    <id>https://arxiv.org/abs/2605.00001v1</id>
-    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2605.00001v1"/>
+    <id>https://arxiv.org/abs/0000.00001v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/0000.00001v1"/>
     <published>2026-05-12T10:00:00Z</published>
     <updated>2026-05-12T10:00:00Z</updated>
-    <content type="text">https://github.com/test/repo</content>
+    <content type="text">https://code.example.com/test/repo</content>
   </entry>
 </feed>
 """
@@ -74,7 +73,7 @@ def _validate_feed(feed_path: pathlib.Path) -> int:
     """
     try:
         root = ET.parse(str(feed_path)).getroot()
-        expected_count = len(root.findall("{" + _ATOM_NS + "}entry"))
+        expected_count = len(root.findall("{" + ATOM_NS + "}entry"))
     except ET.ParseError:
         return 1
 

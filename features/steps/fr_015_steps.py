@@ -2,13 +2,10 @@
 
 import pathlib
 import tempfile
-import xml.etree.ElementTree as ET
 
 from behave import given, then, when
 
 import src.pipeline_feed
-
-_ATOM_NS = "http://www.w3.org/2005/Atom"
 
 
 @given('a minimal feed file "{filepath}" with newest entry published "{published_date}"')
@@ -17,26 +14,31 @@ def step_create_minimal_feed(context, filepath, published_date):
     Create a minimal valid Atom feed file containing one entry with the given
     published date, placing it at filepath relative to context.run_dir.
 
-    Creates context.run_dir if it has not already been created by a preceding step.
+    Delegates serialization to src.pipeline_feed.build_feed so the bytes
+    match the production feed format exactly.  Creates context.run_dir if it
+    has not already been created by a preceding step.
     """
     if context.run_dir is None:
         context.run_dir = pathlib.Path(tempfile.mkdtemp())
     feed_path = context.run_dir / filepath
     feed_path.parent.mkdir(parents=True, exist_ok=True)
 
-    ET.register_namespace("", _ATOM_NS)
-    feed = ET.Element(f"{{{_ATOM_NS}}}feed")
-    title_elem = ET.SubElement(feed, f"{{{_ATOM_NS}}}title")
-    title_elem.text = "test"
-    id_elem = ET.SubElement(feed, f"{{{_ATOM_NS}}}id")
-    id_elem.text = "https://example.com/feed"
-    entry = ET.SubElement(feed, f"{{{_ATOM_NS}}}entry")
-    pub_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}published")
-    pub_elem.text = published_date
-    upd_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}updated")
-    upd_elem.text = published_date
-
-    feed_path.write_bytes(ET.tostring(feed, encoding="UTF-8", xml_declaration=True))
+    article = {
+        "title": "Test Article",
+        "authors": ["Test Author"],
+        "primary_category": "cs.AI",
+        "abstract_url": "https://arxiv.org/abs/0000.00000v1",
+        "published": published_date,
+        "updated": published_date,
+        "comment_urls": ["https://example.com/"],
+    }
+    feed_bytes = src.pipeline_feed.build_feed(
+        [article],
+        category_id="cs.AI",
+        strict_mode=False,
+        github_repository="owner/code-available-feed",
+    )
+    feed_path.write_bytes(feed_bytes)
 
 
 @when("the staleness check runs")

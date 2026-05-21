@@ -19,5 +19,6 @@ Feature: FR-014 Feed alternate link to the source GitHub repository
   Scenario: Feed alternate link points to the GitHub repository
     Given the environment variable GITHUB_REPOSITORY is "owner/code-available-feed"
     And the environment variable ARXIV_CATEGORY_ID is "cs.AI"
+    And one input article with any valid fields
     When the feed is generated
     Then the feed-level link element with rel "alternate" has href "https://github.com/owner/code-available-feed"

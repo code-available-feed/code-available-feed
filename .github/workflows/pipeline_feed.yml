@@ -61,6 +61,8 @@ jobs:
           ARXIV_CATEGORY_ID: ${{ vars.ARXIV_CATEGORY_ID || 'cs.AI' }}
           ARXIV_CATEGORY_STRICT: ${{ vars.ARXIV_CATEGORY_STRICT || 'false' }}
           ARXIV_CONTINUE_ON_API_ERROR: ${{ vars.ARXIV_CONTINUE_ON_API_ERROR || 'true' }}
+          ARXIV_MAX_RESULTS: ${{ vars.ARXIV_MAX_RESULTS || '50' }}
+          RETRY_BACKOFF_BASE_SECONDS: ${{ vars.RETRY_BACKOFF_BASE_SECONDS || '60' }}
 
       - name: debug
         if: failure()

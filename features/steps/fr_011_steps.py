@@ -69,6 +69,29 @@ def step_all_entries_primary_category(context, n_entries, primary_category):
     context.fixture_server.set_default_primary_category(primary_category)
 
 
+@given(
+    "the fixture server responds with HTTP 200 and a malformed XML body"
+    " to the first request"
+)
+def step_fixture_200_malformed_xml(context):
+    """Queue a 200 response with invalid XML for the first request (start=0)."""
+    context.fixture_server.set_raw_body_response(
+        start=0, status=200, body=b"<not valid xml"
+    )
+
+
+@then("the fixture server received exactly {n:d} requests")
+def step_fixture_received_n_requests(context, n):
+    """Assert the fixture server received exactly n HTTP requests."""
+    received = len(context.fixture_server.get_requests())
+    assert received == n, (
+        f"Expected fixture server to receive {n} requests, got {received}\n"
+        f"Requests: {context.fixture_server.get_requests()}\n"
+        f"pipeline stdout: {context.pipeline_result.stdout}\n"
+        f"pipeline stderr: {context.pipeline_result.stderr}"
+    )
+
+
 @then("the generated atom.xml contains {n:d} entries")
 def step_generated_atom_xml_has_n_entries(context, n):
     """Assert the generated atom.xml contains exactly n <entry> elements."""

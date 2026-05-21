@@ -20,6 +20,7 @@ Feature: FR-009 Feed self-URL construction
   Scenario: Feed self-URL appears as both <feed><id> and <feed><link rel="self" href="..."/>
     Given the environment variable GITHUB_REPOSITORY is "owner/code-available-feed"
     And the environment variable ARXIV_CATEGORY_ID is "cs.AI"
+    And one input article with any valid fields
     When the feed is generated
     Then the feed-level id element value is "https://owner.github.io/code-available-feed/arxiv/cs.ai/atom.xml"
     And the feed-level link element with rel "self" has href "https://owner.github.io/code-available-feed/arxiv/cs.ai/atom.xml"

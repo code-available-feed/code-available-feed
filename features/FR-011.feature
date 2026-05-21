@@ -52,6 +52,7 @@ Feature: FR-011 Retry on API failure
     When the pipeline runs to completion
     Then the pipeline exit code is non-zero
     And no file "docs/arxiv/cs.ai/atom.xml" was written by this run
+    And the fixture server received exactly 4 requests
 
   Scenario: Zero articles after inclusion filtering exits zero and no atom.xml is written
     Given the environment variable RETRY_BACKOFF_BASE_SECONDS is "0.1"
@@ -65,6 +66,13 @@ Feature: FR-011 Retry on API failure
   Scenario: Unset GITHUB_REPOSITORY exits non-zero and no atom.xml is written
     Given the environment variable GITHUB_REPOSITORY is unset
     And the environment variable RETRY_BACKOFF_BASE_SECONDS is "0.1"
+    When the pipeline runs to completion
+    Then the pipeline exit code is non-zero
+    And no file "docs/arxiv/cs.ai/atom.xml" was written by this run
+
+  Scenario: HTTP 200 with malformed XML body exits non-zero and no atom.xml is written
+    Given the environment variable RETRY_BACKOFF_BASE_SECONDS is "0.1"
+    And the fixture server responds with HTTP 200 and a malformed XML body to the first request
     When the pipeline runs to completion
     Then the pipeline exit code is non-zero
     And no file "docs/arxiv/cs.ai/atom.xml" was written by this run

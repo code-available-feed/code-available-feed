@@ -45,3 +45,8 @@ Feature: FR-013 Diagnostic logging to stdout
     When the pipeline runs to completion
     Then stdout does not contain any line starting with "--- "
     And stdout does not contain any line starting with "+++ "
+
+  Scenario: At least one stdout line is valid JSON with the required log keys
+    Given the fixture server returns 5 entries for query parameter "start=0"
+    When the pipeline runs to completion
+    Then at least one stdout line parses as JSON with keys "asctime", "levelname", "name", "funcName", "message"

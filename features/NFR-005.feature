@@ -33,3 +33,10 @@ Feature: NFR-005 Byte-for-byte deterministic XML output for identical input
     When the feed generator runs
     Then the first line of the output equals "<?xml version='1.0' encoding='UTF-8'?>"
 
+  Scenario: Two articles with identical published dates produce byte-identical output regardless of input order
+    Given a fixed set of input articles loaded from "features/fixtures/articles_two_tied.json"
+    When the feed generator runs and writes to "/tmp/run_tied_in_order.xml"
+    And the same input articles are shuffled into a different order
+    And the feed generator runs and writes to "/tmp/run_tied_shuffled.xml"
+    Then the SHA-256 hash of "/tmp/run_tied_in_order.xml" equals the SHA-256 hash of "/tmp/run_tied_shuffled.xml"
+

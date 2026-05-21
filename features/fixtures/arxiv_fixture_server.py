@@ -28,11 +28,17 @@ from atom_ns import ARXIV_NS, ATOM_NS
 
 
 class Response(typing.NamedTuple):
-    """One response policy: HTTP status, entry count, and how many of those entries carry a comment URL."""
+    """One response policy: HTTP status, entry count, how many carry a comment URL, and optional raw body.
+
+    When raw_body is not None the server sends it verbatim as the response body (for status 200)
+    instead of generating an Atom XML document via _build_atom_response.  This allows tests to
+    exercise malformed-XML code paths without modifying the Atom generator.
+    """
 
     status: int
     n_entries: int
     n_have_comment_url: int
+    raw_body: bytes | None = None
 
 
 def _build_atom_response(
@@ -114,10 +120,14 @@ class _FixtureRequestHandler(http.server.BaseHTTPRequestHandler):
         )
 
         if response.status == 200:
-            body = _build_atom_response(
-                response.n_entries,
-                response.n_have_comment_url,
-                primary_category,
+            body = (
+                response.raw_body
+                if response.raw_body is not None
+                else _build_atom_response(
+                    response.n_entries,
+                    response.n_have_comment_url,
+                    primary_category,
+                )
             )
             self.send_response(200)
             self.send_header(
@@ -198,6 +208,21 @@ class ArxivFixtureServer:
             n_have_comment_url=(
                 n_entries if n_have_comment_url is None else n_have_comment_url
             ),
+        )
+        with self._lock:
+            self._queues.setdefault(start, []).append(response)
+
+    def set_raw_body_response(self, start: int, status: int, body: bytes) -> None:
+        """
+        Queue one response for the given start value that sends body verbatim.
+
+        Useful for simulating responses that are HTTP 200 but carry malformed XML.
+        """
+        response = Response(
+            status=status,
+            n_entries=0,
+            n_have_comment_url=0,
+            raw_body=body,
         )
         with self._lock:
             self._queues.setdefault(start, []).append(response)

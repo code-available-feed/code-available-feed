@@ -207,7 +207,7 @@ def include_article(
         )
         return False
 
-    if "https://" not in article.comment:
+    if not article.comment_urls:
         _logger.info(
             "rejected (no comment URL): primary=%s published=%s title=%s url=%s",
             article.primary_category, article.published, article.title,
@@ -281,14 +281,17 @@ def extract_comment_urls(comment: str | None) -> list[str]:
 
     Trailing characters from the set .,;:)]> are stripped from each URL to
     handle common punctuation that surrounds URLs in prose (e.g. "see
-    https://example.com/x.").  Returns an empty list when comment is None
-    or empty.
+    https://example.com/x.").  Scheme-only results (bare "https://") that
+    arise from stripping all content after the scheme — e.g. a comment
+    containing "https://." — are excluded.  Returns an empty list when
+    comment is None or empty.
     """
     if not comment:
         return []
-    return [
+    stripped = [
         url.rstrip(".,;:)]>") for url in re.findall(r"https://\S+", comment)
     ]
+    return [url for url in stripped if url != "https://"]
 
 
 def parse_entries(body: bytes) -> list[Article]:
@@ -402,9 +405,20 @@ def build_feed(
 
     Returns:
       UTF-8 encoded Atom XML bytes with an XML declaration.
+
+    Raises:
+      ValueError: when articles is empty. The caller must ensure at least one
+                  article is present; passing an empty list produces a feed
+                  without the required <feed><updated> element (RFC 4287 §4.1.1).
     """
+    if not articles:
+        raise ValueError("build_feed requires at least one article")
+    # Primary sort: published descending (newest first).
+    # Secondary sort: abstract_url descending to break ties when two articles
+    # share the same published timestamp, giving a stable ordering regardless
+    # of input order (NFR-005).
     sorted_articles = sorted(
-        articles, key=lambda a: a.published, reverse=True
+        articles, key=lambda a: (a.published, a.abstract_url), reverse=True
     )
 
     feed_url = build_feed_url(github_repository, category_id)
@@ -741,7 +755,12 @@ def fetch_all_articles(
                     f"Pagination request failed: HTTP {status} (start={start})"
                 )
 
-        articles = parse_entries(body)
+        try:
+            articles = parse_entries(body)
+        except ET.ParseError as exc:
+            raise RuntimeError(
+                f"Malformed XML in API response (start={start}): {exc}"
+            ) from exc
         count = len(articles)
         _logger.info("Fetched %d results (start=%d)", count, start)
 

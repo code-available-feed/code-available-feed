@@ -32,9 +32,13 @@ See the points below to understand this setup!
 
    b. `ARXIV_CATEGORY_STRICT` (defaults to `false`): set to `true` to restrict to only articles whose primary category matches `ARXIV_CATEGORY_ID`.
 
-   c. `ARXIV_CONTINUE_ON_API_ERROR` (defaults to `true` in the workflow): set to `false` to fail the workflow immediately on any arXiv API error instead of continuing silently.
+   c. `ARXIV_CONTINUE_ON_API_ERROR` (defaults to `true` in the workflow): set to `false` to fail the workflow immediately on any arXiv API error instead of continuing silently. The goal of the silent continuation on arXiv API errors is to avoid frequent pipeline failure email notifications, and instead alert on feed staleness (see the `ARXIV_MAX_STALENESS_DAYS` variable).
 
    d. `ARXIV_MAX_STALENESS_DAYS` (defaults to `5` in the workflow): the workflow fails with a staleness alert when the newest feed entry is more than this many calendar days old (e.g. with the default of `5`, an age of `5` days passes and `6` days fails). Set to `-1` to disable the check. Raise this value for low-volume categories where multi-day gaps without new articles are normal.
+
+   e. `ARXIV_MAX_RESULTS` (defaults to `50`): number of articles requested per arxiv API page.
+
+   f. `RETRY_BACKOFF_BASE_SECONDS` (defaults to `60`): base duration in seconds for exponential retry backoff on the first API page. The N-th retry waits `N × RETRY_BACKOFF_BASE_SECONDS` seconds.
 
 3. Run the `pipeline_feed` workflow at least once (via the Actions tab or wait for the daily schedule).
    The first successful `deploy_orphan` run creates the `gh-pages` branch.
@@ -82,7 +86,7 @@ bash scripts/test_mypy.sh
 ## Rolling back a bad deploy
 
 The `gh-pages` branch holds only the most recent orphan commit (force-pushed on each deploy).
-The 7-day `arxiv-feeds` artifact is the rollback window: re-run `deploy_orphan` via `workflow_dispatch` with an older successful `pipeline_feed` run.
+The 7-day `arxiv-feed` artifact is the rollback window: re-run `deploy_orphan` via `workflow_dispatch` with an older successful `pipeline_feed` run.
 Beyond 7 days, recovery regenerates the feed from the current arXiv state.
 
 # Implementation overview
@@ -91,7 +95,7 @@ Beyond 7 days, recovery regenerates the feed from the current arXiv state.
 
 ```
 ├── compose.yml                   # Docker service: build from Dockerfile.server, mount repo at /app
-├── Dockerfile.server             # debian with apt packages for python (no pip)
+├── Dockerfile.server             # debian with apt-get packages for python (no pip)
 ├── docs/
 │   └── arxiv/
 │       └── {category}/

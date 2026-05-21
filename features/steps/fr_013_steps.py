@@ -1,5 +1,6 @@
 """Step definitions for FR-013: Diagnostic logging to stdout."""
 
+import json
 import pathlib
 import tempfile
 
@@ -118,5 +119,26 @@ def step_stdout_no_line_starts_with(context, text):
     assert not matching, (
         f"Expected no stdout line starting with {text!r},"
         f" but found: {matching}\n"
+        f"stdout:\n{context.pipeline_result.stdout}"
+    )
+
+
+@then(
+    'at least one stdout line parses as JSON with keys'
+    ' "{k1}", "{k2}", "{k3}", "{k4}", "{k5}"'
+)
+def step_stdout_json_with_keys(context, k1, k2, k3, k4, k5):
+    """Assert that at least one stdout line is valid JSON containing all five keys."""
+    required_keys = {k1, k2, k3, k4, k5}
+    lines = context.pipeline_result.stdout.splitlines()
+    for line in lines:
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if required_keys.issubset(obj.keys()):
+            return
+    assert False, (
+        f"No stdout line parses as JSON with all keys {sorted(required_keys)}\n"
         f"stdout:\n{context.pipeline_result.stdout}"
     )

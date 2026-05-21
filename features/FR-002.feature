@@ -67,5 +67,12 @@ Feature: FR-002 Article inclusion filter
       | configured | article_primary | outcome  |
       | cs.AI      | cs.ai           | included |
       | cs.ai      | CS.AI           | included |
-      | cS.Ai      | CS.AI           | included |      
+      | cS.Ai      | CS.AI           | included |
       | cs.AI      | cs.cv           | excluded |
+
+  Scenario: A comment containing only a degenerate URL with no path is excluded
+    Given the environment variable ARXIV_CATEGORY_STRICT is "false"
+    And an article has primary category "cs.AI"
+    And the article comment is "See https://."
+    When the inclusion filter is applied to the article
+    Then the article is excluded

@@ -11,7 +11,7 @@ Feature: FR-002 Article inclusion filter
   Scenario: Non-strict mode includes a cross-listed article whose comment has a URL
     Given the environment variable ARXIV_CATEGORY_STRICT is "false"
     And an article has primary category "cs.CV"
-    And the article comment is "Code at https://github.com/foo/bar"
+    And the article comment is "Code at https://code.example.com/foo/bar"
     When the inclusion filter is applied to the article
     Then the article is included
 
@@ -44,14 +44,14 @@ Feature: FR-002 Article inclusion filter
   Scenario: Strict mode includes an article whose primary category matches and whose comment has a URL
     Given the environment variable ARXIV_CATEGORY_STRICT is "true"
     And an article has primary category "cs.AI"
-    And the article comment is "Demo: https://example.github.io/"
+    And the article comment is "Demo: https://demo.example.com/"
     When the inclusion filter is applied to the article
     Then the article is included
 
   Scenario: Strict mode excludes a cross-listed article even if its comment has a URL
     Given the environment variable ARXIV_CATEGORY_STRICT is "true"
     And an article has primary category "cs.CV"
-    And the article comment is "Code at https://github.com/foo/bar"
+    And the article comment is "Code at https://code.example.com/foo/bar"
     When the inclusion filter is applied to the article
     Then the article is excluded
 
@@ -59,7 +59,7 @@ Feature: FR-002 Article inclusion filter
     Given the environment variable ARXIV_CATEGORY_STRICT is "true"
     And the environment variable ARXIV_CATEGORY_ID is "<configured>"
     And an article has primary category "<article_primary>"
-    And the article comment is "https://github.com/foo/bar"
+    And the article comment is "https://code.example.com/foo/bar"
     When the inclusion filter is applied to the article
     Then the article is <outcome>
 

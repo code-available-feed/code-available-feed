@@ -80,9 +80,9 @@ The discrepancy is intentional: in CI the fail-safe defaults prevent noisy failu
 ## Expected Characteristics
 
 The weekly Atom XML file for cs.AI is expected to contain approximately 100 articles (1 in 10 of ~1000 articles per week have a `https://` URL in their comment).
-The file size is expected to be under 100 KB per week.
-The annual archive is expected to be under 5 MB per category.
-The 1-in-10 ratio is a best estimate based on observation of the cs.AI arxiv listing page; it should be verified against real pipeline output after the first week of operation.
+Based on real pipeline output from mid 2026, each article occupies approximately 3 KB (title, authors, abstract, and structured content block).
+At that rate, 100 articles per week occupy approximately 300 KB; monthly approximately 1 MB; yearly approximately 15 MB per category.
+The 1-in-10 ratio is a best estimate based on observation of the cs.AI arxiv listing page.
 
 ## Technical Choices
 
@@ -107,9 +107,9 @@ Documentation at `https://info.arxiv.org/help/api/user-manual.html`.
 `re.findall(r'https://\S+', comment)` returns a list of all non-overlapping `https://`
 URL matches in the comment string; `\S+` stops at whitespace, so two URLs separated
 by any whitespace or text are captured independently — for example the comment
-`"Code: https://github.com/foo/bar demo: https://foo.github.io/"` yields both URLs.
+`"Code: https://code.example.com/foo/bar demo: https://demo.example.com/"` yields both URLs.
 A second pass strips trailing punctuation characters (`.,;:)]>`) from each match to
-handle constructs like `available at https://github.com/foo/bar.` without removing
+handle constructs like `available at https://code.example.com/foo/bar.` without removing
 path separators or query-string characters.
 
 **No database:**
@@ -152,6 +152,7 @@ will fail the pipeline when no new feed item appears for more than 5 days.
 
 | Feature | Reason for Deferral |
 |---------|---------------------|
+| OPML 1.0 subscription list in the directory repo | A static `feeds.opml` file in the central directory repo (`code-available-feed/code-available-feed`), served via GitHub Pages along `atom.xml` and updated via pull requests; spec: `https://opml.org/spec2.opml` |
 | Scanning `<summary>` (abstract) for `https://` URLs | Some articles place code links only in the abstract and not in the comment; these are currently false negatives; adding abstract scanning would require defining precedence rules when both comment and abstract contain URLs, and would increase the false-positive rate from journal/DOI links that frequently appear in abstracts |
 | Domain allowlist for comment URL filtering | Restricting to known code hosts (github.com, gitlab.com, huggingface.co, zenodo.org, bitbucket.org) would reduce false positives from journal or institution URLs; deferred until the false-positive rate is measured on real data |
 | RelaxNG schema validation of generated Atom XML | `xmllint --relaxng` with the RFC 4287 schema would catch missing required Atom fields that Python's `xml.etree.ElementTree` and newsboat (libxml2 recovery mode) both silently accept; deferred because embedding the RFC 4287 XML RelaxNG schema requires either converting the compact `.rnc` from Appendix B (needs `trang` or `rnc2rng`, neither in the current apt dependencies) or sourcing a pre-converted `.rng` from a third party, adding supply-chain risk for a validation-only file |
@@ -164,7 +165,7 @@ will fail the pipeline when no new feed item appears for more than 5 days.
 | Downloading PDFs to detect code links | PDFs contain code links more reliably than the comment field, but downloading 500-1000 PDFs per week requires gigabytes of temporary storage, hours of processing, and a PDF-to-text conversion step; the comment field heuristic achieves the same goal at negligible cost |
 | Scraping the arxiv listing page HTML | Scraping is fragile and against the arxiv terms of use; the API provides the same comment field in structured form |
 | Using the paperswithcode API or data export | paperswithcode.com shut down its public API and RSS feed in 2025 and the project cannot depend on an unavailable third-party service |
-| Git LFS for archived weekly files | Atom XML is plain text compressing well under standard git; at approximately 5 MB per category per year (100 filtered articles per week × ~1 KB per article = ~100 KB per weekly feed × 52 weeks) there is no need for LFS |
+| Git LFS for archived weekly files | Atom XML is plain text compressing well under standard git; with the estimated 100 articles with code per week the yearly storage space is 15 MB and there is no need for LFS |
 | Multiple categories in one repository | One category per fork is sufficient; supporting multiple categories in one repository requires either multiple feed files (complicating the archive logic) or a merged feed (losing per-category subscriptions) |
 | Direct commits to `main` for feed updates | Committing `docs/arxiv/atom.xml` to `main` mixed generated content with source code and grew `main`'s git history unboundedly; replaced by the orphan-branch model which keeps `main` clean and lets the deploy step force-push without accumulating history |
 | Index feed listing all archived weeks | A subscribable index of past weeks would help readers discover older archives |

@@ -8,7 +8,7 @@
 This repository is a configurable template for the Atom feed of arXiv articles that have code available.
 The goal is to offer replacements for the "papers with code" web feed offered until the [mid-2025](https://github.com/paperswithcode/paperswithcode-data/issues/121).
 
-To configure your own feed serving, fork this repository and set GitHub Actions variables.
+To configure your own feed serving, fork the https://github.com/code-available-feed/code-available-feed repository and set GitHub Actions variables.
 The feed for the desired arXiv category will be served on GitHub Pages.
 
 # Available feeds
@@ -24,9 +24,9 @@ If you serve a feed using this project, consider making a pull request to add yo
 Choose the appropriate name of the fork if you plan to host more than one feed repo.
 See the points below to understand this setup!
 
-1. Fork the repository.
+1. Fork the https://github.com/code-available-feed/code-available-feed repository.
 
-2. In Settings → Actions → Variables:
+2. In your fork configure Settings → Actions → Variables:
 
    a. `ARXIV_CATEGORY_ID` (defaults to `cs.AI`): set to any arXiv category, e.g. `cs.CV`.
 

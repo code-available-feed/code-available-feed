@@ -39,10 +39,10 @@ Feature: FR-003 Per-article field extraction from the arxiv API response
     And the recorded abstract page URL does not start with "http://"
 
   Scenario Outline: Each character in the trailing-punctuation strip set is stripped from a single comment URL
-    Given an article whose comment is "available at https://github.com/foo/bar<suffix>"
+    Given an article whose comment is "available at https://code.example.com/foo/bar<suffix>"
     When the pipeline extracts the comment URLs
     Then the recorded comment URLs in order are:
-      | https://github.com/foo/bar |
+      | https://code.example.com/foo/bar |
 
     Examples:
       | suffix |

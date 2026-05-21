@@ -28,6 +28,6 @@ Feature: FR-009 Feed self-URL construction
   Scenario: Entry id is the versioned arxiv abstract page URL, not the feed self-URL
     Given the environment variable GITHUB_REPOSITORY is "owner/code-available-feed"
     And the environment variable ARXIV_CATEGORY_ID is "cs.AI"
-    And one input article whose abstract page URL is "https://arxiv.org/abs/2605.15199v1"
+    And one input article whose abstract page URL is "https://arxiv.org/abs/0000.00001v1"
     When the feed is generated
-    Then the entry id element value is "https://arxiv.org/abs/2605.15199v1"
+    Then the entry id element value is "https://arxiv.org/abs/0000.00001v1"

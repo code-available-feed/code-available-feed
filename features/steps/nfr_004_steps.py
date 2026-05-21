@@ -45,8 +45,11 @@ def step_one_article_with_abstract_url(context, abstract_url):
 
 @given('the article has comment URL "{comment_url}"')
 def step_article_has_comment_url(context, comment_url):
-    """Append comment_url to the comment_urls list of the first article in context."""
-    context.articles[0].comment_urls.append(comment_url)
+    """Append comment_url to comment_urls and set comment to the URL text."""
+    article = context.articles[0]
+    article.comment_urls.append(comment_url)
+    # Article is a NamedTuple; use _replace to update the immutable comment field.
+    context.articles[0] = article._replace(comment=comment_url)
 
 
 @then('the raw output bytes contain the substring "{substring}"')

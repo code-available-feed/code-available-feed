@@ -482,9 +482,24 @@ def build_feed(
         upd_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}updated")
         upd_elem.text = article.updated
 
+        # "et al." when three or more authors; both names when one or two.
+        author_credit = (
+            f"{article.authors[0]} et al."
+            if len(article.authors) >= 3
+            else ", ".join(article.authors)
+        )
         content_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}content")
         content_elem.set("type", "text")
-        content_elem.text = "\n".join(article.comment_urls)
+        content_elem.text = "\n".join([
+            "Authors:",
+            author_credit,
+            "",
+            "Abstract:",
+            article.abstract,
+            "",
+            "Comments:",
+            article.comment or "",
+        ])
 
     ET.indent(feed, space="  ")
     return ET.tostring(feed, encoding="UTF-8", xml_declaration=True)

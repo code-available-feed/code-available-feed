@@ -4,9 +4,10 @@ Feature: FR-004 Atom 1.0 feed generation
   The pipeline generates an Atom 1.0 feed (RFC 4287) from the collected
   articles. Articles are sorted by first arxiv publication date descending
   (newest first). The top-level feed updated value is the published date of
-  the first article in that order. Each entry's <content type="text"> is a
-  structured block with Authors, Abstract, and Comments sections; the Authors
-  line uses "First Author et al." when there are three or more authors.
+  the first article in that order. Each entry's <content type="html"> is a
+  structured HTML block with Authors, Abstract, and Comments sections labeled
+  with <h3> headings; the Authors line uses "First Author et al." when there
+  are three or more authors.
 
   Background:
     Given the environment variable ARXIV_CATEGORY_ID is "cs.AI"
@@ -32,16 +33,14 @@ Feature: FR-004 Atom 1.0 feed generation
     And the entry has link rel "alternate" type "text/html" with href "https://arxiv.org/abs/0000.00001v1"
     And the entry has published "2026-05-12T11:30:00Z"
     And the entry has updated "2026-05-12T11:30:00Z"
-    And the entry content type is "text" with text
+    And the entry content type is "html" with text
       """
-      Authors:
-      Alice Example, Bob Sample
-
-      Abstract:
-      We propose a method for entity-consistent video generation.
-
-      Comments:
-      Code: https://code.example.com/foo/bar demo: https://demo.example.com/
+      <h3>Authors:</h3>
+      <p>Alice Example, Bob Sample</p>
+      <h3>Abstract:</h3>
+      <p>We propose a method for entity-consistent video generation.</p>
+      <h3>Comments:</h3>
+      <p>Code: https://code.example.com/foo/bar demo: https://demo.example.com/</p>
       """
 
   Scenario: Three or more authors are credited with et al. in the content Authors line
@@ -57,16 +56,14 @@ Feature: FR-004 Atom 1.0 feed generation
       | comment                | Code: https://code.example.com/test             |
       | comment_urls           | https://code.example.com/test                   |
     When the feed is generated
-    Then the entry content type is "text" with text
+    Then the entry content type is "html" with text
       """
-      Authors:
-      Alice Example et al.
-
-      Abstract:
-      A paper with three authors.
-
-      Comments:
-      Code: https://code.example.com/test
+      <h3>Authors:</h3>
+      <p>Alice Example et al.</p>
+      <h3>Abstract:</h3>
+      <p>A paper with three authors.</p>
+      <h3>Comments:</h3>
+      <p>Code: https://code.example.com/test</p>
       """
 
   Scenario: Title is prefixed with the primary category in brackets even when the primary category matches the configured category

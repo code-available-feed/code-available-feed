@@ -27,7 +27,7 @@ _VALID_ATOM_XML = """\
     <link rel="alternate" type="text/html" href="https://arxiv.org/abs/0000.00001v1"/>
     <published>2026-05-12T10:00:00Z</published>
     <updated>2026-05-12T10:00:00Z</updated>
-    <content type="text">https://code.example.com/test/repo</content>
+    <content type="html">https://code.example.com/test/repo</content>
   </entry>
 </feed>
 """
@@ -45,7 +45,7 @@ This feed is corrupted.
     <link rel="alternate" type="text/html" href="https://arxiv.org/abs/0000.00001v1"/>
     <published>2026-05-12T10:00:00Z</published>
     <updated>2026-05-12T10:00:00Z</updated>
-    <content type="text">https://code.example.com/test/repo</content>
+    <content type="html">https://code.example.com/test/repo</content>
   </entry>
 </feed>
 """

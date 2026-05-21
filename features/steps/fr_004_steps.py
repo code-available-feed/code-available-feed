@@ -215,14 +215,14 @@ def step_entry_has_updated(context, expected):
     )
 
 
-@then('the entry content type is "text" with text')
-def step_entry_content_type_text_docstring(context):
-    """Assert content type is text and the text matches the Gherkin docstring."""
+@then('the entry content type is "html" with text')
+def step_entry_content_type_html_docstring(context):
+    """Assert content type is html and the text matches the Gherkin docstring."""
     entry = _get_entry(context)
     content_elem = entry.find(f"{{{ATOM_NS}}}content")
     assert content_elem is not None, "No content element in entry"
-    assert content_elem.get("type") == "text", (
-        f"Expected content type 'text', got {content_elem.get('type')!r}"
+    assert content_elem.get("type") == "html", (
+        f"Expected content type 'html', got {content_elem.get('type')!r}"
     )
     assert content_elem.text == context.text, (
         f"Expected content:\n{context.text!r}\nGot:\n{content_elem.text!r}"

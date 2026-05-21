@@ -73,15 +73,17 @@ def step_raw_bytes_not_contain(context, substring):
     ' inside a content element'
 )
 def step_raw_bytes_contain_in_content(context, substring):
-    # Search the raw (pre-parse) bytes between <content type="text"> and
+    # Search the raw (pre-parse) bytes between <content type="html"> and
     # </content> so that the caller can assert on the XML-escaped form
-    # (e.g. "&amp;" rather than "&") without round-tripping through a parser
-    # that would unescape it.
+    # (e.g. "&amp;amp;" for "&" in HTML content — double-encoded because the
+    # HTML layer html.escape()s it to "&amp;" and then ElementTree XML-escapes
+    # that to "&amp;amp;") without round-tripping through a parser that would
+    # unescape it.
     raw = context.feed_bytes
-    open_tag = b'<content type="text">'
+    open_tag = b'<content type="html">'
     close_tag = b"</content>"
     idx = raw.find(open_tag)
-    assert idx >= 0, 'No <content type="text"> element found in raw output bytes'
+    assert idx >= 0, 'No <content type="html"> element found in raw output bytes'
     end = raw.find(close_tag, idx)
     assert end >= 0, "No </content> closing tag found after content open tag"
     inner = raw[idx + len(open_tag) : end]

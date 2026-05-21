@@ -16,6 +16,7 @@ Environment variables read by this module:
 
 import datetime
 import difflib
+import html
 import json
 import logging
 import os
@@ -489,16 +490,18 @@ def build_feed(
             else ", ".join(article.authors)
         )
         content_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}content")
-        content_elem.set("type", "text")
+        content_elem.set("type", "html")
+        # html.escape() HTML-encodes user text before ElementTree XML-serialises
+        # the element; some feed readers collapse bare newlines and misinterpret
+        # raw "&" or "<" in abstracts/comments as HTML markup.
+        # <h3> headings make the section labels slightly larger than body text.
         content_elem.text = "\n".join([
-            "Authors:",
-            author_credit,
-            "",
-            "Abstract:",
-            article.abstract,
-            "",
-            "Comments:",
-            article.comment or "",
+            "<h3>Authors:</h3>",
+            "<p>" + html.escape(author_credit) + "</p>",
+            "<h3>Abstract:</h3>",
+            "<p>" + html.escape(article.abstract) + "</p>",
+            "<h3>Comments:</h3>",
+            "<p>" + html.escape(article.comment or "") + "</p>",
         ])
 
     ET.indent(feed, space="  ")

@@ -135,7 +135,7 @@ def step_extract_article_fields(context):
     entries = src.pipeline_feed.parse_entries(body)
     assert entries, "parse_entries returned no entries for the constructed feed"
     context.extracted_article = entries[0]
-    context.extracted_urls = entries[0]["comment_urls"]
+    context.extracted_urls = entries[0].comment_urls
 
 
 @when("the pipeline extracts the comment URLs")
@@ -148,7 +148,7 @@ def step_extract_comment_urls(context):
 
 @then('the recorded title is "{expected}"')
 def step_recorded_title(context, expected):
-    actual = context.extracted_article["title"]
+    actual = context.extracted_article.title
     assert actual == expected, (
         f"Expected title {expected!r}, got {actual!r}"
     )
@@ -156,7 +156,7 @@ def step_recorded_title(context, expected):
 
 @then('the recorded authors in order are "{first}" then "{second}"')
 def step_recorded_authors_two(context, first, second):
-    actual = context.extracted_article["authors"]
+    actual = context.extracted_article.authors
     expected = [first, second]
     assert actual == expected, (
         f"Expected authors {expected!r}, got {actual!r}"
@@ -165,7 +165,7 @@ def step_recorded_authors_two(context, first, second):
 
 @then('the recorded primary category is "{expected}"')
 def step_recorded_primary_category(context, expected):
-    actual = context.extracted_article["primary_category"]
+    actual = context.extracted_article.primary_category
     assert actual == expected, (
         f"Expected primary category {expected!r}, got {actual!r}"
     )
@@ -173,7 +173,7 @@ def step_recorded_primary_category(context, expected):
 
 @then('the recorded abstract page URL is "{expected}"')
 def step_recorded_abstract_url(context, expected):
-    actual = context.extracted_article["abstract_url"]
+    actual = context.extracted_article.abstract_url
     assert actual == expected, (
         f"Expected abstract URL {expected!r}, got {actual!r}"
     )
@@ -181,7 +181,7 @@ def step_recorded_abstract_url(context, expected):
 
 @then('the recorded abstract page URL does not start with "{prefix}"')
 def step_recorded_abstract_url_no_prefix(context, prefix):
-    actual = context.extracted_article["abstract_url"]
+    actual = context.extracted_article.abstract_url
     assert not actual.startswith(prefix), (
         f"Expected abstract URL not to start with {prefix!r}, got {actual!r}"
     )
@@ -189,7 +189,7 @@ def step_recorded_abstract_url_no_prefix(context, prefix):
 
 @then('the recorded published date is "{expected}"')
 def step_recorded_published(context, expected):
-    actual = context.extracted_article["published"]
+    actual = context.extracted_article.published
     assert actual == expected, (
         f"Expected published {expected!r}, got {actual!r}"
     )
@@ -197,7 +197,7 @@ def step_recorded_published(context, expected):
 
 @then('the recorded updated date is "{expected}"')
 def step_recorded_updated(context, expected):
-    actual = context.extracted_article["updated"]
+    actual = context.extracted_article.updated
     assert actual == expected, (
         f"Expected updated {expected!r}, got {actual!r}"
     )
@@ -205,8 +205,8 @@ def step_recorded_updated(context, expected):
 
 @then("the recorded published date equals the recorded updated date")
 def step_recorded_published_equals_updated(context):
-    published = context.extracted_article["published"]
-    updated = context.extracted_article["updated"]
+    published = context.extracted_article.published
+    updated = context.extracted_article.updated
     assert published == updated, (
         f"Expected published == updated, got {published!r} != {updated!r}"
     )

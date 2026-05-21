@@ -7,16 +7,22 @@ from behave import given, then, when
 
 import src.pipeline_feed
 
-_MINIMAL_ARTICLE_BASE = {
-    "title": "Test Article",
-    "authors": ["Test Author"],
-    "primary_category": "cs.AI",
-    "abstract_url": "https://arxiv.org/abs/0000.00000v1",
-    "comment_urls": ["https://example.com/"],
-}
+
+def _minimal_article(published: str) -> src.pipeline_feed.Article:
+    """Return a single Article with all required fields set; published equals updated."""
+    return src.pipeline_feed.Article(
+        title="Test Article",
+        authors=["Test Author"],
+        primary_category="cs.AI",
+        abstract_url="https://arxiv.org/abs/0000.00000v1",
+        published=published,
+        updated=published,
+        comment=None,
+        comment_urls=["https://example.com/"],
+    )
 
 
-def _build_feed_bytes(articles: list[dict]) -> bytes:
+def _build_feed_bytes(articles: list[src.pipeline_feed.Article]) -> bytes:
     """Serialize articles to Atom XML via src.pipeline_feed.build_feed."""
     return src.pipeline_feed.build_feed(
         articles,
@@ -28,12 +34,7 @@ def _build_feed_bytes(articles: list[dict]) -> bytes:
 
 def _build_minimal_atom_feed() -> bytes:
     """Return Atom XML bytes for a single-entry minimal feed used by commit-guard tests."""
-    article = {
-        **_MINIMAL_ARTICLE_BASE,
-        "published": "2026-05-14T15:00:00Z",
-        "updated": "2026-05-14T15:00:00Z",
-    }
-    return _build_feed_bytes([article])
+    return _build_feed_bytes([_minimal_article("2026-05-14T15:00:00Z")])
 
 
 def _build_feed_for_message(n: int, newest_published: str) -> bytes:
@@ -50,21 +51,10 @@ def _build_feed_for_message(n: int, newest_published: str) -> bytes:
       n:                number of entries to include
       newest_published: RFC 3339 date string for the newest entry
     """
-    articles = [
-        {
-            **_MINIMAL_ARTICLE_BASE,
-            "published": newest_published,
-            "updated": newest_published,
-        }
-    ]
-    for _ in range(1, n):
-        articles.append(
-            {
-                **_MINIMAL_ARTICLE_BASE,
-                "published": "2026-01-01T00:00:00Z",
-                "updated": "2026-01-01T00:00:00Z",
-            }
-        )
+    articles = [_minimal_article(newest_published)]
+    articles.extend(
+        _minimal_article("2026-01-01T00:00:00Z") for _ in range(1, n)
+    )
     return _build_feed_bytes(articles)
 
 

@@ -26,39 +26,51 @@ def _get_entry(context) -> ET.Element:
     return entries[0]
 
 
+def _article_from_fields(fields: dict) -> src.pipeline_feed.Article:
+    """Build an Article from a partial dict of field values, filling defaults for omitted fields."""
+    return src.pipeline_feed.Article(
+        title=fields.get("title", ""),
+        authors=fields.get("authors", []),
+        primary_category=fields.get("primary_category", ""),
+        abstract_url=fields.get("abstract_url", ""),
+        published=fields.get("published", ""),
+        updated=fields.get("updated", ""),
+        comment=fields.get("comment", None),
+        comment_urls=fields.get("comment_urls", []),
+    )
+
+
 @given("one input article with")
 def step_one_article_with_table(context):
     """
-    Build one article dict from a two-column table with headers 'field' and
-    'value'.
+    Build one Article from a two-column table with headers 'field' and 'value'.
 
     Supported fields: title, authors (comma-separated), primary_category,
     abstract_url, published, updated, comment_urls (comma-separated).
     """
-    article: dict = {}
+    fields: dict = {}
     for row in context.table:
         field = row["field"]
         value = row["value"]
         if field == "authors":
-            article["authors"] = _parse_authors(value)
+            fields["authors"] = _parse_authors(value)
         elif field == "comment_urls":
-            article["comment_urls"] = _parse_urls(value)
+            fields["comment_urls"] = _parse_urls(value)
         else:
-            article[field] = value
-    context.articles = [article]
+            fields[field] = value
+    context.articles = [_article_from_fields(fields)]
 
 
 @given("three input articles")
 def step_three_articles_with_table(context):
     """
-    Build three article dicts from a table whose columns are the article fields.
+    Build three Articles from a table whose columns are the article fields.
 
     Column names: title, authors (comma-separated), primary_category,
     abstract_url, published, updated, comment_urls (comma-separated).
     """
-    articles = []
-    for row in context.table:
-        articles.append(
+    context.articles = [
+        _article_from_fields(
             {
                 "title": row["title"],
                 "authors": _parse_authors(row["authors"]),
@@ -69,22 +81,25 @@ def step_three_articles_with_table(context):
                 "comment_urls": _parse_urls(row["comment_urls"]),
             }
         )
-    context.articles = articles
+        for row in context.table
+    ]
 
 
 @given("one input article with any valid fields")
 def step_one_article_any_fields(context):
-    """Provide a single article with minimal valid field values."""
+    """Provide a single Article with minimal valid field values."""
     context.articles = [
-        {
-            "title": "Any Paper Title",
-            "authors": ["Test Author"],
-            "primary_category": "cs.AI",
-            "abstract_url": "https://arxiv.org/abs/0000.00000v1",
-            "published": "2026-05-12T11:30:00Z",
-            "updated": "2026-05-12T11:30:00Z",
-            "comment_urls": ["https://example.com/"],
-        }
+        _article_from_fields(
+            {
+                "title": "Any Paper Title",
+                "authors": ["Test Author"],
+                "primary_category": "cs.AI",
+                "abstract_url": "https://arxiv.org/abs/0000.00000v1",
+                "published": "2026-05-12T11:30:00Z",
+                "updated": "2026-05-12T11:30:00Z",
+                "comment_urls": ["https://example.com/"],
+            }
+        )
     ]
 
 

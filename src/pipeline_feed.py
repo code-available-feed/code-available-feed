@@ -23,6 +23,7 @@ import pathlib
 import re
 import sys
 import time
+import typing
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -37,10 +38,6 @@ ET.register_namespace("", _ATOM_NS)
 # NFR-002: minimum pause before every API request to respect arxiv rate limits.
 _MIN_REQUEST_INTERVAL_SECONDS: int = 5
 
-# Characters stripped from the trailing end of each extracted comment URL.
-# These are common punctuation characters that surround URLs in prose text.
-_TRAILING_PUNCT: frozenset[str] = frozenset(".,;:)]>")
-
 # Arxiv categories follow the pattern subject(-subsubject)?(.archive)?
 # e.g. cs.AI, cs.cv, astro-ph.HE, gr-qc. Letters only; no path separators,
 # whitespace, or directory-traversal sequences are permitted. This guards
@@ -49,6 +46,23 @@ _TRAILING_PUNCT: frozenset[str] = frozenset(".,;:)]>")
 _ARXIV_CATEGORY_PATTERN = re.compile(r"^[a-zA-Z]+(-[a-zA-Z]+)?(\.[a-zA-Z]+)?$")
 
 _logger = logging.getLogger(__name__)
+
+
+class Article(typing.NamedTuple):
+    """One arxiv article: the fields extracted from the API response and consumed by the feed builder.
+
+    authors and comment_urls are list[str] rather than tuple[str, ...] so that
+    test code can compare them against literal lists with the == operator.
+    """
+
+    title: str
+    authors: list[str]
+    primary_category: str
+    abstract_url: str
+    published: str
+    updated: str
+    comment: str | None
+    comment_urls: list[str]
 
 
 class _UtcJsonFormatter(logging.Formatter):
@@ -127,66 +141,84 @@ def _validate_staleness_days(value: str) -> int:
     return parsed
 
 
+def _resolve_today() -> datetime.date:
+    """Return PIPELINE_TODAY if set, otherwise the current UTC date."""
+    override = os.environ.get("PIPELINE_TODAY")
+    if override:
+        return datetime.date.fromisoformat(override)
+    return datetime.datetime.now(datetime.timezone.utc).date()
+
+
+def _parse_rfc3339_utc_date(timestamp: str) -> datetime.date:
+    """Parse an RFC 3339 timestamp and return its UTC date.
+
+    fromisoformat handles the "Z" UTC suffix in Python 3.11+; the result is
+    converted to UTC before the date portion is taken so that timestamps
+    expressed in other offsets still yield the UTC calendar date.
+    """
+    return (
+        datetime.datetime.fromisoformat(timestamp)
+        .astimezone(datetime.timezone.utc)
+        .date()
+    )
+
+
 # ---------------------------------------------------------------------------
 # Article inclusion filter
 # ---------------------------------------------------------------------------
 
 
 def include_article(
-    primary_category: str,
-    comment: str | None,
-    abstract_url: str = "",
-    published: str = "",
-    title: str = "",
+    article: Article, category_id: str, strict_mode: bool
 ) -> bool:
     """
     Return True if the article should be included in the feed.
 
     Both conditions must hold:
-    1. Category condition: when strict mode is enabled, the article's primary
-       category must match the configured ARXIV_CATEGORY_ID (case-insensitive);
-       when strict mode is disabled, any primary category is accepted.
-    2. Comment URL condition: the arxiv:comment field must contain at least one
+    1. Category condition: when strict_mode is True, article.primary_category
+       must match category_id (case-insensitive); when strict_mode is False,
+       any primary category is accepted.
+    2. Comment URL condition: article.comment must contain at least one
        https:// URL; absent or empty comment fields are treated as no URL.
 
-    Reads ARXIV_CATEGORY_ID and ARXIV_CATEGORY_STRICT from the environment via
-    resolve_category_id and resolve_strict_mode.
+    Resolved values for category_id and strict_mode are passed in by the
+    caller so the resolver is invoked once per pipeline run rather than once
+    per article.
 
     Parameters:
-      primary_category: the article's primary arxiv category (e.g. "cs.AI")
-      comment:          the arxiv:comment field text, or None when absent
-      abstract_url:     arxiv abstract page URL; included in log output for traceability
-      published:        RFC 3339 first-publication date; included in log output for traceability
-      title:            article title; included in log output for traceability
+      article:      the candidate article
+      category_id:  resolved value of ARXIV_CATEGORY_ID (e.g. "cs.AI")
+      strict_mode:  resolved value of ARXIV_CATEGORY_STRICT
     """
-    category_id = resolve_category_id()
-    strict_mode = resolve_strict_mode()
-
-    if strict_mode and primary_category.lower() != category_id.lower():
+    if strict_mode and article.primary_category.lower() != category_id.lower():
         _logger.info(
             "rejected (strict category mismatch): primary=%s expected=%s"
             " published=%s title=%s url=%s",
-            primary_category, category_id, published, title, abstract_url,
+            article.primary_category, category_id, article.published,
+            article.title, article.abstract_url,
         )
         return False
 
-    if not comment:
+    if not article.comment:
         _logger.info(
             "rejected (no comment): primary=%s published=%s title=%s url=%s",
-            primary_category, published, title, abstract_url,
+            article.primary_category, article.published, article.title,
+            article.abstract_url,
         )
         return False
 
-    if "https://" not in comment:
+    if "https://" not in article.comment:
         _logger.info(
             "rejected (no comment URL): primary=%s published=%s title=%s url=%s",
-            primary_category, published, title, abstract_url,
+            article.primary_category, article.published, article.title,
+            article.abstract_url,
         )
         return False
 
     _logger.info(
         "included: primary=%s published=%s title=%s url=%s",
-        primary_category, published, title, abstract_url,
+        article.primary_category, article.published, article.title,
+        article.abstract_url,
     )
     return True
 
@@ -254,31 +286,28 @@ def extract_comment_urls(comment: str | None) -> list[str]:
     """
     if not comment:
         return []
-    urls = re.findall(r"https://\S+", comment)
-    result: list[str] = []
-    for url in urls:
-        while url and url[-1] in _TRAILING_PUNCT:
-            url = url[:-1]
-        result.append(url)
-    return result
+    return [
+        url.rstrip(".,;:)]>") for url in re.findall(r"https://\S+", comment)
+    ]
 
 
-def parse_entries(body: bytes) -> list[dict]:
+def parse_entries(body: bytes) -> list[Article]:
     """
-    Parse an arxiv Atom XML response and return one dict per <entry>.
+    Parse an arxiv Atom XML response and return one Article per <entry>.
 
-    Each dict contains:
-      title:            str        atom:title text
-      authors:          list[str]  atom:author/atom:name texts in document order
-      primary_category: str        arxiv:primary_category term attribute value
-      abstract_url:     str        atom:link[@rel='alternate'][@type='text/html'] href
-      published:        str        atom:published text (RFC 3339)
-      updated:          str        atom:updated text (RFC 3339)
-      comment:          str | None arxiv:comment text, or None when absent
-      comment_urls:     list[str]  https:// URLs from comment, punctuation stripped
+    The following XML elements are extracted into the corresponding Article
+    fields:
+      atom:title                                       -> title
+      atom:author/atom:name (document order)           -> authors
+      arxiv:primary_category/@term                     -> primary_category
+      atom:link[@rel='alternate'][@type='text/html']   -> abstract_url
+      atom:published                                   -> published
+      atom:updated                                     -> updated
+      arxiv:comment (or None if absent)                -> comment
+      comment_urls is computed from comment by extract_comment_urls.
     """
     root = ET.fromstring(body)
-    entries = []
+    articles: list[Article] = []
     for entry in root.findall(f"{{{_ATOM_NS}}}entry"):
         title_elem = entry.find(f"{{{_ATOM_NS}}}title")
         title = title_elem.text if title_elem is not None else ""
@@ -316,19 +345,19 @@ def parse_entries(body: bytes) -> list[dict]:
             comment_elem.text if comment_elem is not None else None
         )
 
-        entries.append(
-            {
-                "title": title,
-                "authors": authors,
-                "primary_category": primary_category,
-                "abstract_url": abstract_url,
-                "published": published,
-                "updated": updated,
-                "comment": comment,
-                "comment_urls": extract_comment_urls(comment),
-            }
+        articles.append(
+            Article(
+                title=title or "",
+                authors=authors,
+                primary_category=primary_category,
+                abstract_url=abstract_url,
+                published=published or "",
+                updated=updated or "",
+                comment=comment,
+                comment_urls=extract_comment_urls(comment),
+            )
         )
-    return entries
+    return articles
 
 
 # ---------------------------------------------------------------------------
@@ -337,40 +366,21 @@ def parse_entries(body: bytes) -> list[dict]:
 
 
 def build_github_repo_url(github_repository: str) -> str:
-    """
-    Construct the GitHub repository URL from GITHUB_REPOSITORY.
-
-    Parameters:
-      github_repository: "owner/repo" as set by GITHUB_REPOSITORY
-
-    Returns:
-      https://github.com/{owner}/{repo}
-    """
+    """Return the GitHub repository URL for a "owner/repo" identifier."""
     owner, repo = github_repository.split("/", 1)
     return f"https://github.com/{owner}/{repo}"
 
 
 def build_feed_url(github_repository: str, category_id: str) -> str:
-    """
-    Construct the canonical GitHub Pages URL for the feed.
-
-    Splits github_repository on '/' to extract owner and repo, lowercases
-    category_id for the URL path segment, and returns the full feed URL.
-
-    Parameters:
-      github_repository: "owner/repo" as set by GITHUB_REPOSITORY
-      category_id:       ARXIV_CATEGORY_ID (e.g. "cs.AI")
-
-    Returns:
-      https://{owner}.github.io/{repo}/arxiv/{category}/atom.xml
-    """
+    """Return the canonical GitHub Pages URL of the feed for the given owner/repo and category."""
     owner, repo = github_repository.split("/", 1)
-    category_lower = category_id.lower()
-    return f"https://{owner}.github.io/{repo}/arxiv/{category_lower}/atom.xml"
+    return (
+        f"https://{owner}.github.io/{repo}/arxiv/{category_id.lower()}/atom.xml"
+    )
 
 
 def build_feed(
-    articles: list[dict],
+    articles: list[Article],
     category_id: str,
     strict_mode: bool,
     github_repository: str,
@@ -384,8 +394,8 @@ def build_feed(
     input data (NFR-005).
 
     Parameters:
-      articles:          list of article dicts as returned by parse_entries and
-                         filtered by include_article
+      articles:          list of Article values as produced by parse_entries
+                         and filtered by include_article
       category_id:       value of ARXIV_CATEGORY_ID (e.g. "cs.AI")
       strict_mode:       resolved value of ARXIV_CATEGORY_STRICT
       github_repository: value of GITHUB_REPOSITORY (format "owner/repo")
@@ -394,8 +404,11 @@ def build_feed(
       UTF-8 encoded Atom XML bytes with an XML declaration.
     """
     sorted_articles = sorted(
-        articles, key=lambda a: a["published"], reverse=True
+        articles, key=lambda a: a.published, reverse=True
     )
+
+    feed_url = build_feed_url(github_repository, category_id)
+    repo_url = build_github_repo_url(github_repository)
 
     feed = ET.Element(f"{{{_ATOM_NS}}}feed")
 
@@ -403,13 +416,12 @@ def build_feed(
     strict_str = str(strict_mode).lower()
     title_elem.text = f"{category_id} strict={strict_str} {github_repository}"
 
-    feed_url = build_feed_url(github_repository, category_id)
     id_elem = ET.SubElement(feed, f"{{{_ATOM_NS}}}id")
     id_elem.text = feed_url
 
     if sorted_articles:
         updated_elem = ET.SubElement(feed, f"{{{_ATOM_NS}}}updated")
-        updated_elem.text = sorted_articles[0]["published"]
+        updated_elem.text = sorted_articles[0].published
 
     link_self_elem = ET.SubElement(feed, f"{{{_ATOM_NS}}}link")
     link_self_elem.set("rel", "self")
@@ -419,40 +431,40 @@ def build_feed(
     link_alt_elem = ET.SubElement(feed, f"{{{_ATOM_NS}}}link")
     link_alt_elem.set("rel", "alternate")
     link_alt_elem.set("type", "text/html")
-    link_alt_elem.set("href", build_github_repo_url(github_repository))
+    link_alt_elem.set("href", repo_url)
 
     for article in sorted_articles:
         entry = ET.SubElement(feed, f"{{{_ATOM_NS}}}entry")
 
         title_e = ET.SubElement(entry, f"{{{_ATOM_NS}}}title")
-        title_e.text = f"[{article['primary_category']}] {article['title']}"
+        title_e.text = f"[{article.primary_category}] {article.title}"
 
-        for author_name in article["authors"]:
+        for author_name in article.authors:
             author_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}author")
             name_elem = ET.SubElement(author_elem, f"{{{_ATOM_NS}}}name")
             name_elem.text = author_name
 
         cat_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}category")
-        cat_elem.set("term", article["primary_category"])
+        cat_elem.set("term", article.primary_category)
         cat_elem.set("scheme", "http://arxiv.org/schemas/atom")
 
         id_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}id")
-        id_elem.text = article["abstract_url"]
+        id_elem.text = article.abstract_url
 
         link_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}link")
         link_elem.set("rel", "alternate")
         link_elem.set("type", "text/html")
-        link_elem.set("href", article["abstract_url"])
+        link_elem.set("href", article.abstract_url)
 
         pub_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}published")
-        pub_elem.text = article["published"]
+        pub_elem.text = article.published
 
         upd_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}updated")
-        upd_elem.text = article["updated"]
+        upd_elem.text = article.updated
 
         content_elem = ET.SubElement(entry, f"{{{_ATOM_NS}}}content")
         content_elem.set("type", "text")
-        content_elem.text = "\n".join(article["comment_urls"])
+        content_elem.text = "\n".join(article.comment_urls)
 
     ET.indent(feed, space="  ")
     return ET.tostring(feed, encoding="UTF-8", xml_declaration=True)
@@ -470,27 +482,20 @@ def build_commit_message_from_bytes(feed_bytes: bytes) -> str:
     feed with no entries raises ValueError.
     """
     root = ET.fromstring(feed_bytes)
-    entries = root.findall(f"{{{_ATOM_NS}}}entry")
-    n = len(entries)
+    n = len(root.findall(f"{{{_ATOM_NS}}}entry"))
     if n == 0:
         raise ValueError(
             "build_commit_message: feed contains no <entry> elements"
         )
-    article_word = "article" if n == 1 else "articles"
-    published_dates: list[str] = []
-    for entry in entries:
-        published_elem = entry.find(f"{{{_ATOM_NS}}}published")
-        if published_elem is not None and published_elem.text:
-            published_dates.append(published_elem.text)
-    # RFC 3339 dates with the same format sort lexicographically by chronology.
-    newest_date = max(published_dates)
-    # Parse the full RFC 3339 timestamp as a timezone-aware datetime and
-    # convert to UTC before extracting the date.  fromisoformat handles the
-    # "Z" UTC suffix in Python 3.11+.
-    entry_dt = datetime.datetime.fromisoformat(newest_date)
-    entry_date = entry_dt.astimezone(datetime.timezone.utc).date()
+    newest_date = newest_published_date_from_feed(feed_bytes)
+    # n > 0 means at least one entry, but every entry may lack <published>;
+    # build_feed always writes a <published> element, so this is unreachable
+    # for feeds produced by this module.
+    assert newest_date is not None, "feed has entries but no published dates"
+    entry_date = _parse_rfc3339_utc_date(newest_date)
     iso = entry_date.isocalendar()
     week_str = f"{iso.year}-W{iso.week:02d}"
+    article_word = "article" if n == 1 else "articles"
     return f"Update {week_str} feed ({n} {article_word})"
 
 
@@ -517,8 +522,11 @@ def print_unified_diff(
     """
     prior_lines = prior_bytes.decode("utf-8").splitlines(keepends=True)
     new_lines = new_bytes.decode("utf-8").splitlines(keepends=True)
-    for line in difflib.unified_diff(prior_lines, new_lines, fromfile=label, tofile=label):
-        sys.stdout.write(line)
+    sys.stdout.writelines(
+        difflib.unified_diff(
+            prior_lines, new_lines, fromfile=label, tofile=label
+        )
+    )
     sys.stdout.flush()
 
 
@@ -533,7 +541,8 @@ def newest_published_date_from_feed(feed_bytes: bytes) -> str | None:
 
     Compares dates as strings; RFC 3339 timestamps with the same format are
     lexicographically ordered, so max() gives the newest date without parsing.
-    Returns None when the feed contains no <entry> elements.
+    Returns None when the feed contains no <entry> elements with a published
+    date.
     """
     root = ET.fromstring(feed_bytes)
     published_dates: list[str] = []
@@ -566,11 +575,7 @@ def archive_prior_week_feed(
     if newest_date is None:
         return
 
-    # Parse the full RFC 3339 timestamp as a timezone-aware datetime and
-    # convert to UTC before extracting the date.  fromisoformat handles the
-    # "Z" UTC suffix in Python 3.11+.
-    entry_dt = datetime.datetime.fromisoformat(newest_date)
-    entry_date = entry_dt.astimezone(datetime.timezone.utc).date()
+    entry_date = _parse_rfc3339_utc_date(newest_date)
     entry_iso = entry_date.isocalendar()
     today_iso = today.isocalendar()
 
@@ -630,24 +635,16 @@ def check_feed_staleness(
         _logger.info("feed file not found: %s", atom_xml_path)
         return 0
 
-    feed_bytes = atom_xml_path.read_bytes()
-    root = ET.fromstring(feed_bytes)
-    published_dates: list[str] = []
-    for entry in root.findall(f"{{{_ATOM_NS}}}entry"):
-        published_elem = entry.find(f"{{{_ATOM_NS}}}published")
-        if published_elem is not None and published_elem.text:
-            published_dates.append(published_elem.text)
-
-    if not published_dates:
+    newest_date_str = newest_published_date_from_feed(atom_xml_path.read_bytes())
+    if newest_date_str is None:
         _logger.info("feed has no entries: %s", atom_xml_path)
         return 0
 
-    newest_date_str = max(published_dates)
-    # fromisoformat handles the "Z" UTC suffix in Python 3.11+.
-    entry_dt = datetime.datetime.fromisoformat(newest_date_str)
-    entry_date = entry_dt.astimezone(datetime.timezone.utc).date()
+    entry_date = _parse_rfc3339_utc_date(newest_date_str)
     delta_days = (today - entry_date).days
-    threshold_str = "disabled" if max_staleness_days == -1 else f"{max_staleness_days} days"
+    threshold_str = (
+        "disabled" if max_staleness_days == -1 else f"{max_staleness_days} days"
+    )
     _logger.info(
         "feed age: %d days (newest entry: %s, today: %s, threshold: %s)",
         delta_days,
@@ -681,7 +678,7 @@ def fetch_all_articles(
     today: datetime.date,
     backoff_base_seconds: float,
     max_results: int,
-) -> list[dict]:
+) -> list[Article]:
     """
     Fetch all arxiv articles for the ISO week that contains today, paginating
     in steps of max_results.
@@ -701,7 +698,7 @@ def fetch_all_articles(
     monday, sunday = compute_week_bounds(today)
     max_retries_first_page = 3
     start = 0
-    all_entries: list[dict] = []
+    all_articles: list[Article] = []
 
     while True:
         url = build_api_url(
@@ -744,11 +741,11 @@ def fetch_all_articles(
                     f"Pagination request failed: HTTP {status} (start={start})"
                 )
 
-        entries = parse_entries(body)
-        count = len(entries)
+        articles = parse_entries(body)
+        count = len(articles)
         _logger.info("Fetched %d results (start=%d)", count, start)
 
-        all_entries.extend(entries)
+        all_articles.extend(articles)
 
         if count < max_results:
             # Received fewer entries than requested: this is the last page.
@@ -756,7 +753,7 @@ def fetch_all_articles(
 
         start += max_results
 
-    return all_entries
+    return all_articles
 
 
 # ---------------------------------------------------------------------------
@@ -821,12 +818,7 @@ def run_staleness_check(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
         _logger.error("%s", exc)
         return 1
 
-    today_override = os.environ.get("PIPELINE_TODAY")
-    if today_override:
-        today = datetime.date.fromisoformat(today_override)
-    else:
-        today = datetime.datetime.now(datetime.timezone.utc).date()
-
+    today = _resolve_today()
     feed_path = base_dir / "docs" / "arxiv" / category_id.lower() / "atom.xml"
 
     return check_feed_staleness(feed_path, today, max_staleness_days)
@@ -856,13 +848,7 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
         os.environ.get("RETRY_BACKOFF_BASE_SECONDS", "60")
     )
     max_results = int(os.environ.get("ARXIV_MAX_RESULTS", "50"))
-
-    today_override = os.environ.get("PIPELINE_TODAY")
-    today: datetime.date
-    if today_override:
-        today = datetime.date.fromisoformat(today_override)
-    else:
-        today = datetime.datetime.now(datetime.timezone.utc).date()
+    today = _resolve_today()
 
     _logger.info(
         "pipeline starting: category=%s strict=%s today=%s",
@@ -891,13 +877,7 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
     filtered = [
         article
         for article in articles
-        if include_article(
-            article["primary_category"],
-            article["comment"],
-            abstract_url=article["abstract_url"],
-            published=article["published"],
-            title=article["title"],
-        )
+        if include_article(article, category_id, strict_mode)
     ]
     n_filtered = len(filtered)
     article_word = "article" if n_filtered == 1 else "articles"

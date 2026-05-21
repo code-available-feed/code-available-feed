@@ -4,43 +4,47 @@ import xml.etree.ElementTree as ET
 
 from behave import given, then
 
+import src.pipeline_feed
+
 
 @given('one input article with title "{title}"')
 def step_one_article_with_title(context, title):
-    """Provide a single article with the given title and minimal valid other fields."""
+    """Provide a single Article with the given title and minimal valid other fields."""
     context.articles = [
-        {
-            "title": title,
-            "authors": ["Test Author"],
-            "primary_category": "cs.AI",
-            "abstract_url": "https://arxiv.org/abs/0000.00000v1",
-            "published": "2026-05-12T11:30:00Z",
-            "updated": "2026-05-12T11:30:00Z",
-            "comment_urls": ["https://example.com/"],
-        }
+        src.pipeline_feed.Article(
+            title=title,
+            authors=["Test Author"],
+            primary_category="cs.AI",
+            abstract_url="https://arxiv.org/abs/0000.00000v1",
+            published="2026-05-12T11:30:00Z",
+            updated="2026-05-12T11:30:00Z",
+            comment=None,
+            comment_urls=["https://example.com/"],
+        )
     ]
 
 
 @given('one input article with abstract URL "{abstract_url}"')
 def step_one_article_with_abstract_url(context, abstract_url):
-    """Provide a single article with the given abstract URL; comment_urls start empty."""
+    """Provide a single Article with the given abstract URL; comment_urls start empty."""
     context.articles = [
-        {
-            "title": "Any Paper Title",
-            "authors": ["Test Author"],
-            "primary_category": "cs.AI",
-            "abstract_url": abstract_url,
-            "published": "2026-05-12T11:30:00Z",
-            "updated": "2026-05-12T11:30:00Z",
-            "comment_urls": [],
-        }
+        src.pipeline_feed.Article(
+            title="Any Paper Title",
+            authors=["Test Author"],
+            primary_category="cs.AI",
+            abstract_url=abstract_url,
+            published="2026-05-12T11:30:00Z",
+            updated="2026-05-12T11:30:00Z",
+            comment=None,
+            comment_urls=[],
+        )
     ]
 
 
 @given('the article has comment URL "{comment_url}"')
 def step_article_has_comment_url(context, comment_url):
     """Append comment_url to the comment_urls list of the first article in context."""
-    context.articles[0]["comment_urls"].append(comment_url)
+    context.articles[0].comment_urls.append(comment_url)
 
 
 @then('the raw output bytes contain the substring "{substring}"')

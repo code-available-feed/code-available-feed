@@ -26,26 +26,27 @@ def _run_feed_and_write(context, path: str) -> None:
 
 @given('a fixed set of input articles loaded from "{json_path}"')
 def step_load_articles_from_json(context, json_path: str) -> None:
-    """Load the article list from a JSON fixture file into context.articles."""
-    context.articles = json.loads(
+    """Load the article list from a JSON fixture file into context.articles as Articles."""
+    raw_articles = json.loads(
         pathlib.Path(json_path).read_text(encoding="utf-8")
     )
+    context.articles = [src.pipeline_feed.Article(**d) for d in raw_articles]
 
 
 @given("any non-empty input article set")
 def step_any_nonempty_article_set(context) -> None:
-    """Provide a single article with valid field values."""
+    """Provide a single Article with valid field values."""
     context.articles = [
-        {
-            "title": "Any Paper",
-            "authors": ["Test Author"],
-            "primary_category": "cs.AI",
-            "abstract_url": "https://arxiv.org/abs/0000.00000v1",
-            "published": "2026-05-12T11:30:00Z",
-            "updated": "2026-05-12T11:30:00Z",
-            "comment": "Code: https://example.com/",
-            "comment_urls": ["https://example.com/"],
-        }
+        src.pipeline_feed.Article(
+            title="Any Paper",
+            authors=["Test Author"],
+            primary_category="cs.AI",
+            abstract_url="https://arxiv.org/abs/0000.00000v1",
+            published="2026-05-12T11:30:00Z",
+            updated="2026-05-12T11:30:00Z",
+            comment="Code: https://example.com/",
+            comment_urls=["https://example.com/"],
+        )
     ]
 
 

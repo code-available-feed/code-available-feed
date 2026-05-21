@@ -23,15 +23,16 @@ def step_create_minimal_feed(context, filepath, published_date):
     feed_path = context.run_dir / filepath
     feed_path.parent.mkdir(parents=True, exist_ok=True)
 
-    article = {
-        "title": "Test Article",
-        "authors": ["Test Author"],
-        "primary_category": "cs.AI",
-        "abstract_url": "https://arxiv.org/abs/0000.00000v1",
-        "published": published_date,
-        "updated": published_date,
-        "comment_urls": ["https://example.com/"],
-    }
+    article = src.pipeline_feed.Article(
+        title="Test Article",
+        authors=["Test Author"],
+        primary_category="cs.AI",
+        abstract_url="https://arxiv.org/abs/0000.00000v1",
+        published=published_date,
+        updated=published_date,
+        comment=None,
+        comment_urls=["https://example.com/"],
+    )
     feed_bytes = src.pipeline_feed.build_feed(
         [article],
         category_id="cs.AI",

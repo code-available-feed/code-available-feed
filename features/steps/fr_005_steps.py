@@ -19,15 +19,16 @@ def _build_minimal_feed(published: str) -> bytes:
     Parameters:
       published: RFC 3339 date string, e.g. "2026-05-08T12:00:00Z"
     """
-    article = {
-        "title": "Test Article",
-        "authors": ["Test Author"],
-        "primary_category": "cs.AI",
-        "abstract_url": "https://arxiv.org/abs/0000.00000v1",
-        "published": published,
-        "updated": published,
-        "comment_urls": ["https://example.com/"],
-    }
+    article = src.pipeline_feed.Article(
+        title="Test Article",
+        authors=["Test Author"],
+        primary_category="cs.AI",
+        abstract_url="https://arxiv.org/abs/0000.00000v1",
+        published=published,
+        updated=published,
+        comment=None,
+        comment_urls=["https://example.com/"],
+    )
     return src.pipeline_feed.build_feed(
         [article],
         category_id="cs.AI",

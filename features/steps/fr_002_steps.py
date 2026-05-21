@@ -33,9 +33,21 @@ def step_article_comment_element_state(context, element_state):
 
 @when("the inclusion filter is applied to the article")
 def step_apply_inclusion_filter(context):
+    """Build an Article with only the fields the filter inspects and call include_article."""
+    article = src.pipeline_feed.Article(
+        title="",
+        authors=[],
+        primary_category=context.article_primary_category,
+        abstract_url="",
+        published="",
+        updated="",
+        comment=context.article_comment,
+        comment_urls=[],
+    )
     context.article_included = src.pipeline_feed.include_article(
-        context.article_primary_category,
-        context.article_comment,
+        article,
+        src.pipeline_feed.resolve_category_id(),
+        src.pipeline_feed.resolve_strict_mode(),
     )
 
 

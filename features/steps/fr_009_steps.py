@@ -28,17 +28,18 @@ def step_feed_self_url_is(context, expected):
 
 @given('one input article whose abstract page URL is "{abstract_url}"')
 def step_one_article_with_abstract_url(context, abstract_url):
-    """Provide a single article with a specific abstract page URL."""
+    """Provide a single Article with a specific abstract page URL."""
     context.articles = [
-        {
-            "title": "Any Paper Title",
-            "authors": ["Test Author"],
-            "primary_category": "cs.AI",
-            "abstract_url": abstract_url,
-            "published": "2026-05-12T11:30:00Z",
-            "updated": "2026-05-12T11:30:00Z",
-            "comment_urls": ["https://example.com/"],
-        }
+        src.pipeline_feed.Article(
+            title="Any Paper Title",
+            authors=["Test Author"],
+            primary_category="cs.AI",
+            abstract_url=abstract_url,
+            published="2026-05-12T11:30:00Z",
+            updated="2026-05-12T11:30:00Z",
+            comment=None,
+            comment_urls=["https://example.com/"],
+        )
     ]
 
 

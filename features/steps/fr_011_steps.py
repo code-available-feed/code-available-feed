@@ -11,8 +11,8 @@ from atom_ns import ATOM_NS
 
 @given("the fixture server responds with HTTP 503 to the first request")
 def step_fixture_503_first_request(context):
-    """Configure the fixture server to return 503 for the first request."""
-    context.fixture_server.set_initial_response_sequence([(503, 0, 0)])
+    """Queue a 503 response for the first request (start=0)."""
+    context.fixture_server.set_response(start=0, status=503, n_entries=0)
 
 
 @given(
@@ -29,10 +29,9 @@ def step_fixture_respond_to_subsequent_requests(context, status, n_entries):
 
 @given("the fixture server responds with HTTP 503 to the first 2 requests")
 def step_fixture_503_first_two_requests(context):
-    """Configure the fixture server to return 503 for the first two requests."""
-    context.fixture_server.set_initial_response_sequence(
-        [(503, 0, 0), (503, 0, 0)]
-    )
+    """Queue two 503 responses for the first two requests (both start=0 retries)."""
+    context.fixture_server.set_response(start=0, status=503, n_entries=0)
+    context.fixture_server.set_response(start=0, status=503, n_entries=0)
 
 
 @given("the fixture server responds with HTTP 503 to the second request")

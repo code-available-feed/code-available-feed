@@ -4,16 +4,17 @@ Local fixture HTTP server that mimics the arxiv Atom API for BDD tests.
 Runs in a daemon thread inside the behave process.  One server instance is
 created per scenario (via the Background step) and stopped in after_scenario.
 
-Response resolution order for each incoming request:
+Each request is resolved as follows:
 
-1.  If an initial response sequence is configured, the next element is
-    consumed regardless of the start query parameter.
-2.  Else if the start value is present in the response table, that entry
-    is used.
-3.  Else the server default response is used.
+1.  If a non-empty queue is configured for the request's start query
+    parameter, the next queued Response is popped and used.
+2.  Otherwise the server's single default Response is used.
 
-The initial sequence supports retry-scenario tests where the same start=0
-URL must return different statuses on successive calls.
+A queue holds zero or more pre-configured Responses for a given start
+value.  This single mechanism supports both pagination tests (one
+Response queued per distinct start) and retry tests (multiple Responses
+queued for start=0, popped one per retry until the queue drains and
+subsequent retries hit the default).
 """
 
 import http.server
@@ -32,13 +33,6 @@ class Response(typing.NamedTuple):
     status: int
     n_entries: int
     n_have_comment_url: int
-
-
-def _resolve_n_have_comment_url(
-    n_entries: int, n_have_comment_url: int | None
-) -> int:
-    """Return n_entries when the caller passed None, otherwise the explicit value."""
-    return n_entries if n_have_comment_url is None else n_have_comment_url
 
 
 def _build_atom_response(
@@ -146,10 +140,10 @@ class ArxivFixtureServer:
     """
     Local HTTP server that mimics the arxiv API for BDD tests.
 
-    Resolution order per request is documented at module level: initial
-    response sequence first, then start-keyed table, then the single
-    default response.  The primary category applied to generated entries
-    is a server-wide setting (default "cs.AI").
+    Resolution order per request is documented at module level: pop one
+    Response from the queue for the request's start value if non-empty,
+    otherwise use the single default Response.  The primary category
+    applied to generated entries is a server-wide setting (default "cs.AI").
     """
 
     _DEFAULT_RESPONSE = Response(status=200, n_entries=10, n_have_comment_url=10)
@@ -159,8 +153,10 @@ class ArxivFixtureServer:
         """Start the fixture server on an ephemeral localhost port in a daemon thread."""
         self._lock = threading.Lock()
         self._requests: list[str] = []
-        self._response_table: dict[int, Response] = {}
-        self._initial_responses: list[Response] = []
+        # Maps start parameter value to a FIFO queue of Responses; each
+        # request to that start value pops one entry from the queue, and
+        # when empty (or absent) the request falls through to _default.
+        self._queues: dict[int, list[Response]] = {}
         self._default: Response = self._DEFAULT_RESPONSE
         self._primary_category: str = self._DEFAULT_PRIMARY_CATEGORY
 
@@ -188,37 +184,23 @@ class ArxivFixtureServer:
         n_have_comment_url: int | None = None,
     ) -> None:
         """
-        Configure the response for a specific start parameter value.
+        Queue one response for the given start parameter value.
 
         n_have_comment_url defaults to n_entries (all entries get a URL)
-        when not set.
+        when not set.  Each call appends one Response to the queue for
+        that start value; the request handler pops one per request.  When
+        the queue is drained, subsequent requests for the same start value
+        fall through to the default response.
         """
         response = Response(
             status=status,
             n_entries=n_entries,
-            n_have_comment_url=_resolve_n_have_comment_url(
-                n_entries, n_have_comment_url
+            n_have_comment_url=(
+                n_entries if n_have_comment_url is None else n_have_comment_url
             ),
         )
         with self._lock:
-            self._response_table[start] = response
-
-    def set_initial_response_sequence(
-        self, responses: list[tuple[int, int, int]]
-    ) -> None:
-        """
-        Set a sequence of responses to return for the first len(responses)
-        requests, regardless of their start parameter value.
-
-        Each element is (http_status, n_entries, n_have_comment_url).
-        Once the sequence is exhausted, subsequent requests fall through to
-        the start-based response table and the server default.
-        """
-        with self._lock:
-            self._initial_responses = [
-                Response(status=s, n_entries=n, n_have_comment_url=u)
-                for s, n, u in responses
-            ]
+            self._queues.setdefault(start, []).append(response)
 
     def set_default(
         self,
@@ -227,8 +209,8 @@ class ArxivFixtureServer:
         n_have_comment_url: int | None = None,
     ) -> None:
         """
-        Override the default response returned when neither the initial
-        sequence nor the per-start table matches.
+        Override the default response returned when the request's start
+        value has no queue or its queue has been drained.
 
         n_have_comment_url defaults to n_entries (all entries get a URL)
         when not set.
@@ -236,8 +218,8 @@ class ArxivFixtureServer:
         response = Response(
             status=status,
             n_entries=n_entries,
-            n_have_comment_url=_resolve_n_have_comment_url(
-                n_entries, n_have_comment_url
+            n_have_comment_url=(
+                n_entries if n_have_comment_url is None else n_have_comment_url
             ),
         )
         with self._lock:
@@ -247,8 +229,8 @@ class ArxivFixtureServer:
         """
         Set the arxiv primary category applied to all generated fixture entries.
 
-        Affects responses from the initial sequence, the start-based table,
-        and the server default.  Default value is "cs.AI".
+        Affects every response served by this fixture instance, whether
+        popped from a queue or taken from the default.  Default value is "cs.AI".
         """
         with self._lock:
             self._primary_category = primary_category
@@ -268,15 +250,15 @@ class ArxivFixtureServer:
         """
         Record the request and return (response, primary_category) under lock.
 
-        The initial sequence has highest precedence (consumed once per
-        request), then the start-keyed table, then the default.
+        The queue for start_val is consumed once per request; when the
+        queue is empty or absent, the request falls through to the single
+        default response.
         """
         with self._lock:
             self._requests.append(request_path)
-            if self._initial_responses:
-                response = self._initial_responses.pop(0)
-            elif start_val in self._response_table:
-                response = self._response_table[start_val]
+            queue = self._queues.get(start_val)
+            if queue:
+                response = queue.pop(0)
             else:
                 response = self._default
             return response, self._primary_category

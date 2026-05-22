@@ -39,10 +39,12 @@ Currently it's [not possible](https://github.com/orgs/community/discussions/7913
 
    f. `RETRY_BACKOFF_BASE_SECONDS` (defaults to `60`): base duration in seconds for exponential retry backoff on the first API page. The N-th retry waits `N × RETRY_BACKOFF_BASE_SECONDS` seconds.
 
-3. Run the `pipeline_feed` workflow at least once (via the Actions tab or wait for the daily schedule).
+3. Enable GitHub Actions in Settings -> Actions -> General -> Allow {owner}, and select non-{owner}, actions and reusable workflows ->  Allow actions created by GitHub.
+
+4. Run the `pipeline_feed` workflow at least once (via the Actions tab or wait for the daily schedule).
    The first successful `deploy_orphan` run creates the `gh-pages` branch.
 
-4. In repository Settings → Pages, set Source to *Deploy from a branch*, Branch to `gh-pages`, Folder to `/docs`.
+5. In repository Settings → Pages, set Source to *Deploy from a branch*, Branch to `gh-pages`, Folder to `/docs`.
 
 After setup, the feed URL is `https://{owner}.github.io/{repo}/arxiv/{category}/atom.xml`
 (e.g. `https://marcindulak.github.io/code-available-feed-cs-ai/arxiv/cs.ai/atom.xml`).

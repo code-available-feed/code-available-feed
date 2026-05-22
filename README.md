@@ -16,17 +16,16 @@ The feed for the desired arXiv category will be served on GitHub Pages.
 See [https://code-available-feed.github.io/code-available-feed](https://code-available-feed.github.io/code-available-feed) for the sorted list of available feeds.
 If you serve a feed using this project, consider making a pull request to add your feed to this list.
 
+> [!NOTE]
+Currently it's [not possible](https://github.com/orgs/community/discussions/79137) to create two forks of the same repo, so one GitHub user can host only one feed.
+
 # Usage examples
 
 ## GitHub Pages setup (one-time)
 
-> [!NOTE]
-Choose the appropriate name of the fork if you plan to host more than one feed repo.
-See the points below to understand this setup!
-
 1. Fork the https://github.com/code-available-feed/code-available-feed repository.
 
-2. In your fork configure Settings → Actions → Variables:
+2. In your fork configure Settings → Secrets and Variables -> Actions → Variables -> Repository Variables:
 
    a. `ARXIV_CATEGORY_ID` (defaults to `cs.AI`): set to any arXiv category, e.g. `cs.CV`.
 

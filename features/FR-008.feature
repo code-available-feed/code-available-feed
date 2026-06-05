@@ -1,12 +1,13 @@
-@status-done
+@status-todo
 Feature: FR-008 Repository variable resolution
 
   Two repository variables control filtering: ARXIV_CATEGORY_ID (default
   "cs.AI") and ARXIV_CATEGORY_STRICT (default "false"). Two additional
   variables control error handling and staleness alerting:
   ARXIV_CONTINUE_ON_API_ERROR (default "false") and ARXIV_MAX_STALENESS_DAYS
-  (default "-1"). All boolean-like variables follow the same convention: only
-  the case-insensitive literal "true" enables the mode; any other value
+  (default "-1"). ARXIV_MAX_BACKFILL_DAYS (default "8") controls the rolling
+  fetch window in days. All boolean-like variables follow the same convention:
+  only the case-insensitive literal "true" enables the mode; any other value
   including empty string or unset disables it.
 
   Scenario: ARXIV_CATEGORY_ID defaults to "cs.AI" when the environment variable is unset
@@ -88,5 +89,39 @@ Feature: FR-008 Repository variable resolution
       | value      |
       | 0          |
       | -2         |
+      | notanumber |
+      | 1.5        |
+
+  Scenario: ARXIV_MAX_BACKFILL_DAYS defaults to 8 when the environment variable is unset
+    Given the environment variable ARXIV_MAX_BACKFILL_DAYS is unset
+    When the max-backfill-days configuration is resolved
+    Then the resolved max-backfill-days is 8
+
+  Scenario: ARXIV_MAX_BACKFILL_DAYS passes the configured value through when set
+    Given the environment variable ARXIV_MAX_BACKFILL_DAYS is "15"
+    When the max-backfill-days configuration is resolved
+    Then the resolved max-backfill-days is 15
+
+  Scenario Outline: ARXIV_MAX_BACKFILL_DAYS accepts positive integers
+    Given the environment variable ARXIV_MAX_BACKFILL_DAYS is "<value>"
+    When the max-backfill-days configuration is resolved
+    Then ARXIV_MAX_BACKFILL_DAYS is accepted
+
+    Examples:
+      | value |
+      | 1     |
+      | 8     |
+      | 30    |
+
+  Scenario Outline: ARXIV_MAX_BACKFILL_DAYS rejects zero, negatives, and non-integers
+    Given the environment variable ARXIV_MAX_BACKFILL_DAYS is "<value>"
+    When the max-backfill-days configuration is resolved
+    Then ARXIV_MAX_BACKFILL_DAYS is rejected with ValueError
+
+    Examples:
+      | value      |
+      | 0          |
+      | -1         |
+      | -5         |
       | notanumber |
       | 1.5        |

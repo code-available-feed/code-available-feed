@@ -1,13 +1,18 @@
-@status-done
+@status-todo
 Feature: FR-005 Weekly storage path and week-rollover archive
 
-  The current week's feed is stored at "docs/arxiv/{category}/atom.xml" where
-  {category} is the ARXIV_CATEGORY_ID lowercased. At the start of each run the
-  script parses the ISO week number of the newest <entry><published> date in
-  the existing atom.xml (if any) and compares it to the ISO week number of
-  today. If they differ, the existing file is copied to
+  The current feed is stored at "docs/arxiv/{category}/atom.xml" where
+  {category} is the ARXIV_CATEGORY_ID lowercased.
+  At the start of each run the script parses the ISO week number of the newest
+  <entry><published> date in the existing atom.xml (if any) and compares it to
+  the ISO week number of today.
+  If they differ, the existing file is copied to
   "docs/arxiv/{category}/archive/YYYY-WNN/atom.xml" before being overwritten.
   No archive step is performed on the very first run.
+
+  Archiving runs unconditionally before any early-exit path (including 0
+  articles returned by the API or 0 articles passing the filter).
+  An existing archive file is never overwritten (write-once guard).
 
   Background:
     Given the local arxiv fixture server is running
@@ -50,3 +55,23 @@ Feature: FR-005 Weekly storage path and week-rollover archive
     Given an existing "docs/arxiv/cs.ai/atom.xml" whose newest entry published date is "2026-05-12T12:00:00Z"
     When the pipeline runs to completion
     Then no file exists under "docs/arxiv/cs.ai/archive/"
+
+  Scenario: Archive is created even when the API returns zero articles
+    Given an existing "docs/arxiv/cs.ai/atom.xml" whose newest entry published date is "2026-05-08T12:00:00Z"
+    And the fixture server responds with HTTP 200 and 0 entries to the first request
+    When the pipeline runs to completion
+    Then the pipeline exit code is 0
+    And the file "docs/arxiv/cs.ai/archive/2026-W19/atom.xml" exists
+
+  Scenario: Archive is created even when zero articles pass the inclusion filter
+    Given an existing "docs/arxiv/cs.ai/atom.xml" whose newest entry published date is "2026-05-08T12:00:00Z"
+    And by default the fixture server returns entries that have no comment URL
+    When the pipeline runs to completion
+    Then the pipeline exit code is 0
+    And the file "docs/arxiv/cs.ai/archive/2026-W19/atom.xml" exists
+
+  Scenario: Write-once guard prevents overwriting an existing archive
+    Given an existing "docs/arxiv/cs.ai/atom.xml" whose newest entry published date is "2026-05-08T12:00:00Z"
+    And an existing archive file "docs/arxiv/cs.ai/archive/2026-W19/atom.xml" with content "prior archive"
+    When the pipeline runs to completion
+    Then the content of "docs/arxiv/cs.ai/archive/2026-W19/atom.xml" is "prior archive"

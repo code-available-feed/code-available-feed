@@ -1,10 +1,14 @@
-@status-done
-Feature: FR-001 Fetch the current ISO week from the arxiv API
+@status-todo
+Feature: FR-001 Fetch articles from the arxiv API using a rolling window
 
   The pipeline fetches every article submitted to the configured arxiv category
-  during the current ISO calendar week (Monday 00:00 UTC to Sunday 23:59 UTC).
+  during the rolling window [today - ARXIV_MAX_BACKFILL_DAYS, today].
   It pages the arxiv API in steps of ARXIV_MAX_RESULTS results (default 50)
   and uses the configured category id.
+
+  The rolling window replaces the former ISO week bounds to recover articles
+  submitted after Thursday 14:00 ET, which the arXiv announcement schedule
+  delays until after the ISO week boundary.
 
   The scenarios run against a local fixture HTTP server (not export.arxiv.org).
   The pipeline points at the fixture via the ARXIV_API_BASE_URL environment
@@ -20,26 +24,28 @@ Feature: FR-001 Fetch the current ISO week from the arxiv API
     And by default the fixture server returns entries that all have a comment URL
     And no "docs/arxiv/cs.ai/atom.xml" file exists in a fresh temporary directory
 
-  Scenario: The first API request uses the current ISO week date bounds
+  Scenario: The first API request uses rolling window bounds [today - 8, today] by default
     Given the environment variable PIPELINE_TODAY is "2026-05-14"
     When the pipeline runs to completion
     Then the fixture server received at least one request with path "/api/query"
-    And the first request query string contains "search_query=cat:cs.AI+AND+submittedDate:[202605110000+TO+202605172359]"
+    And the first request query string contains "search_query=cat:cs.AI+AND+submittedDate:[202605060000+TO+202605142359]"
     And the first request query string contains "start=0"
     And the first request query string contains "max_results=50"
 
-  Scenario Outline: Date range covers the full current ISO week regardless of which weekday "today" is
+  Scenario Outline: Rolling window date range covers [today - ARXIV_MAX_BACKFILL_DAYS, today]
     Given the environment variable PIPELINE_TODAY is "<today>"
+    And the environment variable ARXIV_MAX_BACKFILL_DAYS is "<n>"
     When the pipeline runs to completion
-    Then the first request query string contains "submittedDate:[<monday>0000+TO+<sunday>2359]"
+    Then the first request query string contains "submittedDate:[<start>0000+TO+<end>2359]"
 
     Examples:
-      | today      | monday   | sunday   |
-      | 2026-05-11 | 20260511 | 20260517 |
-      | 2026-05-14 | 20260511 | 20260517 |
-      | 2026-05-17 | 20260511 | 20260517 |
-      | 2026-12-31 | 20261228 | 20270103 |
-      | 2027-01-01 | 20261228 | 20270103 |
+      | today      | n  | start    | end      |
+      | 2026-05-14 | 8  | 20260506 | 20260514 |
+      | 2026-05-14 | 1  | 20260513 | 20260514 |
+      | 2026-05-14 | 15 | 20260429 | 20260514 |
+      | 2026-05-12 | 8  | 20260504 | 20260512 |
+      | 2026-12-31 | 8  | 20261223 | 20261231 |
+      | 2027-01-05 | 8  | 20261228 | 20270105 |
 
   Scenario: The first API request sorts by submission date descending
     Given the environment variable PIPELINE_TODAY is "2026-05-14"

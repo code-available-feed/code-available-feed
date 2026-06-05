@@ -104,3 +104,30 @@ def step_contents_match_prior(context, filepath, prior_filepath):
         f"expected length: {len(context.prior_atom_xml_bytes)}, "
         f"actual length: {len(actual_bytes)}"
     )
+
+
+@given("by default the fixture server returns entries that have no comment URL")
+def step_fixture_default_no_comment_url(context):
+    """Configure the fixture server to return entries without comment URLs."""
+    context.fixture_server.set_default(status=200, n_entries=10, n_have_comment_url=0)
+
+
+@given('an existing archive file "{filepath}" with content "{content}"')
+def step_create_existing_archive(context, filepath, content):
+    """Create an archive file at filepath inside run_dir with the given content."""
+    full_path = context.run_dir / filepath
+    full_path.parent.mkdir(parents=True, exist_ok=True)
+    full_path.write_text(content, encoding="utf-8")
+
+
+@then('the content of "{filepath}" is "{expected_content}"')
+def step_content_is(context, filepath, expected_content):
+    """Assert that the file at filepath inside run_dir has the expected content."""
+    full_path = context.run_dir / filepath
+    assert full_path.exists(), (
+        f"Expected file {full_path} to exist, but it does not"
+    )
+    actual = full_path.read_text(encoding="utf-8")
+    assert actual == expected_content, (
+        f"Expected content {expected_content!r}, got {actual!r}"
+    )

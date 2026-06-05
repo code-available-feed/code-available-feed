@@ -865,6 +865,9 @@ def archive_prior_week_feed(
     archive_dir = output_path.parent / "archive" / archive_week
     archive_dir.mkdir(parents=True, exist_ok=True)
     archive_target = archive_dir / "atom.xml"
+    if archive_target.exists():
+        _logger.info("archive already exists, skipping: %s", archive_target)
+        return
     _logger.info("archiving %s to %s", output_path, archive_target)
     archive_target.write_bytes(feed_bytes)
 
@@ -1137,6 +1140,13 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
     start_yyyymmdd = start_date.strftime("%Y%m%d")
     end_yyyymmdd = today.strftime("%Y%m%d")
 
+    category_lower = category_id.lower()
+    output_dir = base_dir / "docs" / "arxiv" / category_lower
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "atom.xml"
+
+    archive_prior_week_feed(output_path, today)
+
     _logger.info(
         "pipeline starting: category=%s strict=%s today=%s backfill_days=%d",
         category_id, strict_mode, today, max_backfill_days,
@@ -1175,15 +1185,9 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
         _logger.info("no articles passed the inclusion filter for this period")
         return 0
 
-    category_lower = category_id.lower()
-    output_dir = base_dir / "docs" / "arxiv" / category_lower
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / "atom.xml"
-
     # Capture the current file bytes before any changes for change detection.
     prior_bytes = output_path.read_bytes() if output_path.exists() else None
 
-    archive_prior_week_feed(output_path, today)
     feed_bytes = build_feed(filtered, category_id, strict_mode, github_repository)
 
     # FR-013: unified diff between prior and newly generated feed for

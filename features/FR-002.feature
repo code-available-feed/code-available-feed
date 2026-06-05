@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-002 Article inclusion filter with cascading code-URL search
 
   An article is included in the feed if and only if both conditions hold:

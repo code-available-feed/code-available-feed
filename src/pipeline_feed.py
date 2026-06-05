@@ -26,6 +26,7 @@ import sys
 import time
 import typing
 import urllib.error
+import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 
@@ -46,6 +47,20 @@ _MIN_REQUEST_INTERVAL_SECONDS: int = 5
 # "../etc/passwd" reaching the docs/arxiv/{category}/ filesystem path.
 _ARXIV_CATEGORY_PATTERN = re.compile(r"^[a-zA-Z]+(-[a-zA-Z]+)?(\.[a-zA-Z]+)?$")
 
+# Code-hosting domains accepted as code-availability signals in abstracts
+# and PDF text.  Comment URLs accept any https:// URL regardless of domain.
+ACCEPTED_REPO_DOMAINS: frozenset[str] = frozenset({
+    "github.com",
+    "gitlab.com",
+    "huggingface.co",
+})
+
+# Domain suffixes that match any subdomain (e.g. ".github.io" matches
+# "user.github.io").
+ACCEPTED_REPO_DOMAIN_SUFFIXES: frozenset[str] = frozenset({
+    ".github.io",
+})
+
 _logger = logging.getLogger(__name__)
 
 
@@ -54,6 +69,9 @@ class Article(typing.NamedTuple):
 
     authors and comment_urls are list[str] rather than tuple[str, ...] so that
     test code can compare them against literal lists with the == operator.
+    repo_found_in and repo_urls are populated by the enrichment cascade; they
+    default to empty so that parse_entries and test constructors need not
+    specify them.
     """
 
     title: str
@@ -65,6 +83,8 @@ class Article(typing.NamedTuple):
     abstract: str
     comment: str | None
     comment_urls: list[str]
+    repo_found_in: str = ""
+    repo_urls: tuple[str, ...] = ()
 
 
 class _UtcJsonFormatter(logging.Formatter):
@@ -186,33 +206,114 @@ def _parse_rfc3339_utc_date(timestamp: str) -> datetime.date:
 
 
 # ---------------------------------------------------------------------------
-# Article inclusion filter
+# Article inclusion filter and enrichment cascade
 # ---------------------------------------------------------------------------
 
 
-def include_article(
+def _is_url_on_accepted_domain(
+    url: str,
+    accepted_domains: frozenset[str],
+    accepted_suffixes: frozenset[str],
+) -> bool:
+    """Return True when url's hostname matches any accepted domain or suffix."""
+    parsed = urllib.parse.urlparse(url)
+    hostname = (parsed.hostname or "").lower()
+    if hostname in accepted_domains:
+        return True
+    return any(hostname.endswith(suffix) for suffix in accepted_suffixes)
+
+
+def extract_repo_urls(
+    text: str,
+    accepted_domains: frozenset[str] | None = None,
+    accepted_suffixes: frozenset[str] | None = None,
+) -> list[str]:
+    """Extract accepted-domain URLs from free-form text (abstract or PDF).
+
+    Two regex passes are applied:
+    1. https://\\S+ captures scheme-prefixed URLs.
+    2. A bare-domain regex for each accepted domain and suffix captures URLs
+       that appear without the https:// scheme (e.g. when LaTeX renders a
+       URL via \\href{url}{icon}).
+
+    Trailing punctuation from the set .,;:)]> is stripped from each match.
+    Results are deduplicated and filtered to the accepted domain set.
+    """
+    if not text:
+        return []
+
+    domains = accepted_domains if accepted_domains is not None else ACCEPTED_REPO_DOMAINS
+    suffixes = accepted_suffixes if accepted_suffixes is not None else ACCEPTED_REPO_DOMAIN_SUFFIXES
+
+    raw_urls: list[str] = []
+
+    for match in re.findall(r"https://\S+", text):
+        raw_urls.append(match.rstrip(".,;:)]>"))
+
+    bare_parts: list[str] = []
+    for domain in sorted(domains):
+        bare_parts.append(re.escape(domain))
+    for suffix in sorted(suffixes):
+        bare_parts.append(r"\S+" + re.escape(suffix))
+    if bare_parts:
+        bare_regex = f"(?:{'|'.join(bare_parts)})/\\S+"
+        for match in re.findall(bare_regex, text):
+            raw_urls.append(f"https://{match.rstrip('.,;:)]>')}")
+
+    seen: set[str] = set()
+    filtered: list[str] = []
+    for url in raw_urls:
+        if url in seen:
+            continue
+        seen.add(url)
+        if _is_url_on_accepted_domain(url, domains, suffixes):
+            filtered.append(url)
+
+    return filtered
+
+
+def enrich_from_metadata(
+    article: Article,
+    accepted_domains: frozenset[str] | None = None,
+    accepted_suffixes: frozenset[str] | None = None,
+) -> Article:
+    """Set repo_found_in and repo_urls from comment or abstract URLs.
+
+    Cascade: comment URLs (any https://) take priority; abstract URLs
+    (accepted domains only) are the fallback.  Returns article unchanged
+    when neither source yields a URL.
+    """
+    if article.comment_urls:
+        return article._replace(
+            repo_found_in="comment",
+            repo_urls=tuple(sorted(set(article.comment_urls))),
+        )
+
+    abstract_urls = extract_repo_urls(
+        article.abstract,
+        accepted_domains=accepted_domains,
+        accepted_suffixes=accepted_suffixes,
+    )
+    if abstract_urls:
+        return article._replace(
+            repo_found_in="abstract",
+            repo_urls=tuple(sorted(set(abstract_urls))),
+        )
+
+    return article
+
+
+def matches_category(
     article: Article, category_id: str, strict_mode: bool
 ) -> bool:
+    """Return True when the article's primary category passes the category filter.
+
+    Non-strict mode (default) accepts any primary category.
+    Strict mode requires a case-insensitive match with category_id.
     """
-    Return True if the article should be included in the feed.
-
-    Both conditions must hold:
-    1. Category condition: when strict_mode is True, article.primary_category
-       must match category_id (case-insensitive); when strict_mode is False,
-       any primary category is accepted.
-    2. Comment URL condition: article.comment must contain at least one
-       https:// URL; absent or empty comment fields are treated as no URL.
-
-    Resolved values for category_id and strict_mode are passed in by the
-    caller so the resolver is invoked once per pipeline run rather than once
-    per article.
-
-    Parameters:
-      article:      the candidate article
-      category_id:  resolved value of ARXIV_CATEGORY_ID (e.g. "cs.AI")
-      strict_mode:  resolved value of ARXIV_CATEGORY_STRICT
-    """
-    if strict_mode and article.primary_category.lower() != category_id.lower():
+    if not strict_mode:
+        return True
+    if article.primary_category.lower() != category_id.lower():
         _logger.info(
             "rejected (strict category mismatch): primary=%s expected=%s"
             " published=%s title=%s url=%s",
@@ -220,29 +321,29 @@ def include_article(
             article.title, article.abstract_url,
         )
         return False
+    return True
 
-    if not article.comment:
+
+def include_article(article: Article) -> bool:
+    """Return True when the article has a code-availability URL from any cascade source.
+
+    The enrichment cascade (enrich_from_metadata or enrich_from_pdf) must
+    have run before calling this function; it checks repo_found_in which is
+    set by the cascade.
+    """
+    if article.repo_found_in:
         _logger.info(
-            "rejected (no comment): primary=%s published=%s title=%s url=%s",
-            article.primary_category, article.published, article.title,
-            article.abstract_url,
+            "included: source=%s primary=%s published=%s title=%s url=%s",
+            article.repo_found_in, article.primary_category,
+            article.published, article.title, article.abstract_url,
         )
-        return False
-
-    if not article.comment_urls:
-        _logger.info(
-            "rejected (no comment URL): primary=%s published=%s title=%s url=%s",
-            article.primary_category, article.published, article.title,
-            article.abstract_url,
-        )
-        return False
-
+        return True
     _logger.info(
-        "included: primary=%s published=%s title=%s url=%s",
+        "rejected (no code URL): primary=%s published=%s title=%s url=%s",
         article.primary_category, article.published, article.title,
         article.abstract_url,
     )
-    return True
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -937,11 +1038,11 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
         _logger.info("no articles returned by the API for this period")
         return 0
 
-    filtered = [
-        article
-        for article in articles
-        if include_article(article, category_id, strict_mode)
+    articles = [
+        a for a in articles if matches_category(a, category_id, strict_mode)
     ]
+    enriched = [enrich_from_metadata(a) for a in articles]
+    filtered = [a for a in enriched if include_article(a)]
     n_filtered = len(filtered)
     article_word = "article" if n_filtered == 1 else "articles"
     _logger.info("%d %s passed the filter", n_filtered, article_word)

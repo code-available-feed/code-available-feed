@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-001 Fetch articles from the arxiv API using a rolling window
 
   The pipeline fetches every article submitted to the configured arxiv category

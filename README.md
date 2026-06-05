@@ -105,7 +105,7 @@ Beyond 7 days, recovery regenerates the feed from the current arXiv state.
 ├── docs/
 │   └── arxiv/
 │       └── {category}/
-│           ├── atom.xml          # Current week's Atom 1.0 feed
+│           ├── atom.xml          # Rolling-window Atom 1.0 feed
 │           └── archive/          # Prior-weeks archives
 │               └── YYYY-WNN/
 │                   └── atom.xml

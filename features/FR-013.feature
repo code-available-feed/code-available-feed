@@ -18,7 +18,7 @@ Feature: FR-013 Diagnostic logging to stdout
     Given the fixture server returns 5 entries for query parameter "start=0"
     When the pipeline runs to completion
     Then stdout contains a line containing "/api/query"
-    And stdout contains a line containing "submittedDate:[202605110000+TO+202605172359]"
+    And stdout contains a line containing "submittedDate:[202605060000+TO+202605142359]"
 
   Scenario: A per-page result count is logged for each API page
     Given the fixture server returns 50 entries for query parameter "start=0"

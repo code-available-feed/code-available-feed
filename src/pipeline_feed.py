@@ -1,12 +1,14 @@
 """
-Pipeline entry point: fetch arxiv articles for the current ISO week, apply the
-inclusion filter, and write docs/arxiv/{category}/atom.xml.
+Pipeline entry point: fetch arxiv articles for the rolling window
+[today - ARXIV_MAX_BACKFILL_DAYS, today], apply the inclusion filter,
+and write docs/arxiv/{category}/atom.xml.
 
 Environment variables read by this module:
   ARXIV_API_BASE_URL           optional; default "https://export.arxiv.org"
   ARXIV_CATEGORY_ID            optional; default "cs.AI"
   ARXIV_CATEGORY_STRICT        optional; "true" enables strict primary-category filter
   ARXIV_CONTINUE_ON_API_ERROR  optional; "true" exits 0 on API failure instead of 1
+  ARXIV_MAX_BACKFILL_DAYS      optional; rolling window in days; default 8
   ARXIV_MAX_RESULTS            optional; entries per API page; default 50
   ARXIV_MAX_STALENESS_DAYS     optional; days before feed is considered stale; default -1 (disabled)
   GITHUB_REPOSITORY            required; "owner/repo" (always set by GitHub Actions)
@@ -482,8 +484,8 @@ def compute_week_bounds(today: datetime.date) -> tuple[str, str]:
 def build_api_url(
     base_url: str,
     category_id: str,
-    monday: str,
-    sunday: str,
+    start_yyyymmdd: str,
+    end_yyyymmdd: str,
     start: int,
     max_results: int,
 ) -> str:
@@ -495,7 +497,7 @@ def build_api_url(
     unencoded because the arxiv server expects this exact form.
     """
     search_query = (
-        f"cat:{category_id}+AND+submittedDate:[{monday}0000+TO+{sunday}2359]"
+        f"cat:{category_id}+AND+submittedDate:[{start_yyyymmdd}0000+TO+{end_yyyymmdd}2359]"
     )
     return (
         f"{base_url}/api/query"
@@ -952,34 +954,33 @@ def check_feed_staleness(
 def fetch_all_articles(
     base_url: str,
     category_id: str,
-    today: datetime.date,
+    start_yyyymmdd: str,
+    end_yyyymmdd: str,
     backoff_base_seconds: float,
     max_results: int,
 ) -> list[Article]:
     """
-    Fetch all arxiv articles for the ISO week that contains today, paginating
-    in steps of max_results.
+    Fetch all arxiv articles for the rolling window [start_yyyymmdd, end_yyyymmdd],
+    paginating in steps of max_results.
 
     NFR-002: sleeps _MIN_REQUEST_INTERVAL_SECONDS before every API request.
     FR-011: retries the first page up to max_retries_first_page times with exponential backoff on
     non-200 responses; exits immediately on non-200 for subsequent pages.
 
     Returns an empty list when the first API page returns HTTP 200 with zero
-    entries; this is a valid result for the start of a new ISO week (Monday
-    before arxiv has processed any submissions) or a quiet category.
+    entries; this is a valid result for a quiet period or a small category.
 
     Raises RuntimeError on unrecoverable errors:
     - all retries for the first page exhausted
     - non-200 on a pagination page
     """
-    monday, sunday = compute_week_bounds(today)
     max_retries_first_page = 3
     start = 0
     all_articles: list[Article] = []
 
     while True:
         url = build_api_url(
-            base_url, category_id, monday, sunday, start, max_results
+            base_url, category_id, start_yyyymmdd, end_yyyymmdd, start, max_results
         )
         _logger.info("requesting %s", url)
 
@@ -1130,18 +1131,23 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
         os.environ.get("RETRY_BACKOFF_BASE_SECONDS", "60")
     )
     max_results = int(os.environ.get("ARXIV_MAX_RESULTS", "50"))
+    max_backfill_days = resolve_max_backfill_days()
     today = _resolve_today()
+    start_date = today - datetime.timedelta(days=max_backfill_days)
+    start_yyyymmdd = start_date.strftime("%Y%m%d")
+    end_yyyymmdd = today.strftime("%Y%m%d")
 
     _logger.info(
-        "pipeline starting: category=%s strict=%s today=%s",
-        category_id, strict_mode, today,
+        "pipeline starting: category=%s strict=%s today=%s backfill_days=%d",
+        category_id, strict_mode, today, max_backfill_days,
     )
 
     continue_on_api_error = resolve_continue_on_api_error()
 
     try:
         articles = fetch_all_articles(
-            base_url, category_id, today, backoff_base_seconds, max_results
+            base_url, category_id, start_yyyymmdd, end_yyyymmdd,
+            backoff_base_seconds, max_results,
         )
     except RuntimeError as exc:
         if continue_on_api_error:

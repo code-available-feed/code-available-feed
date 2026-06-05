@@ -17,6 +17,7 @@ Environment variables read by this module:
 import datetime
 import difflib
 import html
+import io
 import json
 import logging
 import os
@@ -301,6 +302,123 @@ def enrich_from_metadata(
         )
 
     return article
+
+
+def extract_pdf_repo_urls(
+    pdf_bytes: bytes,
+    max_pages: int = 10,
+    accepted_domains: frozenset[str] | None = None,
+    accepted_suffixes: frozenset[str] | None = None,
+) -> list[str]:
+    """Extract accepted-domain URLs from PDF pages, stopping before References.
+
+    Three extraction layers per page, applied in order:
+    1. Link annotations (/Link with /A /URI) -- most reliable, full URIs
+       from PDF hyperlink metadata.
+    2. Text https://\\S+ regex -- catches scheme-prefixed visible URLs.
+    3. Text bare domain regex -- catches URLs without https:// scheme
+       (e.g. when LaTeX renders \\href{url}{icon}).
+
+    Scanning stops when a page contains a standalone "References" or
+    "REFERENCES" line; that page and all subsequent pages are skipped.
+
+    Returns sorted, deduplicated, domain-filtered URLs.
+    """
+    import pypdf
+
+    domains = accepted_domains if accepted_domains is not None else ACCEPTED_REPO_DOMAINS
+    suffixes = accepted_suffixes if accepted_suffixes is not None else ACCEPTED_REPO_DOMAIN_SUFFIXES
+
+    reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
+    raw_urls: list[str] = []
+
+    for page_index in range(min(len(reader.pages), max_pages)):
+        page = reader.pages[page_index]
+        text = page.extract_text() or ""
+
+        if re.search(r"(?m)^\s*(?:References|REFERENCES)\s*$", text):
+            break
+
+        if page.annotations:
+            for annotation in page.annotations:
+                annotation_obj = annotation.get_object()
+                if annotation_obj.get("/Subtype") == "/Link":
+                    action = annotation_obj.get("/A")
+                    if action:
+                        uri = action.get("/URI")
+                        if uri:
+                            raw_urls.append(str(uri))
+
+        for match in re.findall(r"https://\S+", text):
+            raw_urls.append(match.rstrip(".,;:)]>"))
+
+        bare_parts: list[str] = []
+        for domain in sorted(domains):
+            bare_parts.append(re.escape(domain))
+        for suffix in sorted(suffixes):
+            bare_parts.append(r"\S+" + re.escape(suffix))
+        if bare_parts:
+            bare_regex = f"(?:{'|'.join(bare_parts)})/\\S+"
+            for match in re.findall(bare_regex, text):
+                raw_urls.append(f"https://{match.rstrip('.,;:)]>')}")
+
+    seen: set[str] = set()
+    filtered: list[str] = []
+    for url in raw_urls:
+        if url in seen:
+            continue
+        seen.add(url)
+        if _is_url_on_accepted_domain(url, domains, suffixes):
+            filtered.append(url)
+
+    return sorted(filtered)
+
+
+def _default_fetch_pdf(url: str) -> bytes:
+    """Fetch PDF bytes from url with a rate-limit pause (NFR-002)."""
+    time.sleep(_MIN_REQUEST_INTERVAL_SECONDS)
+    with urllib.request.urlopen(url) as response:
+        return response.read()
+
+
+def enrich_from_pdf(
+    article: Article,
+    accepted_domains: frozenset[str] | None = None,
+    accepted_suffixes: frozenset[str] | None = None,
+    _fetch_pdf: typing.Callable[[str], bytes] | None = None,
+) -> Article | None:
+    """Enrich article with repo URLs extracted from its PDF body.
+
+    Skips articles already enriched (repo_found_in is non-empty).
+    Downloads the PDF from export.arxiv.org and runs extract_pdf_repo_urls.
+    Returns None on any error so the caller can exclude failed articles
+    from the processed dict and retry them on the next run.
+    """
+    if article.repo_found_in:
+        return article
+
+    fetcher = _fetch_pdf if _fetch_pdf is not None else _default_fetch_pdf
+
+    try:
+        arxiv_id = article.abstract_url.rsplit("/", 1)[-1]
+        pdf_url = f"https://export.arxiv.org/pdf/{arxiv_id}"
+        pdf_bytes = fetcher(pdf_url)
+        urls = extract_pdf_repo_urls(
+            pdf_bytes,
+            accepted_domains=accepted_domains,
+            accepted_suffixes=accepted_suffixes,
+        )
+        if urls:
+            return article._replace(
+                repo_found_in="pdf",
+                repo_urls=tuple(sorted(set(urls))),
+            )
+        return article
+    except Exception as exc:
+        _logger.error(
+            "PDF enrichment failed for %s: %s", article.abstract_url, exc
+        )
+        return None
 
 
 def matches_category(

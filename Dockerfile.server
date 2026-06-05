@@ -9,12 +9,18 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     procps \
     python-is-python3 \
     python3 \
+    python3-pip \
+    python3-venv \
     tree
 
 # Install test dependencies
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     python3-behave \
     python3-mypy
+
+# Install pdf dependencies
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    python3-pypdf
 
 # Set the UID/GID of the user:group to the IDs of the user using this Dockerfile
 ARG USER=nonroot

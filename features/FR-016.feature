@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-016 PDF body URL extraction
 
   The pipeline extracts accepted-domain URLs from the PDF body (up to the

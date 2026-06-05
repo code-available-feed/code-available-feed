@@ -143,6 +143,26 @@ def _validate_staleness_days(value: str) -> int:
     return parsed
 
 
+def resolve_max_backfill_days() -> int:
+    """Return ARXIV_MAX_BACKFILL_DAYS from the environment, defaulting to 8.
+
+    Accepts positive integers only (minimum 1).  Raises ValueError for zero,
+    negative integers, or non-integer strings.
+    """
+    value = os.environ.get("ARXIV_MAX_BACKFILL_DAYS", "8")
+    try:
+        parsed = int(value)
+    except ValueError:
+        raise ValueError(
+            f"ARXIV_MAX_BACKFILL_DAYS must be a positive integer, got: {value!r}"
+        )
+    if parsed < 1:
+        raise ValueError(
+            f"ARXIV_MAX_BACKFILL_DAYS must be a positive integer, got: {parsed}"
+        )
+    return parsed
+
+
 def _resolve_today() -> datetime.date:
     """Return PIPELINE_TODAY if set, otherwise the current UTC date."""
     override = os.environ.get("PIPELINE_TODAY")

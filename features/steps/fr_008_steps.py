@@ -114,3 +114,37 @@ def step_staleness_rejected(context):
         "Expected ARXIV_MAX_STALENESS_DAYS to raise ValueError, got "
         f"{type(context.staleness_exception).__name__}: {context.staleness_exception!r}"
     )
+
+
+@when("the max-backfill-days configuration is resolved")
+def step_resolve_max_backfill_days(context):
+    """Resolve ARXIV_MAX_BACKFILL_DAYS, capturing either the parsed value or the exception."""
+    context.backfill_exception = None
+    context.backfill_parsed = None
+    try:
+        context.backfill_parsed = src.pipeline_feed.resolve_max_backfill_days()
+    except ValueError as exc:
+        context.backfill_exception = exc
+
+
+@then("the resolved max-backfill-days is {expected:d}")
+def step_resolved_max_backfill_days(context, expected):
+    assert context.backfill_parsed == expected, (
+        f"Expected max-backfill-days {expected}, got {context.backfill_parsed}"
+    )
+
+
+@then("ARXIV_MAX_BACKFILL_DAYS is accepted")
+def step_backfill_accepted(context):
+    assert context.backfill_exception is None, (
+        f"Expected ARXIV_MAX_BACKFILL_DAYS to be accepted, got exception: "
+        f"{context.backfill_exception!r}"
+    )
+
+
+@then("ARXIV_MAX_BACKFILL_DAYS is rejected with ValueError")
+def step_backfill_rejected(context):
+    assert isinstance(context.backfill_exception, ValueError), (
+        "Expected ARXIV_MAX_BACKFILL_DAYS to raise ValueError, got "
+        f"{type(context.backfill_exception).__name__}: {context.backfill_exception!r}"
+    )

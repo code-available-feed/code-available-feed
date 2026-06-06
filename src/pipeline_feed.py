@@ -16,6 +16,7 @@ Environment variables read by this module:
   RETRY_BACKOFF_BASE_SECONDS   optional; seconds for exponential retry backoff; default 60
 """
 
+import concurrent.futures
 import datetime
 import difflib
 import html
@@ -260,7 +261,7 @@ def extract_repo_urls(
 
     raw_urls: list[str] = []
 
-    for match in re.findall(r"https://\S+", text):
+    for match in re.findall(r"https://[^\s,]+", text):
         raw_urls.append(match.rstrip(".,;:)]>"))
 
     bare_parts: list[str] = []
@@ -321,6 +322,7 @@ def extract_pdf_repo_urls(
     max_pages: int = 10,
     accepted_domains: frozenset[str] | None = None,
     accepted_suffixes: frozenset[str] | None = None,
+    _label: str = "",
 ) -> list[str]:
     """Extract accepted-domain URLs from PDF pages, stopping before References.
 
@@ -334,6 +336,10 @@ def extract_pdf_repo_urls(
     Scanning stops when a page contains a standalone "References" or
     "REFERENCES" line; that page and all subsequent pages are skipped.
 
+    _label is included in every log line to identify which article/PDF is
+    being scanned; callers in production pass article.abstract_url; test
+    callers omit it (default empty string produces no label suffix).
+
     Returns sorted, deduplicated, domain-filtered URLs.
     """
     import pypdf
@@ -341,7 +347,10 @@ def extract_pdf_repo_urls(
     domains = accepted_domains if accepted_domains is not None else ACCEPTED_REPO_DOMAINS
     suffixes = accepted_suffixes if accepted_suffixes is not None else ACCEPTED_REPO_DOMAIN_SUFFIXES
 
+    label = f" [{_label}]" if _label else ""
+
     reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
+    _logger.info("PDF: %d pages, %.0f KB%s", len(reader.pages), len(pdf_bytes) / 1024, label)
     raw_urls: list[str] = []
 
     for page_index in range(min(len(reader.pages), max_pages)):
@@ -349,7 +358,10 @@ def extract_pdf_repo_urls(
         text = page.extract_text() or ""
 
         if re.search(r"(?m)^\s*(?:References|REFERENCES)\s*$", text):
+            _logger.info("PDF page %d: References section detected, stopping%s", page_index + 1, label)
             break
+
+        page_raw: list[str] = []
 
         if page.annotations:
             for annotation in page.annotations:
@@ -359,10 +371,10 @@ def extract_pdf_repo_urls(
                     if action:
                         uri = action.get("/URI")
                         if uri:
-                            raw_urls.append(str(uri))
+                            page_raw.append(str(uri))
 
-        for match in re.findall(r"https://\S+", text):
-            raw_urls.append(match.rstrip(".,;:)]>"))
+        for match in re.findall(r"https://[^\s,]+", text):
+            page_raw.append(match.rstrip(".,;:)]>"))
 
         bare_parts: list[str] = []
         for domain in sorted(domains):
@@ -372,7 +384,19 @@ def extract_pdf_repo_urls(
         if bare_parts:
             bare_regex = f"(?:{'|'.join(bare_parts)})/\\S+"
             for match in re.findall(bare_regex, text):
-                raw_urls.append(f"https://{match.rstrip('.,;:)]>')}")
+                page_raw.append(f"https://{match.rstrip('.,;:)]>')}")
+
+        page_accepted = [
+            u for u in page_raw
+            if _is_url_on_accepted_domain(u, domains, suffixes)
+        ]
+        if page_accepted:
+            _logger.info(
+                "PDF page %d: %d accepted-domain URL(s): %s%s",
+                page_index + 1, len(page_accepted), page_accepted, label,
+            )
+
+        raw_urls.extend(page_raw)
 
     seen: set[str] = set()
     filtered: list[str] = []
@@ -398,11 +422,15 @@ def enrich_from_pdf(
     accepted_domains: frozenset[str] | None = None,
     accepted_suffixes: frozenset[str] | None = None,
     _fetch_pdf: typing.Callable[[str], bytes] | None = None,
+    _pdf_base_url: str = "https://export.arxiv.org",
 ) -> Article | None:
     """Enrich article with repo URLs extracted from its PDF body.
 
     Skips articles already enriched (repo_found_in is non-empty).
-    Downloads the PDF from export.arxiv.org and runs extract_pdf_repo_urls.
+    Downloads the PDF from _pdf_base_url/pdf/{arxiv_id} and runs
+    extract_pdf_repo_urls.  _pdf_base_url defaults to the production
+    arxiv export server and is overridden in tests via the same
+    ARXIV_API_BASE_URL mechanism used for API requests.
     Returns None on any error so the caller can exclude failed articles
     from the processed dict and retry them on the next run.
     """
@@ -413,18 +441,32 @@ def enrich_from_pdf(
 
     try:
         arxiv_id = article.abstract_url.rsplit("/", 1)[-1]
-        pdf_url = f"https://export.arxiv.org/pdf/{arxiv_id}"
+        pdf_url = f"{_pdf_base_url}/pdf/{arxiv_id}"
+        _logger.info("fetching PDF: %s", pdf_url)
+        t0 = time.monotonic()
         pdf_bytes = fetcher(pdf_url)
+        download_s = time.monotonic() - t0
+        t1 = time.monotonic()
         urls = extract_pdf_repo_urls(
             pdf_bytes,
             accepted_domains=accepted_domains,
             accepted_suffixes=accepted_suffixes,
+            _label=article.abstract_url,
         )
+        scan_s = time.monotonic() - t1
         if urls:
+            _logger.info(
+                "PDF found %d URL(s) (download %.1fs scan %.1fs) for %s: %s",
+                len(urls), download_s, scan_s, article.abstract_url, urls,
+            )
             return article._replace(
                 repo_found_in="pdf",
                 repo_urls=tuple(sorted(set(urls))),
             )
+        _logger.info(
+            "PDF: no accepted-domain URL found (download %.1fs scan %.1fs) for %s",
+            download_s, scan_s, article.abstract_url,
+        )
         return article
     except Exception as exc:
         _logger.error(
@@ -463,8 +505,8 @@ def include_article(article: Article) -> bool:
     """
     if article.repo_found_in:
         _logger.info(
-            "included: source=%s primary=%s published=%s title=%s url=%s",
-            article.repo_found_in, article.primary_category,
+            "included: source=%s urls=%s primary=%s published=%s title=%s url=%s",
+            article.repo_found_in, list(article.repo_urls), article.primary_category,
             article.published, article.title, article.abstract_url,
         )
         return True
@@ -542,7 +584,7 @@ def extract_comment_urls(comment: str | None) -> list[str]:
     if not comment:
         return []
     stripped = [
-        url.rstrip(".,;:)]>") for url in re.findall(r"https://\S+", comment)
+        url.rstrip(".,;:)]>") for url in re.findall(r"https://[^\s,]+", comment)
     ]
     return [url for url in stripped if url != "https://"]
 
@@ -1293,16 +1335,55 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
         else:
             to_enrich.append(a)
 
-    enriched = [enrich_from_metadata(a) for a in to_enrich]
-    all_articles = restored + enriched
+    enriched_meta = [enrich_from_metadata(a) for a in to_enrich]
+
+    # Split: metadata found a URL, or needs PDF enrichment (FR-002 cascade step 3)
+    meta_found = [a for a in enriched_meta if a.repo_found_in]
+    needs_pdf = [a for a in enriched_meta if not a.repo_found_in]
+
+    # PDF enrichment via thread pool (FR-016, max_workers=3 per REQUIREMENTS).
+    # Uses ARXIV_API_BASE_URL so tests can redirect PDF requests to the fixture server.
+    pdf_base_url = os.environ.get("ARXIV_API_BASE_URL", "https://export.arxiv.org")
+    pdf_outcomes: list[Article | None] = []
+    if needs_pdf:
+        _logger.info("enriching %d articles from PDF", len(needs_pdf))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            pdf_outcomes = list(executor.map(
+                lambda a: enrich_from_pdf(a, _pdf_base_url=pdf_base_url),
+                needs_pdf,
+            ))
+
+    # Separate successfully attempted articles from failed PDF downloads.
+    # None means the download failed; those articles are not added to the
+    # processed dict so the download is retried on the next run.
+    pdf_succeeded: list[Article] = []
+    pdf_failed: list[Article] = []
+    for orig, result in zip(needs_pdf, pdf_outcomes):
+        if result is None:
+            pdf_failed.append(orig)
+        else:
+            pdf_succeeded.append(result)
+
+    if needs_pdf:
+        _logger.info(
+            "PDF enrichment done: %d with URL, %d without URL, %d failed (will retry)",
+            sum(1 for a in pdf_succeeded if a.repo_found_in),
+            sum(1 for a in pdf_succeeded if not a.repo_found_in),
+            len(pdf_failed),
+        )
+
+    all_articles = restored + meta_found + pdf_succeeded + pdf_failed
     filtered = [a for a in all_articles if include_article(a)]
     n_filtered = len(filtered)
     article_word = "article" if n_filtered == 1 else "articles"
     _logger.info("%d %s passed the filter", n_filtered, article_word)
 
-    # Build updated processed dict from existing + newly enriched
+    # Build updated processed dict:
+    # - meta_found: found via comment or abstract
+    # - pdf_succeeded: PDF enrichment ran to completion (URL found or empty)
+    # - pdf_failed: download failed; excluded so the download is retried next run
     new_processed = dict(processed)
-    for a in enriched:
+    for a in meta_found + pdf_succeeded:
         new_processed[a.abstract_url] = ProcessedEntry(
             updated=a.updated,
             repo_found_in=a.repo_found_in,

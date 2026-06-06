@@ -55,14 +55,14 @@ jobs:
             || echo "No gh-pages branch yet, starting fresh"
 
       - name: bash scripts/pipeline_feed.sh
-        timeout-minutes: 20
+        timeout-minutes: 60
         run: bash scripts/pipeline_feed.sh
         env:
           ARXIV_CATEGORY_ID: ${{ vars.ARXIV_CATEGORY_ID || 'cs.AI' }}
           ARXIV_CATEGORY_STRICT: ${{ vars.ARXIV_CATEGORY_STRICT || 'false' }}
           ARXIV_CONTINUE_ON_API_ERROR: ${{ vars.ARXIV_CONTINUE_ON_API_ERROR || 'true' }}
           ARXIV_MAX_BACKFILL_DAYS: ${{ vars.ARXIV_MAX_BACKFILL_DAYS || '8' }}
-          ARXIV_MAX_RESULTS: ${{ vars.ARXIV_MAX_RESULTS || '50' }}
+          ARXIV_MAX_RESULTS: ${{ vars.ARXIV_MAX_RESULTS || '100' }}
           RETRY_BACKOFF_BASE_SECONDS: ${{ vars.RETRY_BACKOFF_BASE_SECONDS || '60' }}
 
       - name: debug

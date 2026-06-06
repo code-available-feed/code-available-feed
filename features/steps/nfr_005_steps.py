@@ -16,7 +16,7 @@ def _run_feed_and_write(context, path: str) -> None:
     strict_mode = src.pipeline_feed.resolve_strict_mode()
     github_repository = os.environ.get("GITHUB_REPOSITORY", "")
     feed_bytes = src.pipeline_feed.build_feed(
-        context.articles, category_id, strict_mode, github_repository
+        context.articles, {}, category_id, strict_mode, github_repository
     )
     dest = pathlib.Path(path)
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -76,7 +76,7 @@ def step_feed_generator_runs(context) -> None:
     strict_mode = src.pipeline_feed.resolve_strict_mode()
     github_repository = os.environ.get("GITHUB_REPOSITORY", "")
     context.feed_bytes = src.pipeline_feed.build_feed(
-        context.articles, category_id, strict_mode, github_repository
+        context.articles, {}, category_id, strict_mode, github_repository
     )
 
 

@@ -32,6 +32,7 @@ def _build_minimal_feed(published: str) -> bytes:
     )
     return src.pipeline_feed.build_feed(
         [article],
+        {},
         category_id="cs.AI",
         strict_mode=False,
         github_repository="owner/code-available-feed",

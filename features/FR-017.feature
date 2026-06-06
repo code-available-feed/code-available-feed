@@ -1,4 +1,4 @@
-@status-todo
+@status-done
 Feature: FR-017 Processed dict persistence
 
   The pipeline persists the cascade outcome for each article in a
@@ -50,7 +50,7 @@ Feature: FR-017 Processed dict persistence
     Given a processed dict entry for "https://arxiv.example.com/abs/0002v1" with repo_found_in "" and repo_urls ""
     And an article fetched from the API with abstract_url "https://arxiv.example.com/abs/0002v1"
     When the pipeline applies the processed dict to the article
-    Then the article repo_found_in is ""
+    Then the article has empty repo_found_in
     And no enrichment cascade runs for this article
 
   Scenario: build_feed includes the processed element in the feed XML

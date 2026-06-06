@@ -36,6 +36,7 @@ def step_create_minimal_feed(context, filepath, published_date):
     )
     feed_bytes = src.pipeline_feed.build_feed(
         [article],
+        {},
         category_id="cs.AI",
         strict_mode=False,
         github_repository="owner/code-available-feed",

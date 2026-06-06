@@ -35,10 +35,12 @@ import xml.etree.ElementTree as ET
 
 _ATOM_NS = "http://www.w3.org/2005/Atom"
 _ARXIV_NS = "http://arxiv.org/schemas/atom"
+_CAF_NS = "tag:code-available-feed.github.io,2026:atom-extensions"
 
 # Register the Atom namespace as the default so the serialiser writes
 # <feed xmlns="..."> rather than <ns0:feed xmlns:ns0="...">.
 ET.register_namespace("", _ATOM_NS)
+ET.register_namespace("code-available-feed", _CAF_NS)
 
 # NFR-002: minimum pause before every API request to respect arxiv rate limits.
 _MIN_REQUEST_INTERVAL_SECONDS: int = 5
@@ -88,6 +90,14 @@ class Article(typing.NamedTuple):
     comment_urls: list[str]
     repo_found_in: str = ""
     repo_urls: tuple[str, ...] = ()
+
+
+class ProcessedEntry(typing.NamedTuple):
+    """Stored cascade outcome for one article, persisted in the processed element."""
+
+    updated: str
+    repo_found_in: str
+    repo_urls: tuple[str, ...]
 
 
 class _UtcJsonFormatter(logging.Formatter):
@@ -632,6 +642,7 @@ def build_feed_url(github_repository: str, category_id: str) -> str:
 
 def build_feed(
     articles: list[Article],
+    processed: dict[str, ProcessedEntry],
     category_id: str,
     strict_mode: bool,
     github_repository: str,
@@ -647,6 +658,8 @@ def build_feed(
     Parameters:
       articles:          list of Article values as produced by parse_entries
                          and filtered by include_article
+      processed:         dict mapping abstract_url to ProcessedEntry; written
+                         as a feed-level extension element
       category_id:       value of ARXIV_CATEGORY_ID (e.g. "cs.AI")
       strict_mode:       resolved value of ARXIV_CATEGORY_STRICT
       github_repository: value of GITHUB_REPOSITORY (format "owner/repo")
@@ -744,6 +757,8 @@ def build_feed(
             "<h3>Comments:</h3>",
             "<p>" + html.escape(article.comment or "") + "</p>",
         ])
+
+    feed.append(_build_processed_element(processed))
 
     ET.indent(feed, space="  ")
     return ET.tostring(feed, encoding="UTF-8", xml_declaration=True)
@@ -947,6 +962,93 @@ def check_feed_staleness(
         )
         return 1
     return 0
+
+
+# ---------------------------------------------------------------------------
+# Processed dict persistence
+# ---------------------------------------------------------------------------
+
+
+def load_processed(
+    atom_xml_path: pathlib.Path,
+    start_date: datetime.date,
+    end_date: datetime.date,
+) -> dict[str, ProcessedEntry]:
+    """Load the processed dict from the extension element in atom.xml.
+
+    Returns a dict keyed by article abstract_url.  Only entries whose
+    updated date falls within [start_date, end_date] are kept.  Returns
+    an empty dict when the file does not exist, the element is absent,
+    or all entries are outside the window.
+    """
+    if not atom_xml_path.exists():
+        return {}
+
+    tree = ET.parse(atom_xml_path)
+    root = tree.getroot()
+    processed_elem = root.find(f"{{{_CAF_NS}}}processed")
+    if processed_elem is None:
+        return {}
+
+    result: dict[str, ProcessedEntry] = {}
+    for article_elem in processed_elem.findall(f"{{{_CAF_NS}}}article"):
+        url = article_elem.get("url", "")
+        updated = article_elem.get("updated", "")
+        repo_found_in = article_elem.get("repo_found_in", "")
+        repo_urls_str = article_elem.get("repo_urls", "")
+        repo_urls = tuple(repo_urls_str.split()) if repo_urls_str else ()
+
+        entry_date = _parse_rfc3339_utc_date(updated)
+        if start_date <= entry_date <= end_date:
+            result[url] = ProcessedEntry(
+                updated=updated,
+                repo_found_in=repo_found_in,
+                repo_urls=repo_urls,
+            )
+
+    return result
+
+
+def _build_processed_element(
+    processed: dict[str, ProcessedEntry],
+) -> ET.Element:
+    """Build a <code-available-feed:processed> element from the dict."""
+    processed_elem = ET.Element(f"{{{_CAF_NS}}}processed")
+    for url in sorted(processed):
+        entry = processed[url]
+        article_elem = ET.SubElement(processed_elem, f"{{{_CAF_NS}}}article")
+        article_elem.set("url", url)
+        article_elem.set("updated", entry.updated)
+        article_elem.set("repo_found_in", entry.repo_found_in)
+        article_elem.set("repo_urls", " ".join(sorted(entry.repo_urls)))
+    return processed_elem
+
+
+def write_processed_element(
+    atom_xml_path: pathlib.Path,
+    processed: dict[str, ProcessedEntry],
+) -> None:
+    """Update the processed element in an existing atom.xml without touching entries.
+
+    Does nothing when atom_xml_path does not exist.  Creates the processed
+    element if absent, replaces it if present.  Entry elements are preserved
+    unchanged.
+    """
+    if not atom_xml_path.exists():
+        return
+
+    tree = ET.parse(atom_xml_path)
+    root = tree.getroot()
+
+    existing = root.find(f"{{{_CAF_NS}}}processed")
+    if existing is not None:
+        root.remove(existing)
+
+    new_elem = _build_processed_element(processed)
+    root.append(new_elem)
+    ET.indent(new_elem, space="  ", level=1)
+
+    tree.write(atom_xml_path, encoding="UTF-8", xml_declaration=True)
 
 
 # ---------------------------------------------------------------------------
@@ -1172,23 +1274,56 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
         _logger.info("no articles returned by the API for this period")
         return 0
 
+    processed = load_processed(output_path, start_date, today)
+
     articles = [
         a for a in articles if matches_category(a, category_id, strict_mode)
     ]
-    enriched = [enrich_from_metadata(a) for a in articles]
-    filtered = [a for a in enriched if include_article(a)]
+
+    # Attach stored cascade outcomes to previously processed articles
+    restored: list[Article] = []
+    to_enrich: list[Article] = []
+    for a in articles:
+        if a.abstract_url in processed:
+            entry = processed[a.abstract_url]
+            restored.append(a._replace(
+                repo_found_in=entry.repo_found_in,
+                repo_urls=entry.repo_urls,
+            ))
+        else:
+            to_enrich.append(a)
+
+    enriched = [enrich_from_metadata(a) for a in to_enrich]
+    all_articles = restored + enriched
+    filtered = [a for a in all_articles if include_article(a)]
     n_filtered = len(filtered)
     article_word = "article" if n_filtered == 1 else "articles"
     _logger.info("%d %s passed the filter", n_filtered, article_word)
 
+    # Build updated processed dict from existing + newly enriched
+    new_processed = dict(processed)
+    for a in enriched:
+        new_processed[a.abstract_url] = ProcessedEntry(
+            updated=a.updated,
+            repo_found_in=a.repo_found_in,
+            repo_urls=a.repo_urls,
+        )
+    new_processed = {
+        url: entry for url, entry in new_processed.items()
+        if start_date <= _parse_rfc3339_utc_date(entry.updated) <= today
+    }
+
     if n_filtered == 0:
         _logger.info("no articles passed the inclusion filter for this period")
+        write_processed_element(output_path, new_processed)
         return 0
 
     # Capture the current file bytes before any changes for change detection.
     prior_bytes = output_path.read_bytes() if output_path.exists() else None
 
-    feed_bytes = build_feed(filtered, category_id, strict_mode, github_repository)
+    feed_bytes = build_feed(
+        filtered, new_processed, category_id, strict_mode, github_repository,
+    )
 
     # FR-013: unified diff between prior and newly generated feed for
     # diagnostic visibility in the workflow log.

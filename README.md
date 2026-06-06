@@ -33,12 +33,13 @@ Currently it's [not possible](https://github.com/orgs/community/discussions/7913
 
    c. `ARXIV_CONTINUE_ON_API_ERROR` (defaults to `true` in the workflow): set to `false` to fail the workflow immediately on any arXiv API error instead of continuing silently. The goal of the silent continuation on arXiv API errors is to avoid frequent pipeline failure email notifications, and instead alert on feed staleness (see the `ARXIV_MAX_STALENESS_DAYS` variable).
 
-   d. `ARXIV_MAX_STALENESS_DAYS` (defaults to `10` in the workflow): the workflow fails with a staleness alert when the newest feed entry is more than this many calendar days old (e.g. with the default of `10`, an age of `10` days passes and `11` days fails). Set to `-1` to disable the check. Raise this value for low-volume categories where multi-day gaps without new articles are normal.
+   d. `ARXIV_MAX_STALENESS_DAYS` (defaults to `10` in the workflow): the workflow fails with a staleness alert when the newest feed entry is more than this many calendar days old (e.g. with the default of `10`, an age of `10` days passes and `11` days fails).
+      Set to `-1` to disable the check. Raise this value for low-volume categories where multi-day gaps without new articles are normal.
 
    e. `ARXIV_MAX_BACKFILL_DAYS` (defaults to `8`): the rolling fetch window in days.
-The API query fetches articles from `[today - ARXIV_MAX_BACKFILL_DAYS, today]`.
-Must be a positive integer (minimum 1).
-With the default of 8, Monday's run covers the full prior ISO week plus one extra day, recovering articles submitted after Thursday 14:00 ET that the arXiv announcement schedule delays past the ISO week boundary.
+      The API query fetches articles from `[today - ARXIV_MAX_BACKFILL_DAYS, today]`.
+      Must be a positive integer (minimum 1).
+      With the default of 8, Monday's run covers the full prior ISO week plus one extra day, recovering articles submitted after Thursday 14:00 ET that the arXiv announcement schedule delays past the ISO week boundary.
 
    f. `ARXIV_MAX_RESULTS` (defaults to `50`): number of articles requested per arxiv API page.
 
@@ -65,7 +66,10 @@ bash scripts/build_docker_image.sh
 Run the pipeline:
 
 ```bash
-ARXIV_CATEGORY_ID=cs.AI ARXIV_CATEGORY_STRICT=false \
+ARXIV_CATEGORY_ID=cs.AI \
+ARXIV_CATEGORY_STRICT=false \
+ARXIV_CONTINUE_ON_API_ERROR=true \
+ARXIV_MAX_BACKFILL_DAYS=2 \
 GITHUB_REPOSITORY=marcindulak/code-available-feed-cs-ai bash scripts/pipeline_feed.sh
 ```
 
@@ -106,7 +110,7 @@ Beyond 7 days, recovery regenerates the feed from the current arXiv state.
 │   └── arxiv/
 │       └── {category}/
 │           ├── atom.xml          # Rolling-window Atom 1.0 feed
-│           └── archive/          # Prior-weeks archives
+│           └── archive/          # Prior-weeks rolling-window archives
 │               └── YYYY-WNN/
 │                   └── atom.xml
 ├── features/

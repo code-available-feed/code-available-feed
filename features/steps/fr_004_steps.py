@@ -111,7 +111,7 @@ def step_generate_feed(context):
     strict_mode = src.pipeline_feed.resolve_strict_mode()
     github_repository = os.environ.get("GITHUB_REPOSITORY", "")
     feed_bytes = src.pipeline_feed.build_feed(
-        context.articles, category_id, strict_mode, github_repository
+        context.articles, {}, category_id, strict_mode, github_repository
     )
     context.feed_bytes = feed_bytes
     try:

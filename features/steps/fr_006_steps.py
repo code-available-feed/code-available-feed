@@ -27,6 +27,7 @@ def _build_feed_bytes(articles: list[src.pipeline_feed.Article]) -> bytes:
     """Serialize articles to Atom XML via src.pipeline_feed.build_feed."""
     return src.pipeline_feed.build_feed(
         articles,
+        {},
         category_id="cs.AI",
         strict_mode=False,
         github_repository="owner/code-available-feed",

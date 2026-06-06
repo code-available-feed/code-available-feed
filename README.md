@@ -7,6 +7,8 @@
 
 This repository is a configurable template for the Atom feed of arXiv articles that have code available.
 The goal is to offer replacements for the "papers with code" web feed offered until the [mid-2025](https://github.com/paperswithcode/paperswithcode-data/issues/121).
+The code detection algorithm scans the article text, excluding the `References` section, for common code-hosting domains, such as github.com, gitlab.com, and huggingface.co.
+This maximizes [recall](https://en.wikipedia.org/wiki/Precision_and_recall) at the cost of generating false positives.
 
 To configure your own feed serving, fork the https://github.com/code-available-feed/code-available-feed repository and set GitHub Actions variables.
 The feed for the desired arXiv category will be served on GitHub Pages.
@@ -17,7 +19,7 @@ See [https://code-available-feed.github.io/code-available-feed](https://code-ava
 If you serve a feed using this project, consider making a pull request to add your feed to this list.
 
 > [!NOTE]
-Currently it's [not possible](https://github.com/orgs/community/discussions/79137) to create two forks of the same repo, so one GitHub user can host only one feed.
+> Currently it's [not possible](https://github.com/orgs/community/discussions/79137) to create more than one fork of the same repo, so one GitHub user can host only one feed.
 
 # Usage examples
 

@@ -47,7 +47,7 @@ docker compose up server --detach --wait
 # feed is malformed XML) the feed is invalid and we exit early.
 # Pattern follows scripts/deploy_orphan.sh: outer \" becomes " in the inner
 # bash, then the single-quoted python -c argument receives valid Python code.
-if ! EXPECTED_ITEM_COUNT="$(docker compose exec --no-TTY server bash -ci "python -c 'import xml.etree.ElementTree as ET; root = ET.parse(\"${CONTAINER_FILE}\").getroot(); ns = \"http://www.w3.org/2005/Atom\"; print(len(root.findall(\"{\" + ns + \"}entry\")))'")"; then
+if ! EXPECTED_ITEM_COUNT="$(docker compose exec --no-TTY server python -c "import xml.etree.ElementTree as ET; root = ET.parse('${CONTAINER_FILE}').getroot(); ns = 'http://www.w3.org/2005/Atom'; print(len(root.findall('{' + ns + '}entry')))")"; then
     echo "${FILENAME}: XML parsing failed, treating feed as invalid" >&2
     exit 1
 fi
@@ -56,7 +56,7 @@ fi
 # SEARCH_HIST, CMD_HIST, NEWSBOAT_OUTPUT, and UNREAD are container-side
 # variables (escaped with \$); DOCS_DIR_IN_CONTAINER and REL_PATH are expanded
 # by the host shell before the string is sent to the container.
-UNREAD="$(docker compose exec server bash -ci "
+UNREAD="$(docker compose exec --no-TTY server bash -c "
     PORT=\$(python -c 'import socket; s=socket.socket(); s.bind((\"\",0)); p=s.getsockname()[1]; s.close(); print(p)')
     python -m http.server \"\${PORT}\" --bind 127.0.0.1 --directory ${DOCS_DIR_IN_CONTAINER} &
     HTTP_PID=\$!

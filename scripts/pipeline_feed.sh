@@ -45,7 +45,7 @@ fi
 bash scripts/check_atom_xml.sh
 
 docker compose up server --detach --wait
-docker compose exec server bash -ci "tree -D -s docs"
+docker compose exec --no-TTY server tree -D -s docs
 docker compose exec \
     --env ARXIV_API_BASE_URL="${ARXIV_API_BASE_URL}" \
     --env ARXIV_CATEGORY_ID="${ARXIV_CATEGORY_ID}" \
@@ -56,13 +56,11 @@ docker compose exec \
     --env GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
     --env PIPELINE_TODAY="${PIPELINE_TODAY}" \
     --env RETRY_BACKOFF_BASE_SECONDS="${RETRY_BACKOFF_BASE_SECONDS}" \
-    server bash -ci "python -m src.pipeline_feed"
-docker compose exec server bash -ci "tree -D -s docs"
+    --no-TTY server python -m src.pipeline_feed
+docker compose exec --no-TTY server tree -D -s docs
 
 # Minimal XML well-formedness check on the generated feed.
-docker compose exec --no-TTY server bash -ci "
-    python -c 'import xml.etree.ElementTree as ET; ET.parse(\"docs/arxiv/${ARXIV_CATEGORY_ID_LOWER}/atom.xml\")'
-"
+docker compose exec --no-TTY server python -c "import xml.etree.ElementTree as ET; ET.parse('docs/arxiv/${ARXIV_CATEGORY_ID_LOWER}/atom.xml')"
 
 # Newsboat feed validation (FR-010): validate the current feed and the
 # lexicographically latest archive, if one exists.

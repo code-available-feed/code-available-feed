@@ -85,7 +85,8 @@ def _build_test_pdf(pages: list[dict[str, typing.Any]]) -> bytes:
             annot_ref = writer._add_object(link_annot)
             if "/Annots" not in page:
                 page[NameObject("/Annots")] = ArrayObject()
-            page["/Annots"].append(annot_ref)
+            annots = typing.cast(ArrayObject, page["/Annots"])
+            annots.append(annot_ref)
 
     output = io.BytesIO()
     writer.write(output)

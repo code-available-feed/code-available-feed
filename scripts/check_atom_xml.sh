@@ -10,10 +10,12 @@ echo "Executing: $0"
 #
 # Runs inside the server container because Python is provisioned there.
 docker compose up server --detach --wait
-docker compose exec --no-TTY server bash -ci '
-    set -e
-    for f in $(find docs -name atom.xml 2>/dev/null); do
-        python -c "import xml.etree.ElementTree as ET; ET.parse(\"$f\")" \
-            || { echo "atom.xml is malformed: $f" >&2; exit 1; }
-    done
-'
+docker compose exec --no-TTY server python -c "
+import pathlib, sys, xml.etree.ElementTree as ET
+for f in pathlib.Path('docs').rglob('atom.xml'):
+    try:
+        ET.parse(str(f))
+    except Exception:
+        print(f'atom.xml is malformed: {f}', file=sys.stderr)
+        sys.exit(1)
+"

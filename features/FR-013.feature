@@ -24,8 +24,8 @@ Feature: FR-013 Diagnostic logging to stdout
     Given the fixture server returns 50 entries for query parameter "start=0"
     And the fixture server returns 30 entries for query parameter "start=50"
     When the pipeline runs to completion
-    Then stdout contains a line containing "Fetched 50 results (start=0)"
-    And stdout contains a line containing "Fetched 30 results (start=50)"
+    Then stdout contains a line containing "fetched 50 results (start=0)"
+    And stdout contains a line containing "fetched 30 results (start=50)"
 
   Scenario: The number of articles passing the inclusion filter is logged
     Given the fixture server returns 10 entries where 3 satisfy the inclusion filter

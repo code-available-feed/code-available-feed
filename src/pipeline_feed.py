@@ -1173,7 +1173,7 @@ def fetch_all_articles(
                 f"Malformed XML in API response (start={start}): {exc}"
             ) from exc
         count = len(articles)
-        _logger.info("Fetched %d results (start=%d)", count, start)
+        _logger.info("fetched %d results (start=%d)", count, start)
 
         all_articles.extend(articles)
 
@@ -1335,6 +1335,11 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
         else:
             to_enrich.append(a)
 
+    _logger.info(
+        "%d articles loaded from cache, %d new to enrich",
+        len(restored), len(to_enrich),
+    )
+
     enriched_meta = [enrich_from_metadata(a) for a in to_enrich]
 
     # Split: metadata found a URL, or needs PDF enrichment (FR-002 cascade step 3)
@@ -1375,8 +1380,14 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
     all_articles = restored + meta_found + pdf_succeeded + pdf_failed
     filtered = [a for a in all_articles if include_article(a)]
     n_filtered = len(filtered)
+    n_comment = sum(1 for a in filtered if a.repo_found_in == "comment")
+    n_abstract = sum(1 for a in filtered if a.repo_found_in == "abstract")
+    n_pdf = sum(1 for a in filtered if a.repo_found_in == "pdf")
     article_word = "article" if n_filtered == 1 else "articles"
-    _logger.info("%d %s passed the filter", n_filtered, article_word)
+    _logger.info(
+        "%d %s passed the filter (comment: %d, abstract: %d, pdf: %d)",
+        n_filtered, article_word, n_comment, n_abstract, n_pdf,
+    )
 
     # Build updated processed dict:
     # - meta_found: found via comment or abstract

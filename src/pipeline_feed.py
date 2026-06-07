@@ -1051,6 +1051,23 @@ def load_processed(
     return result
 
 
+def _count_processed_entries(atom_xml_path: pathlib.Path) -> int:
+    """Return the total number of <caf:article> children in the processed element.
+
+    Used to compute the aged-out count: entries that exist in atom.xml but
+    fall outside the current retention window (and are therefore not returned
+    by load_processed).  Returns 0 when the file does not exist or has no
+    processed element.
+    """
+    if not atom_xml_path.exists():
+        return 0
+    root = ET.parse(atom_xml_path).getroot()
+    processed_elem = root.find(f"{{{_CAF_NS}}}processed")
+    if processed_elem is None:
+        return 0
+    return len(processed_elem.findall(f"{{{_CAF_NS}}}article"))
+
+
 def _build_processed_element(
     processed: dict[str, ProcessedEntry],
 ) -> ET.Element:
@@ -1310,13 +1327,15 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
         _logger.error("%s", exc)
         return 1
 
-    _logger.info("fetched %d articles total", len(articles))
+    n_api_fetched = len(articles)
 
-    if len(articles) == 0:
+    if n_api_fetched == 0:
         _logger.info("no articles returned by the API for this period")
         return 0
 
+    n_existing_processed = _count_processed_entries(output_path)
     processed = load_processed(output_path, start_date, today)
+    n_aged_out = n_existing_processed - len(processed)
 
     articles = [
         a for a in articles if matches_category(a, category_id, strict_mode)
@@ -1336,8 +1355,9 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
             to_enrich.append(a)
 
     _logger.info(
-        "%d articles loaded from cache, %d new to enrich",
-        len(restored), len(to_enrich),
+        "%d articles fetched from the API, %d articles loaded from cache, "
+        "%d aged out of the window, %d new to enrich",
+        n_api_fetched, len(restored), n_aged_out, len(to_enrich),
     )
 
     enriched_meta = [enrich_from_metadata(a) for a in to_enrich]
@@ -1380,13 +1400,17 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
     all_articles = restored + meta_found + pdf_succeeded + pdf_failed
     filtered = [a for a in all_articles if include_article(a)]
     n_filtered = len(filtered)
+    n_failed_filter = len(all_articles) - n_filtered
     n_comment = sum(1 for a in filtered if a.repo_found_in == "comment")
     n_abstract = sum(1 for a in filtered if a.repo_found_in == "abstract")
     n_pdf = sum(1 for a in filtered if a.repo_found_in == "pdf")
-    article_word = "article" if n_filtered == 1 else "articles"
+    passed_word = "article" if n_filtered == 1 else "articles"
+    failed_word = "article" if n_failed_filter == 1 else "articles"
     _logger.info(
-        "%d %s passed the filter (comment: %d, abstract: %d, pdf: %d)",
-        n_filtered, article_word, n_comment, n_abstract, n_pdf,
+        "%d %s passed the filter (comment: %d, abstract: %d, pdf: %d); "
+        "%d %s failed the filter",
+        n_filtered, passed_word, n_comment, n_abstract, n_pdf,
+        n_failed_filter, failed_word,
     )
 
     # Build updated processed dict:

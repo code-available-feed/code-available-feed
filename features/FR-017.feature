@@ -38,6 +38,14 @@ Feature: FR-017 Processed dict persistence
     Then the processed dict has 1 entry
     And the entry for "https://arxiv.example.com/abs/0002v1" has repo_found_in "abstract"
 
+  Scenario: load_processed returns all entries when called without date bounds
+    Given an atom.xml file with a processed element containing:
+      | url                                    | updated                  | repo_found_in | repo_urls                              |
+      | https://arxiv.example.com/abs/0001v1   | 2026-05-20T00:00:00Z     | comment       | https://code.example.com/user/repo     |
+      | https://arxiv.example.com/abs/0002v1   | 2026-06-02T00:00:00Z     | abstract      | https://code.example.com/other/repo    |
+    When the processed dict is loaded without date bounds
+    Then the processed dict has 2 entries
+
   Scenario: Previously processed article with non-empty repo_found_in is not re-enriched
     Given a processed dict entry for "https://arxiv.example.com/abs/0001v1" with repo_found_in "comment" and repo_urls "https://code.example.com/user/repo"
     And an article fetched from the API with abstract_url "https://arxiv.example.com/abs/0001v1"

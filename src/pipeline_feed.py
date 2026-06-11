@@ -247,20 +247,66 @@ def _extract_url_context(
 
     Splits text on whitespace and scans for a token whose content (after
     stripping trailing punctuation .,;:)]>) matches url with or without the
-    https:// scheme prefix, to handle bare-domain matches.  Adjacent URL tokens
-    are included as-is so that a run of URLs is visible as a signal.
-    Semicolons are stripped from the result so callers can safely join multiple
-    contexts with '; '.  Returns an empty string when url is not found.
+    https:// scheme prefix, to handle bare-domain matches.  A leading digit
+    sequence directly prepended to "https://" (PDF footnote markers such as
+    "2https://...") is also stripped before comparison so those tokens match.
+    Adjacent URL tokens are included as-is so that a run of URLs is visible
+    as a signal.  Semicolons are stripped from the result so callers can
+    safely join multiple contexts with '; '.  Returns an empty string when url
+    is not found.
     """
     url_bare = url[len("https://"):] if url.startswith("https://") else url
     tokens = text.split()
     for i, token in enumerate(tokens):
         stripped = token.rstrip(".,;:)]>")
-        if stripped == url or stripped == url_bare:
+        # PDF typesetters sometimes concatenate a footnote digit directly with
+        # the https:// scheme (e.g. "2https://example.com").  Strip the leading
+        # digit sequence before the scheme so such tokens still match the URL.
+        stripped_no_footnote = re.sub(r"^[0-9]+(?=https://)", "", stripped)
+        if stripped == url or stripped == url_bare or stripped_no_footnote == url:
             before = tokens[max(0, i - n_before):i]
             after = tokens[i + 1:min(len(tokens), i + 1 + n_after)]
             return " ".join(before + [token] + after).replace(";", "")
     return ""
+
+
+def _extract_annotation_anchor(
+    page: typing.Any,
+    rect: tuple[float, float, float, float],
+) -> str:
+    """Return text within a /Link annotation bounding box using visitor_text.
+
+    Calls page.extract_text(visitor_text=...) and keeps only text whose
+    rendering position (text-matrix coordinates tm[4], tm[5]) falls within the
+    annotation /Rect (PDF default user space, origin bottom-left).  A 1-point
+    tolerance is applied to each boundary to absorb floating-point rounding.
+
+    Returns the collected fragments joined by spaces, or an empty string when
+    no text is found in the region.
+
+    page must be a pypdf.PageObject; typed as Any because pypdf is imported
+    inside extract_pdf_repo_urls rather than at module level.
+    """
+    x1, y1, x2, y2 = rect
+    captured: list[str] = []
+
+    def _visitor(
+        text: str,
+        cm: typing.Any,
+        tm: typing.Any,
+        fontdict: typing.Any,
+        font_size: typing.Any,
+    ) -> None:
+        if not text.strip():
+            return
+        if tm is None or len(tm) < 6:
+            return
+        x, y = float(tm[4]), float(tm[5])
+        if x1 - 1.0 <= x <= x2 + 1.0 and y1 - 1.0 <= y <= y2 + 1.0:
+            captured.append(text.strip())
+
+    page.extract_text(visitor_text=_visitor)
+    return " ".join(t for t in captured if t)
 
 
 def extract_repo_urls(
@@ -400,6 +446,9 @@ def extract_pdf_repo_urls(
             break
 
         page_raw: list[str] = []
+        # Maps annotation-sourced URL to its /Rect for anchor text fallback
+        # when _extract_url_context cannot find the URL in the page text.
+        annotation_rects: dict[str, tuple[float, float, float, float]] = {}
 
         if page.annotations:
             for annotation in page.annotations:
@@ -409,7 +458,13 @@ def extract_pdf_repo_urls(
                     if action:
                         uri = action.get("/URI")
                         if uri:
-                            page_raw.append(str(uri))
+                            url_str = str(uri)
+                            page_raw.append(url_str)
+                            rect = annotation_obj.get("/Rect")
+                            if rect is not None and len(rect) == 4:
+                                annotation_rects[url_str] = tuple(
+                                    float(v) for v in rect
+                                )  # type: ignore[assignment]
 
         for match in re.findall(r"https://[^\s,]+", text):
             page_raw.append(match.rstrip(".,;:)]>"))
@@ -439,6 +494,10 @@ def extract_pdf_repo_urls(
                     continue
                 logged_context_urls.add(url)
                 context = _extract_url_context(text, url)
+                if not context and url in annotation_rects:
+                    context = _extract_annotation_anchor(
+                        page, annotation_rects[url]
+                    )
                 if context:
                     _logger.info(
                         "URL context pdf page %d%s: %s | %s",

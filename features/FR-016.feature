@@ -62,6 +62,19 @@ Feature: FR-016 PDF body URL extraction
     When PDF repo URLs are extracted
     Then the extracted URLs contain exactly 1 entry
 
+  Scenario: Footnote-prepended URL token has context logged
+    Given the accepted repo domains include "code.example.com"
+    And a PDF whose page 1 contains the text "context before 2https://code.example.com/user/repo context after"
+    When PDF repo URLs are extracted with log capture
+    Then the captured log context for "https://code.example.com/user/repo" contains "context before"
+
+  Scenario: Annotation-only URL uses anchor text as context
+    Given the accepted repo domains include "code.example.com"
+    And a PDF whose page 1 has a link annotation with URI "https://code.example.com/user/repo"
+    And the same PDF page 1 contains the text "our code"
+    When PDF repo URLs are extracted with log capture
+    Then the captured log context for "https://code.example.com/user/repo" contains "our code"
+
   Scenario: Corrupt PDF bytes return None from enrichment
     Given the accepted repo domains include "code.example.com"
     And an article that has not been enriched

@@ -30,7 +30,7 @@ Feature: FR-013 Diagnostic logging to stdout
   Scenario: The number of articles passing the inclusion filter is logged
     Given the fixture server returns 10 entries where 3 satisfy the inclusion filter
     When the pipeline runs to completion
-    Then stdout contains a line containing "3 articles passed the filter"
+    Then stdout contains a line containing "3 articles (0 aged out of the window, 3 new) passed the filter"
 
   Scenario: A unified diff between previous and new atom.xml is logged when a previous file exists
     Given an existing file "docs/arxiv/cs.ai/atom.xml" with known previous content

@@ -132,6 +132,14 @@ def step_load_processed_with_dates(context, start, end):
     )
 
 
+@when("the processed dict is loaded without date bounds")
+def step_load_processed_no_dates(context):
+    """Load the processed dict with no date filter applied."""
+    context.loaded_processed = src.pipeline_feed.load_processed(
+        context.atom_xml_path,
+    )
+
+
 @then("the processed dict has {count:d} entries")
 def step_processed_has_n_entries(context, count):
     assert len(context.loaded_processed) == count, (

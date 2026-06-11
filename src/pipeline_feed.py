@@ -1013,15 +1013,24 @@ def check_feed_staleness(
 
 def load_processed(
     atom_xml_path: pathlib.Path,
-    start_date: datetime.date,
-    end_date: datetime.date,
+    start_date: datetime.date | None = None,
+    end_date: datetime.date | None = None,
 ) -> dict[str, ProcessedEntry]:
     """Load the processed dict from the extension element in atom.xml.
 
-    Returns a dict keyed by article abstract_url.  Only entries whose
-    updated date falls within [start_date, end_date] are kept.  Returns
-    an empty dict when the file does not exist, the element is absent,
-    or all entries are outside the window.
+    Returns a dict keyed by article abstract_url.  When start_date and
+    end_date are both provided, only entries whose updated date falls within
+    [start_date, end_date] are kept.  When either is None, no date filter is
+    applied and all entries in the processed element are returned.  Returns
+    an empty dict when the file does not exist, the element is absent, or all
+    entries are outside the window.
+
+    Parameters:
+      atom_xml_path: path to the Atom feed file
+      start_date:    inclusive lower bound for the updated date filter;
+                     None disables the filter
+      end_date:      inclusive upper bound for the updated date filter;
+                     None disables the filter
     """
     if not atom_xml_path.exists():
         return {}
@@ -1040,32 +1049,18 @@ def load_processed(
         repo_urls_str = article_elem.get("repo_urls", "")
         repo_urls = tuple(repo_urls_str.split()) if repo_urls_str else ()
 
-        entry_date = _parse_rfc3339_utc_date(updated)
-        if start_date <= entry_date <= end_date:
-            result[url] = ProcessedEntry(
-                updated=updated,
-                repo_found_in=repo_found_in,
-                repo_urls=repo_urls,
-            )
+        if start_date is not None and end_date is not None:
+            entry_date = _parse_rfc3339_utc_date(updated)
+            if not (start_date <= entry_date <= end_date):
+                continue
+
+        result[url] = ProcessedEntry(
+            updated=updated,
+            repo_found_in=repo_found_in,
+            repo_urls=repo_urls,
+        )
 
     return result
-
-
-def _count_processed_entries(atom_xml_path: pathlib.Path) -> int:
-    """Return the total number of <caf:article> children in the processed element.
-
-    Used to compute the aged-out count: entries that exist in atom.xml but
-    fall outside the current retention window (and are therefore not returned
-    by load_processed).  Returns 0 when the file does not exist or has no
-    processed element.
-    """
-    if not atom_xml_path.exists():
-        return 0
-    root = ET.parse(atom_xml_path).getroot()
-    processed_elem = root.find(f"{{{_CAF_NS}}}processed")
-    if processed_elem is None:
-        return 0
-    return len(processed_elem.findall(f"{{{_CAF_NS}}}article"))
 
 
 def _build_processed_element(
@@ -1333,9 +1328,9 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
         _logger.info("no articles returned by the API for this period")
         return 0
 
-    n_existing_processed = _count_processed_entries(output_path)
+    prior_processed_full = load_processed(output_path)
     processed = load_processed(output_path, start_date, today)
-    n_aged_out = n_existing_processed - len(processed)
+    n_aged_out = len(prior_processed_full) - len(processed)
 
     articles = [
         a for a in articles if matches_category(a, category_id, strict_mode)
@@ -1404,13 +1399,64 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
     n_comment = sum(1 for a in filtered if a.repo_found_in == "comment")
     n_abstract = sum(1 for a in filtered if a.repo_found_in == "abstract")
     n_pdf = sum(1 for a in filtered if a.repo_found_in == "pdf")
+
+    # Delta counts relative to the prior run's atom.xml state.
+    # prior_processed_full has no date windowing, so aged-out entries and their
+    # repo_found_in values are visible for the per-source breakdown.
+    prior_filtered_urls = frozenset(
+        url for url, e in prior_processed_full.items() if e.repo_found_in
+    )
+    prior_failed_urls = frozenset(
+        url for url, e in prior_processed_full.items() if not e.repo_found_in
+    )
+    current_filtered_urls = frozenset(a.abstract_url for a in filtered)
+    current_all_urls = frozenset(a.abstract_url for a in all_articles)
+    aged_out_filtered_urls = prior_filtered_urls - current_filtered_urls
+    n_filtered_aged_out = len(aged_out_filtered_urls)
+    n_filtered_new = len(current_filtered_urls - prior_filtered_urls)
+    n_comment_aged_out = sum(
+        1 for u in aged_out_filtered_urls
+        if prior_processed_full[u].repo_found_in == "comment"
+    )
+    n_abstract_aged_out = sum(
+        1 for u in aged_out_filtered_urls
+        if prior_processed_full[u].repo_found_in == "abstract"
+    )
+    n_pdf_aged_out = sum(
+        1 for u in aged_out_filtered_urls
+        if prior_processed_full[u].repo_found_in == "pdf"
+    )
+    n_comment_new = sum(
+        1 for a in filtered
+        if a.repo_found_in == "comment" and a.abstract_url not in prior_filtered_urls
+    )
+    n_abstract_new = sum(
+        1 for a in filtered
+        if a.repo_found_in == "abstract" and a.abstract_url not in prior_filtered_urls
+    )
+    n_pdf_new = sum(
+        1 for a in filtered
+        if a.repo_found_in == "pdf" and a.abstract_url not in prior_filtered_urls
+    )
+    # Failed aged-out: prior failing articles no longer in the current window.
+    # Failed new: currently failing articles absent from the prior processed dict.
+    n_failed_aged_out = len(prior_failed_urls - current_all_urls)
+    n_failed_new = sum(
+        1 for a in all_articles
+        if not a.repo_found_in and a.abstract_url not in prior_processed_full
+    )
+
     passed_word = "article" if n_filtered == 1 else "articles"
     failed_word = "article" if n_failed_filter == 1 else "articles"
     _logger.info(
-        "%d %s passed the filter (comment: %d, abstract: %d, pdf: %d); "
-        "%d %s failed the filter",
-        n_filtered, passed_word, n_comment, n_abstract, n_pdf,
-        n_failed_filter, failed_word,
+        "%d %s (%d aged out of the window, %d new) passed the filter"
+        " (comment: %d (%d, %d), abstract: %d (%d, %d), pdf: %d (%d, %d));"
+        " %d (%d, %d) %s failed the filter",
+        n_filtered, passed_word, n_filtered_aged_out, n_filtered_new,
+        n_comment, n_comment_aged_out, n_comment_new,
+        n_abstract, n_abstract_aged_out, n_abstract_new,
+        n_pdf, n_pdf_aged_out, n_pdf_new,
+        n_failed_filter, n_failed_aged_out, n_failed_new, failed_word,
     )
 
     # Build updated processed dict:

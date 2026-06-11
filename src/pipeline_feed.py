@@ -237,6 +237,32 @@ def _is_url_on_accepted_domain(
     return any(hostname.endswith(suffix) for suffix in accepted_suffixes)
 
 
+def _extract_url_context(
+    text: str,
+    url: str,
+    n_before: int = 10,
+    n_after: int = 3,
+) -> str:
+    """Return up to n_before tokens before and n_after tokens after url in text.
+
+    Splits text on whitespace and scans for a token whose content (after
+    stripping trailing punctuation .,;:)]>) matches url with or without the
+    https:// scheme prefix, to handle bare-domain matches.  Adjacent URL tokens
+    are included as-is so that a run of URLs is visible as a signal.
+    Semicolons are stripped from the result so callers can safely join multiple
+    contexts with '; '.  Returns an empty string when url is not found.
+    """
+    url_bare = url[len("https://"):] if url.startswith("https://") else url
+    tokens = text.split()
+    for i, token in enumerate(tokens):
+        stripped = token.rstrip(".,;:)]>")
+        if stripped == url or stripped == url_bare:
+            before = tokens[max(0, i - n_before):i]
+            after = tokens[i + 1:min(len(tokens), i + 1 + n_after)]
+            return " ".join(before + [token] + after).replace(";", "")
+    return ""
+
+
 def extract_repo_urls(
     text: str,
     accepted_domains: frozenset[str] | None = None,
@@ -298,6 +324,12 @@ def enrich_from_metadata(
     when neither source yields a URL.
     """
     if article.comment_urls:
+        for url in sorted(set(article.comment_urls)):
+            context = _extract_url_context(article.comment or "", url)
+            _logger.info(
+                "URL context comment [%s]: %s | %s",
+                article.abstract_url, url, context,
+            )
         return article._replace(
             repo_found_in="comment",
             repo_urls=tuple(sorted(set(article.comment_urls))),
@@ -309,6 +341,12 @@ def enrich_from_metadata(
         accepted_suffixes=accepted_suffixes,
     )
     if abstract_urls:
+        for url in sorted(set(abstract_urls)):
+            context = _extract_url_context(article.abstract, url)
+            _logger.info(
+                "URL context abstract [%s]: %s | %s",
+                article.abstract_url, url, context,
+            )
         return article._replace(
             repo_found_in="abstract",
             repo_urls=tuple(sorted(set(abstract_urls))),
@@ -395,6 +433,17 @@ def extract_pdf_repo_urls(
                 "PDF page %d: %d accepted-domain URL(s): %s%s",
                 page_index + 1, len(page_accepted), page_accepted, label,
             )
+            logged_context_urls: set[str] = set()
+            for url in page_accepted:
+                if url in logged_context_urls:
+                    continue
+                logged_context_urls.add(url)
+                context = _extract_url_context(text, url)
+                if context:
+                    _logger.info(
+                        "URL context pdf page %d%s: %s | %s",
+                        page_index + 1, label, url, context,
+                    )
 
         raw_urls.extend(page_raw)
 

@@ -1,6 +1,7 @@
 """Step definitions for FR-016: PDF body URL extraction."""
 
 import io
+import logging
 import pathlib
 import typing
 
@@ -15,6 +16,17 @@ from pypdf.generic import (
     NumberObject,
     TextStringObject,
 )
+
+
+class _LogCapture(logging.Handler):
+    """In-memory log handler that stores formatted message strings."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.lines: list[str] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.lines.append(self.format(record))
 
 
 def _ensure_pdf_pages(context: typing.Any, page_num: int) -> None:
@@ -218,6 +230,27 @@ def step_extract_pdf_urls(context):
     )
 
 
+@when("PDF repo URLs are extracted with log capture")
+def step_extract_pdf_urls_with_log_capture(context):
+    """Run extract_pdf_repo_urls and capture all INFO log lines it emits."""
+    pdf_bytes = _build_test_pdf(context.pdf_pages)
+    _save_debug_pdf(context, pdf_bytes)
+
+    handler = _LogCapture()
+    handler.setLevel(logging.DEBUG)
+    pipeline_logger = logging.getLogger("src.pipeline_feed")
+    pipeline_logger.addHandler(handler)
+    try:
+        context.extracted_urls = src.pipeline_feed.extract_pdf_repo_urls(
+            pdf_bytes,
+            accepted_domains=_get_accepted_domains(context),
+            accepted_suffixes=_get_accepted_suffixes(context),
+        )
+    finally:
+        pipeline_logger.removeHandler(handler)
+    context.captured_log_lines = handler.lines
+
+
 @when("PDF enrichment is attempted for the article")
 def step_attempt_pdf_enrichment(context):
     pdf_bytes = getattr(context, "pdf_bytes_for_article", None)
@@ -292,4 +325,17 @@ def step_repo_urls_contains(context, url):
     result = context.enrichment_result
     assert url in result.repo_urls, (
         f"Expected {url!r} in repo_urls, got {result.repo_urls!r}"
+    )
+
+
+@then('the captured log context for "{url}" contains "{text}"')
+def step_captured_log_context_contains(context, url, text):
+    """Assert a URL-context log line exists that mentions both url and text."""
+    matching = [
+        line for line in context.captured_log_lines
+        if "URL context pdf" in line and url in line and text in line
+    ]
+    assert matching, (
+        f"No 'URL context pdf' log line containing both {url!r} and {text!r}\n"
+        f"Captured log lines:\n" + "\n".join(context.captured_log_lines)
     )

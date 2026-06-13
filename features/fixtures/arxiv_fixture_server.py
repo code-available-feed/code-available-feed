@@ -28,30 +28,38 @@ from atom_ns import ARXIV_NS, ATOM_NS
 
 
 class Response(typing.NamedTuple):
-    """One response policy: HTTP status, entry count, how many carry a comment URL, and optional raw body.
+    """One response policy: HTTP status, entry count, URL distribution, and optional raw body.
 
     When raw_body is not None the server sends it verbatim as the response body (for status 200)
     instead of generating an Atom XML document via _build_atom_response.  This allows tests to
     exercise malformed-XML code paths without modifying the Atom generator.
+
+    Entry URL assignment order (0-based index i):
+      i < n_have_comment_url                              -> comment element with https://code.example.com/...
+      n_have_comment_url <= i < n_have_comment_url + n_have_abstract_url -> summary with https://github.com/... (accepted domain)
+      otherwise                                           -> plain abstract text, no code URL
     """
 
     status: int
     n_entries: int
     n_have_comment_url: int
+    n_have_abstract_url: int = 0
     raw_body: bytes | None = None
 
 
 def _build_atom_response(
     n_entries: int,
     n_have_comment_url: int,
+    n_have_abstract_url: int,
     primary_category: str,
 ) -> bytes:
-    """
-    Return a minimal arxiv Atom XML body containing n_entries entries.
+    """Return a minimal arxiv Atom XML body containing n_entries entries.
 
-    The first n_have_comment_url entries include a comment field with an
-    https:// URL; the remainder do not.  Pass n_entries to give all entries
-    a comment URL; pass 0 to give none.
+    Entry URL assignment follows the Response docstring ordering:
+    - i < n_have_comment_url: comment element with https://code.example.com/fixture/repo-N
+    - n_have_comment_url <= i < n_have_comment_url + n_have_abstract_url:
+        summary with https://github.com/fixture/repo-N (accepted domain for abstract cascade)
+    - otherwise: plain summary text with no accepted-domain URL
     """
     root = ET.Element(f"{{{ATOM_NS}}}feed")
 
@@ -82,9 +90,16 @@ def _build_atom_response(
         ET.SubElement(entry, f"{{{ATOM_NS}}}updated").text = (
             "2026-05-12T10:00:00Z"
         )
-        ET.SubElement(entry, f"{{{ATOM_NS}}}summary").text = (
-            f"Abstract text for fixture article {i + 1}."
-        )
+
+        abstract_url_boundary = n_have_comment_url + n_have_abstract_url
+        if n_have_comment_url <= i < abstract_url_boundary:
+            ET.SubElement(entry, f"{{{ATOM_NS}}}summary").text = (
+                f"Code at https://github.com/fixture/repo-{i + 1}"
+            )
+        else:
+            ET.SubElement(entry, f"{{{ATOM_NS}}}summary").text = (
+                f"Abstract text for fixture article {i + 1}."
+            )
 
         if i < n_have_comment_url:
             ET.SubElement(entry, f"{{{ARXIV_NS}}}comment").text = (
@@ -129,6 +144,7 @@ class _FixtureRequestHandler(http.server.BaseHTTPRequestHandler):
                 else _build_atom_response(
                     response.n_entries,
                     response.n_have_comment_url,
+                    response.n_have_abstract_url,
                     primary_category,
                 )
             )
@@ -195,15 +211,15 @@ class ArxivFixtureServer:
         status: int,
         n_entries: int,
         n_have_comment_url: int | None = None,
+        n_have_abstract_url: int = 0,
     ) -> None:
-        """
-        Queue one response for the given start parameter value.
+        """Queue one response for the given start parameter value.
 
-        n_have_comment_url defaults to n_entries (all entries get a URL)
-        when not set.  Each call appends one Response to the queue for
-        that start value; the request handler pops one per request.  When
-        the queue is drained, subsequent requests for the same start value
-        fall through to the default response.
+        n_have_comment_url defaults to n_entries (all entries get a comment URL)
+        when not set.  n_have_abstract_url defaults to 0.  Each call appends one
+        Response to the queue for that start value; the request handler pops one
+        per request.  When the queue is drained, subsequent requests for the same
+        start value fall through to the default response.
         """
         response = Response(
             status=status,
@@ -211,6 +227,7 @@ class ArxivFixtureServer:
             n_have_comment_url=(
                 n_entries if n_have_comment_url is None else n_have_comment_url
             ),
+            n_have_abstract_url=n_have_abstract_url,
         )
         with self._lock:
             self._queues.setdefault(start, []).append(response)
@@ -235,13 +252,13 @@ class ArxivFixtureServer:
         status: int,
         n_entries: int,
         n_have_comment_url: int | None = None,
+        n_have_abstract_url: int = 0,
     ) -> None:
-        """
-        Override the default response returned when the request's start
-        value has no queue or its queue has been drained.
+        """Override the default response returned when the request's start value
+        has no queue or its queue has been drained.
 
-        n_have_comment_url defaults to n_entries (all entries get a URL)
-        when not set.
+        n_have_comment_url defaults to n_entries (all entries get a comment URL)
+        when not set.  n_have_abstract_url defaults to 0.
         """
         response = Response(
             status=status,
@@ -249,6 +266,7 @@ class ArxivFixtureServer:
             n_have_comment_url=(
                 n_entries if n_have_comment_url is None else n_have_comment_url
             ),
+            n_have_abstract_url=n_have_abstract_url,
         )
         with self._lock:
             self._default = response

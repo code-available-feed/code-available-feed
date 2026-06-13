@@ -91,7 +91,7 @@ def step_apply_inclusion_filter(context):
         accepted_suffixes=accepted_suffixes,
     )
     context.article_result = article
-    context.article_included = src.pipeline_feed.include_article(article)
+    context.article_included = src.pipeline_feed.include_article(article, origin="new")
 
 
 @then("the article is included")

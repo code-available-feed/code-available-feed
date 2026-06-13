@@ -95,3 +95,58 @@ Feature: FR-016 PDF body URL extraction
     When PDF enrichment is attempted for the article
     Then the article repo_found_in is "pdf"
     And the article repo_urls contains "https://code.example.com/user/repo"
+
+  # --- PDF enrichment log format scenarios ---
+
+  Scenario: PDF enrichment emits pdf_fetching, pdf_fetched, and pdf log lines when a URL is found
+    Given the accepted repo domains include "code.example.com"
+    And an article that has not been enriched
+    And the PDF for the article contains "https://code.example.com/user/repo" on page 1
+    When PDF enrichment is attempted with log capture
+    Then the enrichment log contains a message containing all of "origin=new status=pdf_fetching" and "url=https://arxiv.example.com/abs/0000.00001v1"
+    And the enrichment log contains a message containing all of "origin=new status=pdf_fetched pages=1" and "url=https://arxiv.example.com/abs/0000.00001v1"
+    And the enrichment log contains a message containing all of "origin=new status=pdf repo_found_in=pdf repo_urls=https://code.example.com/user/repo" and "url=https://arxiv.example.com/abs/0000.00001v1"
+
+  Scenario: PDF enrichment emits status=pdf with empty repo_found_in when no code URL is found
+    Given an article that has not been enriched
+    And the PDF for the article has no code URLs
+    When PDF enrichment is attempted with log capture
+    Then the enrichment log contains a message containing all of "origin=new status=pdf repo_found_in= repo_urls= repo_context=" and "url=https://arxiv.example.com/abs/0000.00001v1"
+
+  Scenario: PDF enrichment emits status=pdf_error when PDF bytes are invalid
+    Given an article that has not been enriched
+    And the PDF bytes for the article are invalid
+    When PDF enrichment is attempted with log capture
+    Then the enrichment log contains a message containing all of "origin=new status=pdf_error" and "url=https://arxiv.example.com/abs/0000.00001v1"
+
+  Scenario: PDF enrichment emits semicolon-joined repo_urls when two URLs are found on different pages
+    Given the accepted repo domains include "code.example.com"
+    And an article that has not been enriched
+    And a PDF whose page 1 contains the text "https://code.example.com/user/repo1"
+    And the PDF page 2 contains the text "https://code.example.com/user/repo2"
+    And the enrichment PDF is built from the page specifications
+    When PDF enrichment is attempted with log capture
+    Then the enrichment log contains a message containing all of "status=pdf repo_found_in=pdf" and "repo_urls=https://code.example.com/user/repo1;https://code.example.com/user/repo2"
+
+  Scenario: PDF enrichment emits non-empty repo_context when URL has surrounding text
+    Given the accepted repo domains include "code.example.com"
+    And an article that has not been enriched
+    And a PDF whose page 1 contains the text "find our code at https://code.example.com/user/repo"
+    And the enrichment PDF is built from the page specifications
+    When PDF enrichment is attempted with log capture
+    Then the enrichment log contains a message containing all substrings:
+      | status=pdf repo_found_in=pdf                  |
+      | repo_context="p1: find our code at            |
+
+  Scenario: PDF enrichment emits semicolon-joined repo_context when two URLs on different pages each have surrounding text
+    Given the accepted repo domains include "code.example.com"
+    And an article that has not been enriched
+    And a PDF whose page 1 contains the text "find our code at https://code.example.com/user/repo1"
+    And the PDF page 2 contains the text "see demo at https://code.example.com/user/repo2"
+    And the enrichment PDF is built from the page specifications
+    When PDF enrichment is attempted with log capture
+    Then the enrichment log contains a message containing all substrings:
+      | status=pdf repo_found_in=pdf                                                        |
+      | repo_urls=https://code.example.com/user/repo1;https://code.example.com/user/repo2  |
+      | repo_context="p1: find our code at                                                  |
+      | p2: see demo at                                                                     |

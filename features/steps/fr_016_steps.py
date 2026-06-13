@@ -1,7 +1,8 @@
 """Step definitions for FR-016: PDF body URL extraction."""
 
+import contextlib
 import io
-import logging
+import json
 import pathlib
 import typing
 
@@ -16,17 +17,6 @@ from pypdf.generic import (
     NumberObject,
     TextStringObject,
 )
-
-
-class _LogCapture(logging.Handler):
-    """In-memory log handler that stores formatted message strings."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.lines: list[str] = []
-
-    def emit(self, record: logging.LogRecord) -> None:
-        self.lines.append(self.format(record))
 
 
 def _ensure_pdf_pages(context: typing.Any, page_num: int) -> None:
@@ -213,6 +203,27 @@ def step_pdf_for_article_with_url(context, url, page_num):
     context.pdf_bytes_for_article = _build_test_pdf(pages)
 
 
+@given("the PDF for the article has no code URLs")
+def step_pdf_for_article_no_code_urls(context):
+    """Build a one-page test PDF whose text contains no accepted-domain URLs."""
+    context.pdf_bytes_for_article = _build_test_pdf([
+        {"lines": ["Abstract: plain text without any code-hosting URLs."], "annotations": []}
+    ])
+
+
+@given("the enrichment PDF is built from the page specifications")
+def step_build_enrichment_pdf_from_pages(context):
+    """Convert context.pdf_pages (built by page-spec given steps) to context.pdf_bytes_for_article.
+
+    Allows enrichment scenarios to reuse the page-building steps
+    (e.g. 'a PDF whose page N contains the text') that normally target
+    extract_pdf_repo_urls, and then redirect the result to enrich_from_pdf.
+    """
+    pdf_bytes = _build_test_pdf(context.pdf_pages)
+    _save_debug_pdf(context, pdf_bytes)
+    context.pdf_bytes_for_article = pdf_bytes
+
+
 # ---------------------------------------------------------------------------
 # When steps
 # ---------------------------------------------------------------------------
@@ -223,32 +234,31 @@ def step_extract_pdf_urls(context):
     pdf_bytes = _build_test_pdf(context.pdf_pages)
     _save_debug_pdf(context, pdf_bytes)
 
-    context.extracted_urls = src.pipeline_feed.extract_pdf_repo_urls(
+    urls, _contexts = src.pipeline_feed.extract_pdf_repo_urls(
         pdf_bytes,
         accepted_domains=_get_accepted_domains(context),
         accepted_suffixes=_get_accepted_suffixes(context),
     )
+    context.extracted_urls = urls
 
 
 @when("PDF repo URLs are extracted with log capture")
 def step_extract_pdf_urls_with_log_capture(context):
-    """Run extract_pdf_repo_urls and capture all INFO log lines it emits."""
+    """Run extract_pdf_repo_urls and capture the returned context strings.
+
+    context.extracted_urls[i] and context.extracted_contexts[i] are parallel:
+    extracted_contexts[i] is the "pN: surrounding text" string for that URL.
+    """
     pdf_bytes = _build_test_pdf(context.pdf_pages)
     _save_debug_pdf(context, pdf_bytes)
 
-    handler = _LogCapture()
-    handler.setLevel(logging.DEBUG)
-    pipeline_logger = logging.getLogger("src.pipeline_feed")
-    pipeline_logger.addHandler(handler)
-    try:
-        context.extracted_urls = src.pipeline_feed.extract_pdf_repo_urls(
-            pdf_bytes,
-            accepted_domains=_get_accepted_domains(context),
-            accepted_suffixes=_get_accepted_suffixes(context),
-        )
-    finally:
-        pipeline_logger.removeHandler(handler)
-    context.captured_log_lines = handler.lines
+    urls, contexts = src.pipeline_feed.extract_pdf_repo_urls(
+        pdf_bytes,
+        accepted_domains=_get_accepted_domains(context),
+        accepted_suffixes=_get_accepted_suffixes(context),
+    )
+    context.extracted_urls = urls
+    context.extracted_contexts = contexts
 
 
 @when("PDF enrichment is attempted for the article")
@@ -269,6 +279,38 @@ def step_attempt_pdf_enrichment(context):
     context.enrichment_result = result
     if result is not None:
         context.article_result = result
+
+
+@when("PDF enrichment is attempted with log capture")
+def step_attempt_pdf_enrichment_with_log_capture(context):
+    """Run enrich_from_pdf with JSON logging active and capture stdout.
+
+    context.captured_pdf_log holds the raw JSON log lines emitted during the
+    call.  Use "the enrichment log contains a message containing" steps to
+    assert on individual fields.
+    """
+    pdf_bytes = getattr(context, "pdf_bytes_for_article", None)
+
+    def fetch_pdf(url: str) -> bytes:
+        if pdf_bytes is None:
+            raise RuntimeError("No PDF bytes prepared for test")
+        return pdf_bytes
+
+    stdout_buf = io.StringIO()
+    # redirect_stdout must wrap _setup_logging() so the StreamHandler binds to
+    # the StringIO buffer rather than the real stdout at handler-creation time.
+    with contextlib.redirect_stdout(stdout_buf):
+        src.pipeline_feed._setup_logging()
+        result = src.pipeline_feed.enrich_from_pdf(
+            context.test_article,
+            accepted_domains=_get_accepted_domains(context),
+            accepted_suffixes=_get_accepted_suffixes(context),
+            _fetch_pdf=fetch_pdf,
+        )
+    context.enrichment_result = result
+    if result is not None:
+        context.article_result = result
+    context.captured_pdf_log = stdout_buf.getvalue()
 
 
 # ---------------------------------------------------------------------------
@@ -328,14 +370,80 @@ def step_repo_urls_contains(context, url):
     )
 
 
+@then('the enrichment log contains a message containing "{text}"')
+def step_enrichment_log_contains(context, text):
+    """Assert a JSON log line from enrich_from_pdf has a message containing text."""
+    lines = context.captured_pdf_log.splitlines()
+    for line in lines:
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if text in obj.get("message", ""):
+            return
+    assert False, (
+        f"No enrichment log line has message containing {text!r}\n"
+        f"Captured log:\n{context.captured_pdf_log}"
+    )
+
+
+@then('the enrichment log contains a message containing all of "{text1}" and "{text2}"')
+def step_enrichment_log_contains_all(context, text1, text2):
+    """Assert a JSON log line from enrich_from_pdf has a message containing both text1 and text2."""
+    lines = context.captured_pdf_log.splitlines()
+    for line in lines:
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        msg = obj.get("message", "")
+        if text1 in msg and text2 in msg:
+            return
+    assert False, (
+        f"No enrichment log line has message containing both {text1!r} and {text2!r}\n"
+        f"Captured log:\n{context.captured_pdf_log}"
+    )
+
+
+@then("the enrichment log contains a message containing all substrings")
+def step_enrichment_log_contains_all_substrings_table(context):
+    """Assert that a single JSON log line from enrich_from_pdf contains all substrings in the table.
+
+    Each table row supplies one required substring.
+    This step exists to allow assertions that contain double-quote characters,
+    which cannot appear inside the Gherkin step string delimiters used by
+    step_enrichment_log_contains_all.
+    """
+    substrings = [row[0] for row in context.table]
+    lines = context.captured_pdf_log.splitlines()
+    for line in lines:
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        msg = obj.get("message", "")
+        if all(s in msg for s in substrings):
+            return
+    assert False, (
+        f"No enrichment log line has message containing all of {substrings!r}\n"
+        f"Captured log:\n{context.captured_pdf_log}"
+    )
+
+
 @then('the captured log context for "{url}" contains "{text}"')
 def step_captured_log_context_contains(context, url, text):
-    """Assert a URL-context log line exists that mentions both url and text."""
-    matching = [
-        line for line in context.captured_log_lines
-        if "URL context pdf" in line and url in line and text in line
-    ]
-    assert matching, (
-        f"No 'URL context pdf' log line containing both {url!r} and {text!r}\n"
-        f"Captured log lines:\n" + "\n".join(context.captured_log_lines)
+    """Assert the context string returned by extract_pdf_repo_urls for url contains text.
+
+    context.extracted_urls and context.extracted_contexts are parallel lists
+    produced by the "PDF repo URLs are extracted with log capture" step.
+    """
+    try:
+        idx = context.extracted_urls.index(url)
+    except ValueError:
+        assert False, (
+            f"URL {url!r} not found in extracted URLs: {context.extracted_urls!r}"
+        )
+    context_str = context.extracted_contexts[idx]
+    assert text in context_str, (
+        f"Expected {text!r} in context for {url!r}, got {context_str!r}"
     )

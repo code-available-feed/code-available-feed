@@ -43,8 +43,9 @@ def _build_atom_xml_with_processed(
     for row in processed_rows:
         url = row["url"]
         repo_urls_str = row.get("repo_urls", "")
-        repo_urls = tuple(repo_urls_str.split()) if repo_urls_str else ()
+        repo_urls = tuple(u for u in repo_urls_str.split(";") if u) if repo_urls_str else ()
         processed[url] = src.pipeline_feed.ProcessedEntry(
+            published=row.get("published", row["updated"]),
             updated=row["updated"],
             repo_found_in=row.get("repo_found_in", ""),
             repo_urls=repo_urls,
@@ -179,8 +180,9 @@ def step_processed_entry(context, url, found_in, urls):
     """Store a processed dict entry for later application."""
     if not hasattr(context, "test_processed"):
         context.test_processed = {}
-    repo_urls = tuple(urls.split()) if urls else ()
+    repo_urls = tuple(u for u in urls.split(";") if u) if urls else ()
     context.test_processed[url] = src.pipeline_feed.ProcessedEntry(
+        published="2026-06-01T00:00:00Z",
         updated="2026-06-01T00:00:00Z",
         repo_found_in=found_in,
         repo_urls=repo_urls,
@@ -269,6 +271,7 @@ def step_processed_dict_n(context, count):
     for i in range(1, count + 1):
         url = f"https://arxiv.example.com/abs/{i:04d}v1"
         context.test_processed[url] = src.pipeline_feed.ProcessedEntry(
+            published="2026-06-01T00:00:00Z",
             updated="2026-06-01T00:00:00Z",
             repo_found_in="comment" if i == 1 else "",
             repo_urls=("https://example.com/",) if i == 1 else (),
@@ -320,11 +323,13 @@ def step_processed_dict_two_urls(context, url1, url2):
     """Create a processed dict with two specific URLs (in the given order)."""
     context.test_processed = {}
     context.test_processed[url1] = src.pipeline_feed.ProcessedEntry(
+        published="2026-06-01T00:00:00Z",
         updated="2026-06-01T00:00:00Z",
         repo_found_in="comment",
         repo_urls=("https://example.com/",),
     )
     context.test_processed[url2] = src.pipeline_feed.ProcessedEntry(
+        published="2026-06-02T00:00:00Z",
         updated="2026-06-02T00:00:00Z",
         repo_found_in="abstract",
         repo_urls=("https://example.com/other",),
@@ -407,6 +412,7 @@ def step_updated_processed_dict(context, count):
     for i in range(1, count + 1):
         url = f"https://arxiv.example.com/abs/new{i:04d}v1"
         context.test_processed[url] = src.pipeline_feed.ProcessedEntry(
+            published=f"2026-06-{i:02d}T00:00:00Z",
             updated=f"2026-06-{i:02d}T00:00:00Z",
             repo_found_in="comment" if i == 1 else "abstract",
             repo_urls=(f"https://example.com/repo{i}",),

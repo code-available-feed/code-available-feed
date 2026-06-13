@@ -94,8 +94,14 @@ class Article(typing.NamedTuple):
 
 
 class ProcessedEntry(typing.NamedTuple):
-    """Stored cascade outcome for one article, persisted in the processed element."""
+    """Stored cascade outcome for one article, persisted in the processed element.
 
+    published is the arxiv <published> date (v1 submission date); it is stored
+    so that status=aged_out log lines can show it alongside updated, making
+    the submittedDate vs updated discrepancy visible in the log output.
+    """
+
+    published: str
     updated: str
     repo_found_in: str
     repo_urls: tuple[str, ...]
@@ -370,16 +376,22 @@ def enrich_from_metadata(
     when neither source yields a URL.
     """
     if article.comment_urls:
-        for url in sorted(set(article.comment_urls)):
-            context = _extract_url_context(article.comment or "", url)
-            _logger.info(
-                "URL context comment [%s]: %s | %s",
-                article.abstract_url, url, context,
-            )
+        urls = sorted(set(article.comment_urls))
+        contexts = [_extract_url_context(article.comment or "", url) for url in urls]
+        repo_context = "; ".join(c for c in contexts if c)
+        repo_context_str = f'"{repo_context}"' if repo_context else ""
+        _logger.info(
+            "origin=new status=comment repo_found_in=comment repo_urls=%s repo_context=%s url=%s",
+            ";".join(urls), repo_context_str, article.abstract_url,
+        )
         return article._replace(
             repo_found_in="comment",
-            repo_urls=tuple(sorted(set(article.comment_urls))),
+            repo_urls=tuple(urls),
         )
+    _logger.info(
+        "origin=new status=comment repo_found_in= repo_urls= repo_context= url=%s",
+        article.abstract_url,
+    )
 
     abstract_urls = extract_repo_urls(
         article.abstract,
@@ -387,16 +399,22 @@ def enrich_from_metadata(
         accepted_suffixes=accepted_suffixes,
     )
     if abstract_urls:
-        for url in sorted(set(abstract_urls)):
-            context = _extract_url_context(article.abstract, url)
-            _logger.info(
-                "URL context abstract [%s]: %s | %s",
-                article.abstract_url, url, context,
-            )
+        urls = sorted(set(abstract_urls))
+        contexts = [_extract_url_context(article.abstract, url) for url in urls]
+        repo_context = "; ".join(c for c in contexts if c)
+        repo_context_str = f'"{repo_context}"' if repo_context else ""
+        _logger.info(
+            "origin=new status=abstract repo_found_in=abstract repo_urls=%s repo_context=%s url=%s",
+            ";".join(urls), repo_context_str, article.abstract_url,
+        )
         return article._replace(
             repo_found_in="abstract",
-            repo_urls=tuple(sorted(set(abstract_urls))),
+            repo_urls=tuple(urls),
         )
+    _logger.info(
+        "origin=new status=abstract repo_found_in= repo_urls= repo_context= url=%s",
+        article.abstract_url,
+    )
 
     return article
 
@@ -406,8 +424,7 @@ def extract_pdf_repo_urls(
     max_pages: int = 10,
     accepted_domains: frozenset[str] | None = None,
     accepted_suffixes: frozenset[str] | None = None,
-    _label: str = "",
-) -> list[str]:
+) -> tuple[list[str], list[str]]:
     """Extract accepted-domain URLs from PDF pages, stopping before References.
 
     Three extraction layers per page, applied in order:
@@ -420,29 +437,28 @@ def extract_pdf_repo_urls(
     Scanning stops when a page contains a standalone "References" or
     "REFERENCES" line; that page and all subsequent pages are skipped.
 
-    _label is included in every log line to identify which article/PDF is
-    being scanned; callers in production pass article.abstract_url; test
-    callers omit it (default empty string produces no label suffix).
-
-    Returns sorted, deduplicated, domain-filtered URLs.
+    Returns a tuple (urls, contexts):
+      urls:     sorted, deduplicated, domain-filtered URLs.
+      contexts: parallel list; contexts[i] is "pN: surrounding text" for
+                urls[i], or an empty string when no surrounding text was found.
+                Callers join non-empty entries with "; " to build repo_context.
     """
     import pypdf
 
     domains = accepted_domains if accepted_domains is not None else ACCEPTED_REPO_DOMAINS
     suffixes = accepted_suffixes if accepted_suffixes is not None else ACCEPTED_REPO_DOMAIN_SUFFIXES
 
-    label = f" [{_label}]" if _label else ""
-
     reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
-    _logger.info("PDF: %d pages, %.0f KB%s", len(reader.pages), len(pdf_bytes) / 1024, label)
     raw_urls: list[str] = []
+    # Maps each URL to its first-occurrence context string "pN: text".
+    # An empty string means the URL was found but no surrounding text was extractable.
+    url_context: dict[str, str] = {}
 
     for page_index in range(min(len(reader.pages), max_pages)):
         page = reader.pages[page_index]
         text = page.extract_text() or ""
 
         if re.search(r"(?m)^\s*(?:References|REFERENCES)\s*$", text):
-            _logger.info("PDF page %d: References section detected, stopping%s", page_index + 1, label)
             break
 
         page_raw: list[str] = []
@@ -483,39 +499,40 @@ def extract_pdf_repo_urls(
             u for u in page_raw
             if _is_url_on_accepted_domain(u, domains, suffixes)
         ]
-        if page_accepted:
-            _logger.info(
-                "PDF page %d: %d accepted-domain URL(s): %s%s",
-                page_index + 1, len(page_accepted), page_accepted, label,
-            )
-            logged_context_urls: set[str] = set()
-            for url in page_accepted:
-                if url in logged_context_urls:
-                    continue
-                logged_context_urls.add(url)
-                context = _extract_url_context(text, url)
-                if not context and url in annotation_rects:
-                    context = _extract_annotation_anchor(
-                        page, annotation_rects[url]
-                    )
-                if context:
-                    _logger.info(
-                        "URL context pdf page %d%s: %s | %s",
-                        page_index + 1, label, url, context,
-                    )
+        for url in page_accepted:
+            if url in url_context:
+                continue
+            ctx = _extract_url_context(text, url)
+            if not ctx and url in annotation_rects:
+                ctx = _extract_annotation_anchor(page, annotation_rects[url])
+            url_context[url] = f"p{page_index + 1}: {ctx}" if ctx else ""
 
         raw_urls.extend(page_raw)
 
+    # Deduplicate preserving first-occurrence order, then sort by URL so the
+    # output is stable regardless of page order.
     seen: set[str] = set()
-    filtered: list[str] = []
+    url_ctx_pairs: list[tuple[str, str]] = []
     for url in raw_urls:
         if url in seen:
             continue
         seen.add(url)
         if _is_url_on_accepted_domain(url, domains, suffixes):
-            filtered.append(url)
+            url_ctx_pairs.append((url, url_context.get(url, "")))
 
-    return sorted(filtered)
+    url_ctx_pairs.sort(key=lambda pair: pair[0])
+    return [u for u, _ in url_ctx_pairs], [c for _, c in url_ctx_pairs]
+
+
+def _count_pdf_pages(pdf_bytes: bytes) -> int:
+    """Return the number of pages in pdf_bytes.
+
+    Called by enrich_from_pdf after downloading and before scanning so the
+    page count is available for the status=pdf_fetched stats log line without
+    a second full parse pass — pypdf.PdfReader is lightweight for page counting.
+    """
+    import pypdf
+    return len(pypdf.PdfReader(io.BytesIO(pdf_bytes)).pages)
 
 
 def _default_fetch_pdf(url: str) -> bytes:
@@ -550,33 +567,44 @@ def enrich_from_pdf(
     try:
         arxiv_id = article.abstract_url.rsplit("/", 1)[-1]
         pdf_url = f"{_pdf_base_url}/pdf/{arxiv_id}"
-        _logger.info("fetching PDF: %s", pdf_url)
+        _logger.info("origin=new status=pdf_fetching url=%s", article.abstract_url)
         t0 = time.monotonic()
         pdf_bytes = fetcher(pdf_url)
         download_s = time.monotonic() - t0
+        n_pages = _count_pdf_pages(pdf_bytes)
+        n_bytes = len(pdf_bytes)
+        _logger.info(
+            "origin=new status=pdf_fetched pages=%d bytes=%d download_s=%.1f url=%s",
+            n_pages, n_bytes, download_s, article.abstract_url,
+        )
         t1 = time.monotonic()
-        urls = extract_pdf_repo_urls(
+        urls, contexts = extract_pdf_repo_urls(
             pdf_bytes,
             accepted_domains=accepted_domains,
             accepted_suffixes=accepted_suffixes,
-            _label=article.abstract_url,
         )
         scan_s = time.monotonic() - t1
+        repo_context = "; ".join(c for c in contexts if c)
+        repo_context_str = f'"{repo_context}"' if repo_context else ""
         if urls:
             _logger.info(
-                "PDF found %d URL(s) (download %.1fs scan %.1fs) for %s: %s",
-                len(urls), download_s, scan_s, article.abstract_url, urls,
+                "origin=new status=pdf repo_found_in=pdf repo_urls=%s repo_context=%s"
+                " scan_s=%.1f updated=%s url=%s",
+                ";".join(urls), repo_context_str, scan_s,
+                article.updated, article.abstract_url,
             )
             return article._replace(
                 repo_found_in="pdf",
                 repo_urls=tuple(sorted(set(urls))),
             )
         _logger.info(
-            "PDF: no accepted-domain URL found (download %.1fs scan %.1fs) for %s",
-            download_s, scan_s, article.abstract_url,
+            "origin=new status=pdf repo_found_in= repo_urls= repo_context="
+            " scan_s=%.1f updated=%s url=%s",
+            scan_s, article.updated, article.abstract_url,
         )
         return article
     except Exception as exc:
+        _logger.info("origin=new status=pdf_error url=%s", article.abstract_url)
         _logger.error(
             "PDF enrichment failed for %s: %s", article.abstract_url, exc
         )
@@ -604,24 +632,28 @@ def matches_category(
     return True
 
 
-def include_article(article: Article) -> bool:
+def include_article(article: Article, origin: str) -> bool:
     """Return True when the article has a code-availability URL from any cascade source.
 
+    origin must be "new" or "cache" to identify where the article came from.
     The enrichment cascade (enrich_from_metadata or enrich_from_pdf) must
     have run before calling this function; it checks repo_found_in which is
     set by the cascade.
+    status=rejected means all cascade stages completed and found no URL;
+    pdf_failed articles must not pass through this function.
     """
     if article.repo_found_in:
         _logger.info(
-            "included: source=%s urls=%s primary=%s published=%s title=%s url=%s",
-            article.repo_found_in, list(article.repo_urls), article.primary_category,
-            article.published, article.title, article.abstract_url,
+            "origin=%s status=included repo_found_in=%s repo_urls=%s repo_context="
+            " updated=%s title=%s url=%s",
+            origin, article.repo_found_in, ";".join(sorted(article.repo_urls)),
+            article.updated, f'"{article.title}"', article.abstract_url,
         )
         return True
     _logger.info(
-        "rejected (no code URL): primary=%s published=%s title=%s url=%s",
-        article.primary_category, article.published, article.title,
-        article.abstract_url,
+        "origin=%s status=rejected repo_found_in= repo_urls= repo_context="
+        " updated=%s title=%s url=%s",
+        origin, article.updated, f'"{article.title}"', article.abstract_url,
     )
     return False
 
@@ -1152,10 +1184,11 @@ def load_processed(
     result: dict[str, ProcessedEntry] = {}
     for article_elem in processed_elem.findall(f"{{{_CAF_NS}}}article"):
         url = article_elem.get("url", "")
+        published = article_elem.get("published", "")
         updated = article_elem.get("updated", "")
         repo_found_in = article_elem.get("repo_found_in", "")
         repo_urls_str = article_elem.get("repo_urls", "")
-        repo_urls = tuple(repo_urls_str.split()) if repo_urls_str else ()
+        repo_urls = tuple(u for u in repo_urls_str.split(";") if u) if repo_urls_str else ()
 
         if start_date is not None and end_date is not None:
             entry_date = _parse_rfc3339_utc_date(updated)
@@ -1163,6 +1196,7 @@ def load_processed(
                 continue
 
         result[url] = ProcessedEntry(
+            published=published,
             updated=updated,
             repo_found_in=repo_found_in,
             repo_urls=repo_urls,
@@ -1180,9 +1214,10 @@ def _build_processed_element(
         entry = processed[url]
         article_elem = ET.SubElement(processed_elem, f"{{{_CAF_NS}}}article")
         article_elem.set("url", url)
+        article_elem.set("published", entry.published)
         article_elem.set("updated", entry.updated)
         article_elem.set("repo_found_in", entry.repo_found_in)
-        article_elem.set("repo_urls", " ".join(sorted(entry.repo_urls)))
+        article_elem.set("repo_urls", ";".join(sorted(entry.repo_urls)))
     return processed_elem
 
 
@@ -1450,6 +1485,16 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
     for a in articles:
         if a.abstract_url in processed:
             entry = processed[a.abstract_url]
+            _logger.info(
+                "origin=cache status=cached repo_found_in=%s repo_urls=%s"
+                " repo_context= published=%s updated=%s title=%s url=%s",
+                entry.repo_found_in,
+                ";".join(sorted(entry.repo_urls)),
+                entry.published,
+                entry.updated,
+                f'"{a.title}"',
+                a.abstract_url,
+            )
             restored.append(a._replace(
                 repo_found_in=entry.repo_found_in,
                 repo_urls=entry.repo_urls,
@@ -1500,8 +1545,15 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
             len(pdf_failed),
         )
 
+    # Keep all_articles for delta-count computation (current_all_urls, n_failed_new).
     all_articles = restored + meta_found + pdf_succeeded + pdf_failed
-    filtered = [a for a in all_articles if include_article(a)]
+    # pdf_failed articles already logged status=pdf_error inside enrich_from_pdf;
+    # they must not reach include_article so status=rejected means only "cascade
+    # completed and found no URL", never "PDF download failed".
+    filtered = (
+        [a for a in restored if include_article(a, origin="cache")]
+        + [a for a in meta_found + pdf_succeeded if include_article(a, origin="new")]
+    )
     n_filtered = len(filtered)
     n_failed_filter = len(all_articles) - n_filtered
     n_comment = sum(1 for a in filtered if a.repo_found_in == "comment")
@@ -1520,6 +1572,19 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
     current_filtered_urls = frozenset(a.abstract_url for a in filtered)
     current_all_urls = frozenset(a.abstract_url for a in all_articles)
     aged_out_filtered_urls = prior_filtered_urls - current_filtered_urls
+    for url in sorted(aged_out_filtered_urls):
+        entry = prior_processed_full[url]
+        # repo_context= is always empty here: context strings are not stored in
+        # ProcessedEntry (adding them would require an atom.xml schema change).
+        _logger.info(
+            "origin=cache status=aged_out repo_found_in=%s repo_urls=%s"
+            " repo_context= published=%s updated=%s url=%s",
+            entry.repo_found_in,
+            ";".join(sorted(entry.repo_urls)),
+            entry.published,
+            entry.updated,
+            url,
+        )
     n_filtered_aged_out = len(aged_out_filtered_urls)
     n_filtered_new = len(current_filtered_urls - prior_filtered_urls)
     n_comment_aged_out = sum(
@@ -1574,6 +1639,7 @@ def main(base_dir: pathlib.Path = pathlib.Path(".")) -> int:
     new_processed = dict(processed)
     for a in meta_found + pdf_succeeded:
         new_processed[a.abstract_url] = ProcessedEntry(
+            published=a.published,
             updated=a.updated,
             repo_found_in=a.repo_found_in,
             repo_urls=a.repo_urls,

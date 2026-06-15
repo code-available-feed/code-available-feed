@@ -33,6 +33,14 @@ If you serve a feed using this project, consider making a pull request to add yo
    |---|---|---|
    | `ARXIV_CATEGORY_ID` | `cs.AI` | Set to any arXiv category, e.g. `cs.CV`. |
    | `ARXIV_CATEGORY_STRICT` | `false` | Set to `true` to restrict to only articles whose primary category matches `ARXIV_CATEGORY_ID`. |
+
+   Normally you only need to set the above variables.
+   Note that if the articles are not restricted to the primary category, and you are subscribed to several such feeds, for example `cs.AI` and `cs.SD`, your feed reader may perform feed item deduplication.
+   
+   The variables below may need to be modified for the categories that have a low frequency of published articles.
+
+   | Variable | Default | Description |
+   |---|---|---|
    | `ARXIV_CONTINUE_ON_API_ERROR` | `true` (in the workflow) | Set to `false` to fail the workflow immediately on any arXiv API error instead of continuing silently. The goal of the silent continuation on arXiv API errors is to avoid frequent pipeline failure email notifications, and instead alert on feed staleness (see `ARXIV_MAX_STALENESS_DAYS`). |
    | `ARXIV_MAX_STALENESS_DAYS` | `10` (in the workflow) | The workflow fails with a staleness alert when the newest feed entry is more than this many calendar days old (e.g. with the default of `10`, an age of `10` days passes and `11` days fails). Set to `-1` to disable the check. Raise this value for low-volume categories where multi-day gaps without new articles are normal. |
    | `ARXIV_MAX_BACKFILL_DAYS` | `8` | The rolling fetch window in days. The API query fetches articles from `[today - ARXIV_MAX_BACKFILL_DAYS, today]`. Must be a positive integer (minimum 1). With the default of 8, Monday's run covers the full prior ISO week plus one extra day, recovering articles submitted after Thursday 14:00 ET that the arXiv announcement schedule delays past the ISO week boundary. |
@@ -48,6 +56,9 @@ If you serve a feed using this project, consider making a pull request to add yo
 
 After setup, the feed URL is `https://{owner}.github.io/{repo}/arxiv/{category}/atom.xml`
 (e.g. `https://marcindulak.github.io/code-available-feed-cs-ai/arxiv/cs.ai/atom.xml`).
+
+> [!NOTE]
+> **Feed reader compatibility:** When an article revises from v1→v2, the feed contains entries with different `<id>` values (versioned URLs) but identical titles. Non-compliant readers that match entries by title instead may not show v2 as a new article if v1 is still retained in the reader's cache.
 
 ## Local development
 

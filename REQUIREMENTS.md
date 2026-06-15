@@ -83,10 +83,9 @@ The discrepancy is intentional: in CI the fail-safe defaults prevent noisy failu
 
 ## Expected Characteristics
 
-The weekly Atom XML file for cs.AI is expected to contain approximately 100 articles (1 in 10 of ~1000 articles per week have a `https://` URL in their comment).
-Based on real pipeline output from mid 2026, each article occupies approximately 3 KB (title, authors, abstract, and structured content block).
-At that rate, 100 articles per week occupy approximately 300 KB; monthly approximately 1 MB; yearly approximately 15 MB per category.
-The 1-in-10 ratio is a best estimate based on observation of the cs.AI arxiv listing page.
+The rolling-window Atom XML file for cs.AI is expected to contain approximately 500 articles (5 in 10 of ~1000 articles per week have a `https://` URL in their comment or abstract or PDF).
+Based on real pipeline output from mid 2026, each article occupies approximately 3 kB (title, authors, abstract, and structured content block).
+At that rate, a rolling 8-day window accumulates approximately 1.5 MB; monthly approximately 5 MB; yearly approximately 70 MB per category.
 
 ## Technical Choices
 
@@ -160,6 +159,10 @@ will fail the pipeline when no new feed item appears for more than the configure
 | Domain allowlist for comment URL filtering | Abstract and PDF filtering already uses an accepted-domain set (FR-002), but comment URLs still accept any `https://` URL; restricting comments to the same accepted-domain set would reduce false positives from journal or institution URLs but may lose project-website links that authors place in comments; deferred until the false-positive rate is measured on real data |
 | RelaxNG schema validation of generated Atom XML | `xmllint --relaxng` with the RFC 4287 schema would catch missing required Atom fields that Python's `xml.etree.ElementTree` and newsboat (libxml2 recovery mode) both silently accept; deferred because embedding the RFC 4287 XML RelaxNG schema requires either converting the compact `.rnc` from Appendix B (needs `trang` or `rnc2rng`, neither in the current apt dependencies) or sourcing a pre-converted `.rng` from a third party, adding supply-chain risk for a validation-only file |
 | `workflow_dispatch` with custom date range | Basic manual trigger is implemented (FR-012) but without date range parameters; running the workflow manually for a past week would allow backfilling gaps caused by runner outages; the custom date range input is deferred as it adds workflow complexity not needed for normal operation |
+
+## Caveats
+
+**Feed reader compliance with Atom specification:** When an article revises from v1→v2, the feed contains entries with different `<id>` values (versioned URLs) but identical titles. According to RFC 4287, feed readers MUST use `<id>` for deduplication and treat different `<id>` values as distinct articles. Non-compliant readers that match entries by title instead may not display v2 as a new article if v1 is still retained in the reader's cache.
 
 ## Abandoned Ideas
 

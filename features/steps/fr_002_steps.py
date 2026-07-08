@@ -1,5 +1,9 @@
 """Step definitions for FR-002: Article inclusion filter with cascading code-URL search."""
 
+import contextlib
+import io
+import json
+
 import src.pipeline_feed
 from behave import given, then, when
 
@@ -52,8 +56,7 @@ def step_article_abstract(context, abstract):
     context.article_abstract = abstract
 
 
-@when("the inclusion filter is applied to the article")
-def step_apply_inclusion_filter(context):
+def _run_inclusion_filter(context):
     """Build an Article, run the category check and enrichment cascade, then filter."""
     article = src.pipeline_feed.Article(
         title="",
@@ -94,6 +97,26 @@ def step_apply_inclusion_filter(context):
     context.article_included = src.pipeline_feed.include_article(article, origin="new")
 
 
+@when("the inclusion filter is applied to the article")
+def step_apply_inclusion_filter(context):
+    _run_inclusion_filter(context)
+
+
+@when("the inclusion filter is applied to the article with log capture")
+def step_apply_inclusion_filter_with_log_capture(context):
+    """Same as the plain step, but captures the JSON logs emitted during the run.
+
+    context.captured_inclusion_log holds the raw log lines, for asserting on
+    diagnostic log lines (e.g. the malformed-candidate-URL log line) that are
+    not otherwise observable through the returned Article.
+    """
+    stdout_buf = io.StringIO()
+    with contextlib.redirect_stdout(stdout_buf):
+        src.pipeline_feed._setup_logging()
+        _run_inclusion_filter(context)
+    context.captured_inclusion_log = stdout_buf.getvalue()
+
+
 @then("the article is included")
 def step_article_is_included(context):
     assert context.article_included, (
@@ -113,4 +136,34 @@ def step_article_repo_found_in(context, expected):
     actual = context.article_result.repo_found_in
     assert actual == expected, (
         f"Expected repo_found_in {expected!r}, got {actual!r}"
+    )
+
+
+@then('the article repo_urls is "{expected}"')
+def step_article_repo_urls_is(context, expected):
+    """Assert repo_urls as a semicolon-joined, sorted string.
+
+    Matches the serialisation build_feed and _build_processed_element already
+    use for repo_urls (";".join(sorted(...))), so scenarios can assert
+    multi-URL results with the same single step used for single-URL ones.
+    """
+    actual = ";".join(sorted(context.article_result.repo_urls))
+    assert actual == expected, (
+        f"Expected repo_urls {expected!r}, got {actual!r}"
+    )
+
+
+@then('the inclusion filter log contains a message containing "{text}"')
+def step_inclusion_filter_log_contains(context, text):
+    """Assert a JSON log line captured by the log-capture When step contains text."""
+    lines = context.captured_inclusion_log.splitlines()
+    for line in lines:
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if text in record.get("message", ""):
+            return
+    raise AssertionError(
+        f"Expected a log message containing {text!r}, got: {context.captured_inclusion_log!r}"
     )

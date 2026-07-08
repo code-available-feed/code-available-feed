@@ -67,6 +67,18 @@ ACCEPTED_REPO_DOMAIN_SUFFIXES: frozenset[str] = frozenset({
     ".github.io",
 })
 
+# Matches markdown link syntax where the link text is itself the same URL as
+# the target, e.g. "[https://x](https://x)" -- a pattern some arxiv abstracts
+# render literally with no whitespace between the two occurrences.  Without
+# this collapse step, the greedy URL-matching regexes below treat the two
+# occurrences as one run and merge them into a single garbled candidate.
+# The backreference (\1) requires an exact match between the two URLs, so
+# this never touches an ordinary markdown link with descriptive text (e.g.
+# "[Project Page](https://x)") or a URL that legitimately embeds another URL
+# as a query parameter (e.g. an OAuth-style redirect link), since neither
+# contains two identical URLs framed by "[...](...)" .
+_MARKDOWN_DUPLICATE_URL_PATTERN = re.compile(r"\[(https?://[^\]\s]+)\]\(\1\)")
+
 _logger = logging.getLogger(__name__)
 
 
@@ -235,7 +247,14 @@ def _is_url_on_accepted_domain(
     accepted_domains: frozenset[str],
     accepted_suffixes: frozenset[str],
 ) -> bool:
-    """Return True when url's hostname matches any accepted domain or suffix."""
+    """Return True when url's hostname matches any accepted domain or suffix.
+
+    Raises ValueError when url is not parseable by urllib.parse.urlparse
+    (e.g. a netloc starting with "[" that is not a valid IPv6 literal); this
+    can happen for a candidate malformed by the regex passes in
+    _extract_candidate_urls.  Callers must catch ValueError rather than
+    treating every candidate as parseable.
+    """
     parsed = urllib.parse.urlparse(url)
     hostname = (parsed.hostname or "").lower()
     if hostname in accepted_domains:
@@ -315,6 +334,27 @@ def _extract_annotation_anchor(
     return " ".join(t for t in captured if t)
 
 
+def _extract_scheme_prefixed_candidates(text: str) -> list[str]:
+    """Return raw https://-prefixed URL candidates found in text.
+
+    Shared by _extract_candidate_urls (abstract/PDF, which also applies a
+    bare-domain pass restricted to accepted domains) and extract_comment_urls
+    (comment URLs accept any domain, so only this scheme-prefixed pass
+    applies; there is no accepted-domain list to build a bare-domain regex
+    from).  text is first passed through _MARKDOWN_DUPLICATE_URL_PATTERN so a
+    markdown-style "[url](url)" duplicate collapses to one occurrence before
+    the greedy https://[^\\s,]+ regex runs; without that collapse the two
+    occurrences (separated by no whitespace) are matched as a single garbled
+    run.  Trailing punctuation from the set .,;:)]> is stripped from each
+    match.
+    """
+    collapsed = _MARKDOWN_DUPLICATE_URL_PATTERN.sub(r"\1", text)
+    return [
+        match.rstrip(".,;:)]>")
+        for match in re.findall(r"https://[^\s,]+", collapsed)
+    ]
+
+
 def _extract_candidate_urls(
     text: str,
     accepted_domains: frozenset[str],
@@ -324,20 +364,23 @@ def _extract_candidate_urls(
 
     Shared by extract_repo_urls (whole abstract text) and
     extract_pdf_repo_urls (per-page PDF text).  Two regex passes are applied:
-    1. https://\\S+ captures scheme-prefixed URLs.
+    1. _extract_scheme_prefixed_candidates captures scheme-prefixed URLs (see
+       its docstring for the markdown-duplicate collapse it applies first).
     2. A bare-domain regex for each accepted domain and suffix captures URLs
        that appear without the https:// scheme (e.g. when LaTeX renders a
-       URL via \\href{url}{icon}).
+       URL via \\href{url}{icon}).  This pass also runs against the
+       markdown-collapsed text, and skips any match that itself contains
+       "://": a schemeless bare-domain match can never legitimately contain a
+       scheme, so one that does means its greedy \\S+ prefix swallowed a
+       preceding scheme-prefixed URL with no separating whitespace; that URL
+       was already captured correctly by pass 1, so the match is spurious.
 
-    Trailing punctuation from the set .,;:)]> is stripped from each match.
     Callers are responsible for deduplication and for filtering results to
     the accepted domain set via _is_url_on_accepted_domain.
     """
-    candidates: list[str] = []
+    candidates = _extract_scheme_prefixed_candidates(text)
 
-    for match in re.findall(r"https://[^\s,]+", text):
-        candidates.append(match.rstrip(".,;:)]>"))
-
+    collapsed = _MARKDOWN_DUPLICATE_URL_PATTERN.sub(r"\1", text)
     bare_parts: list[str] = []
     for domain in sorted(accepted_domains):
         bare_parts.append(re.escape(domain))
@@ -345,7 +388,9 @@ def _extract_candidate_urls(
         bare_parts.append(r"\S+" + re.escape(suffix))
     if bare_parts:
         bare_regex = f"(?:{'|'.join(bare_parts)})/\\S+"
-        for match in re.findall(bare_regex, text):
+        for match in re.findall(bare_regex, collapsed):
+            if "://" in match:
+                continue
             candidates.append(f"https://{match.rstrip('.,;:)]>')}")
 
     return candidates
@@ -355,11 +400,18 @@ def extract_repo_urls(
     text: str,
     accepted_domains: frozenset[str] | None = None,
     accepted_suffixes: frozenset[str] | None = None,
+    source_url: str = "",
 ) -> list[str]:
     """Extract accepted-domain URLs from free-form text (abstract or PDF).
 
     See _extract_candidate_urls for the two regex passes applied.
-    Results are deduplicated and filtered to the accepted domain set.
+    Results are deduplicated and filtered to the accepted domain set.  A
+    candidate that _is_url_on_accepted_domain cannot parse (e.g. a
+    scheme-prefixed URL malformed by the regex passes, see
+    _extract_candidate_urls) is logged at INFO with status=abstract_malformed_url
+    and excluded, rather than raising; source_url identifies the originating
+    article in that log line and defaults to "" for direct/test callers that
+    have no article context.
     """
     if not text:
         return []
@@ -375,7 +427,15 @@ def extract_repo_urls(
         if url in seen:
             continue
         seen.add(url)
-        if _is_url_on_accepted_domain(url, domains, suffixes):
+        try:
+            is_accepted = _is_url_on_accepted_domain(url, domains, suffixes)
+        except ValueError:
+            _logger.info(
+                "origin=new status=abstract_malformed_url candidate=%s url=%s",
+                url, source_url,
+            )
+            continue
+        if is_accepted:
             filtered.append(url)
 
     return filtered
@@ -414,6 +474,7 @@ def enrich_from_metadata(
         article.abstract,
         accepted_domains=accepted_domains,
         accepted_suffixes=accepted_suffixes,
+        source_url=article.abstract_url,
     )
     if abstract_urls:
         urls = sorted(set(abstract_urls))
@@ -441,6 +502,7 @@ def extract_pdf_repo_urls(
     max_pages: int = 10,
     accepted_domains: frozenset[str] | None = None,
     accepted_suffixes: frozenset[str] | None = None,
+    source_url: str = "",
 ) -> tuple[list[str], list[str]]:
     """Extract accepted-domain URLs from PDF pages, stopping before References.
 
@@ -453,6 +515,12 @@ def extract_pdf_repo_urls(
 
     Scanning stops when a page contains a standalone "References" or
     "REFERENCES" line; that page and all subsequent pages are skipped.
+
+    A candidate (from any of the three layers) that _is_url_on_accepted_domain
+    cannot parse is logged at INFO with status=pdf_malformed_url and excluded,
+    rather than raising; source_url identifies the originating article in
+    that log line and defaults to "" for direct/test callers that have no
+    article context.
 
     Returns a tuple (urls, contexts):
       urls:     sorted, deduplicated, domain-filtered URLs.
@@ -501,10 +569,19 @@ def extract_pdf_repo_urls(
 
         page_raw.extend(_extract_candidate_urls(text, domains, suffixes))
 
-        page_accepted = [
-            u for u in page_raw
-            if _is_url_on_accepted_domain(u, domains, suffixes)
-        ]
+        page_accepted: list[str] = []
+        for u in page_raw:
+            try:
+                is_accepted = _is_url_on_accepted_domain(u, domains, suffixes)
+            except ValueError:
+                _logger.info(
+                    "origin=new status=pdf_malformed_url page=%d candidate=%s url=%s",
+                    page_index + 1, u, source_url,
+                )
+                continue
+            if is_accepted:
+                page_accepted.append(u)
+
         for url in page_accepted:
             if url in url_context:
                 continue
@@ -588,6 +665,7 @@ def enrich_from_pdf(
             pdf_bytes,
             accepted_domains=accepted_domains,
             accepted_suffixes=accepted_suffixes,
+            source_url=article.abstract_url,
         )
         scan_s = time.monotonic() - t1
         repo_context = "; ".join(c for c in contexts if c)
@@ -716,7 +794,7 @@ def _fetch_page(url: str) -> tuple[int, bytes]:
         return exc.code, b""
 
 
-def extract_comment_urls(comment: str | None) -> list[str]:
+def extract_comment_urls(comment: str | None, source_url: str = "") -> list[str]:
     """
     Extract all https:// URLs from comment in order of appearance.
 
@@ -724,15 +802,34 @@ def extract_comment_urls(comment: str | None) -> list[str]:
     handle common punctuation that surrounds URLs in prose (e.g. "see
     https://example.com/x.").  Scheme-only results (bare "https://") that
     arise from stripping all content after the scheme — e.g. a comment
-    containing "https://." — are excluded.  Returns an empty list when
-    comment is None or empty.
+    containing "https://." — are excluded.  Comment URLs accept any domain
+    (see FR-002), so unlike extract_repo_urls/extract_pdf_repo_urls there is
+    no accepted-domain check here; a candidate is still validated by
+    urllib.parse.urlparse to reject syntactically invalid URLs (e.g. a
+    literal "[" immediately after the scheme).  A candidate that fails to
+    parse is logged at INFO with status=comment_malformed_url and excluded,
+    rather than raising; source_url identifies the originating article in
+    that log line and defaults to "" for direct/test callers that have no
+    article context.  Returns an empty list when comment is None or empty.
     """
     if not comment:
         return []
-    stripped = [
-        url.rstrip(".,;:)]>") for url in re.findall(r"https://[^\s,]+", comment)
-    ]
-    return [url for url in stripped if url != "https://"]
+
+    urls: list[str] = []
+    for url in _extract_scheme_prefixed_candidates(comment):
+        if url == "https://":
+            continue
+        try:
+            urllib.parse.urlparse(url)
+        except ValueError:
+            _logger.info(
+                "origin=new status=comment_malformed_url candidate=%s url=%s",
+                url, source_url,
+            )
+            continue
+        urls.append(url)
+
+    return urls
 
 
 def parse_entries(body: bytes) -> list[Article]:
@@ -803,7 +900,7 @@ def parse_entries(body: bytes) -> list[Article]:
                 updated=updated or "",
                 abstract=abstract or "",
                 comment=comment,
-                comment_urls=extract_comment_urls(comment),
+                comment_urls=extract_comment_urls(comment, source_url=abstract_url),
             )
         )
     return articles

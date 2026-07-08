@@ -315,6 +315,42 @@ def _extract_annotation_anchor(
     return " ".join(t for t in captured if t)
 
 
+def _extract_candidate_urls(
+    text: str,
+    accepted_domains: frozenset[str],
+    accepted_suffixes: frozenset[str],
+) -> list[str]:
+    """Return raw (undeduplicated, unfiltered) URL candidates found in text.
+
+    Shared by extract_repo_urls (whole abstract text) and
+    extract_pdf_repo_urls (per-page PDF text).  Two regex passes are applied:
+    1. https://\\S+ captures scheme-prefixed URLs.
+    2. A bare-domain regex for each accepted domain and suffix captures URLs
+       that appear without the https:// scheme (e.g. when LaTeX renders a
+       URL via \\href{url}{icon}).
+
+    Trailing punctuation from the set .,;:)]> is stripped from each match.
+    Callers are responsible for deduplication and for filtering results to
+    the accepted domain set via _is_url_on_accepted_domain.
+    """
+    candidates: list[str] = []
+
+    for match in re.findall(r"https://[^\s,]+", text):
+        candidates.append(match.rstrip(".,;:)]>"))
+
+    bare_parts: list[str] = []
+    for domain in sorted(accepted_domains):
+        bare_parts.append(re.escape(domain))
+    for suffix in sorted(accepted_suffixes):
+        bare_parts.append(r"\S+" + re.escape(suffix))
+    if bare_parts:
+        bare_regex = f"(?:{'|'.join(bare_parts)})/\\S+"
+        for match in re.findall(bare_regex, text):
+            candidates.append(f"https://{match.rstrip('.,;:)]>')}")
+
+    return candidates
+
+
 def extract_repo_urls(
     text: str,
     accepted_domains: frozenset[str] | None = None,
@@ -322,13 +358,7 @@ def extract_repo_urls(
 ) -> list[str]:
     """Extract accepted-domain URLs from free-form text (abstract or PDF).
 
-    Two regex passes are applied:
-    1. https://\\S+ captures scheme-prefixed URLs.
-    2. A bare-domain regex for each accepted domain and suffix captures URLs
-       that appear without the https:// scheme (e.g. when LaTeX renders a
-       URL via \\href{url}{icon}).
-
-    Trailing punctuation from the set .,;:)]> is stripped from each match.
+    See _extract_candidate_urls for the two regex passes applied.
     Results are deduplicated and filtered to the accepted domain set.
     """
     if not text:
@@ -337,20 +367,7 @@ def extract_repo_urls(
     domains = accepted_domains if accepted_domains is not None else ACCEPTED_REPO_DOMAINS
     suffixes = accepted_suffixes if accepted_suffixes is not None else ACCEPTED_REPO_DOMAIN_SUFFIXES
 
-    raw_urls: list[str] = []
-
-    for match in re.findall(r"https://[^\s,]+", text):
-        raw_urls.append(match.rstrip(".,;:)]>"))
-
-    bare_parts: list[str] = []
-    for domain in sorted(domains):
-        bare_parts.append(re.escape(domain))
-    for suffix in sorted(suffixes):
-        bare_parts.append(r"\S+" + re.escape(suffix))
-    if bare_parts:
-        bare_regex = f"(?:{'|'.join(bare_parts)})/\\S+"
-        for match in re.findall(bare_regex, text):
-            raw_urls.append(f"https://{match.rstrip('.,;:)]>')}")
+    raw_urls = _extract_candidate_urls(text, domains, suffixes)
 
     seen: set[str] = set()
     filtered: list[str] = []
@@ -482,18 +499,7 @@ def extract_pdf_repo_urls(
                                     float(v) for v in rect
                                 )  # type: ignore[assignment]
 
-        for match in re.findall(r"https://[^\s,]+", text):
-            page_raw.append(match.rstrip(".,;:)]>"))
-
-        bare_parts: list[str] = []
-        for domain in sorted(domains):
-            bare_parts.append(re.escape(domain))
-        for suffix in sorted(suffixes):
-            bare_parts.append(r"\S+" + re.escape(suffix))
-        if bare_parts:
-            bare_regex = f"(?:{'|'.join(bare_parts)})/\\S+"
-            for match in re.findall(bare_regex, text):
-                page_raw.append(f"https://{match.rstrip('.,;:)]>')}")
+        page_raw.extend(_extract_candidate_urls(text, domains, suffixes))
 
         page_accepted = [
             u for u in page_raw

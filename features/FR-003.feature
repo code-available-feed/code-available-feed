@@ -6,7 +6,9 @@ Feature: FR-003 Per-article field extraction from the arxiv API response
   abstract page URL (https), the first publication date, the latest version
   date, the abstract text (from atom:summary), and all "https://" URLs from
   the comment in order of appearance with characters from the
-  trailing-punctuation strip set stripped from each URL.
+  trailing-punctuation strip set stripped from each URL. A candidate that is
+  not a parseable URL is excluded and logged as diagnostic-only, rather than
+  raising.
 
   Scenario: Extract all recorded fields from a representative API entry
     Given an arxiv API entry with:
@@ -72,6 +74,18 @@ Feature: FR-003 Per-article field extraction from the arxiv API response
     When the pipeline extracts the comment URLs
     Then the recorded comment URLs in order are:
       | https://example.com/path?q=1&r=2 |
+
+  Scenario: A comment URL that fails to parse is logged as malformed and excluded, not crashed
+    Given an article whose comment is "Code available at https://[bad-ipv6/repo for testing."
+    When the pipeline extracts the comment URLs with log capture
+    Then the recorded comment URLs are empty
+    And the comment extraction log contains a message containing "status=comment_malformed_url"
+
+  Scenario: A comment URL containing another URL as a query parameter is captured whole, not truncated
+    Given an article whose comment is "See https://example.com/redirect?url=https://other.example.com/page for details."
+    When the pipeline extracts the comment URLs
+    Then the recorded comment URLs in order are:
+      | https://example.com/redirect?url=https://other.example.com/page |
 
   Scenario: Updated equals published for a v1 article
     Given an arxiv API entry whose atom:published is "2026-05-12T11:30:00Z" and atom:updated is "2026-05-12T11:30:00Z"

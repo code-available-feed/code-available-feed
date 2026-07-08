@@ -180,3 +180,76 @@ Feature: FR-002 Article inclusion filter with cascading code-URL search
     When the inclusion filter is applied to the article
     Then the article is included
     And the article repo_found_in is "comment"
+
+  # --- Malformed abstract URL scenarios (reproduce a production crash and a ---
+  # --- data-corruption defect in _extract_candidate_urls; expected to fail ---
+  # --- until the extraction fix lands) ---
+
+  Scenario: Markdown-style duplicate URL against an accepted domain suffix does not crash the filter
+    Given the environment variable ARXIV_CATEGORY_STRICT is "false"
+    And the accepted repo domain suffixes include ".pages.example.com"
+    And an article has primary category "cs.AI"
+    And the article comment element is "absent"
+    And the article abstract is "Project page: [https://user.pages.example.com/project](https://user.pages.example.com/project)."
+    When the inclusion filter is applied to the article
+    Then the article is included
+    And the article repo_found_in is "abstract"
+    And the article repo_urls is "https://user.pages.example.com/project"
+
+  Scenario: Markdown-style duplicate URL against an accepted exact domain yields the clean URL
+    Given the environment variable ARXIV_CATEGORY_STRICT is "false"
+    And the accepted repo domains include "code.example.com"
+    And an article has primary category "cs.AI"
+    And the article comment element is "absent"
+    And the article abstract is "Code: [https://code.example.com/user/repo](https://code.example.com/user/repo)."
+    When the inclusion filter is applied to the article
+    Then the article is included
+    And the article repo_found_in is "abstract"
+    And the article repo_urls is "https://code.example.com/user/repo"
+
+  Scenario: Two independent markdown-style duplicate URLs in the same abstract are both extracted cleanly
+    Given the environment variable ARXIV_CATEGORY_STRICT is "false"
+    And the accepted repo domains include "code.example.com"
+    And the accepted repo domains include "forge.example.com"
+    And an article has primary category "cs.AI"
+    And the article comment element is "absent"
+    And the article abstract is "Code: [https://code.example.com/a](https://code.example.com/a). Mirror: [https://forge.example.com/b](https://forge.example.com/b)."
+    When the inclusion filter is applied to the article
+    Then the article is included
+    And the article repo_found_in is "abstract"
+    And the article repo_urls is "https://code.example.com/a;https://forge.example.com/b"
+
+  # --- Malformed candidate URL diagnostic logging (FR-013 log format) ---
+  #
+  # This uses a URL that is unparseable on its own terms (an unbalanced "["
+  # right after the scheme, which urlparse rejects as an invalid IPv6 host),
+  # deliberately independent of the markdown-duplicate-URL scenarios above:
+  # once those are fixed to extract a clean candidate, they must stop
+  # producing any malformed candidate at all, so they cannot serve as a
+  # stable regression test for this logging behavior.
+
+  Scenario: A candidate URL that fails to parse is logged as malformed and excluded, not crashed
+    Given the environment variable ARXIV_CATEGORY_STRICT is "false"
+    And an article has primary category "cs.AI"
+    And the article comment element is "absent"
+    And the article abstract is "Code available at https://[bad-ipv6/repo for testing."
+    When the inclusion filter is applied to the article with log capture
+    Then the inclusion filter log contains a message containing "status=abstract_malformed_url"
+    And the article is excluded
+
+  # --- Regression: a URL that legitimately embeds another URL as a query ---
+  # --- parameter must be captured whole, not truncated at the embedded ---
+  # --- "https://".  This is the case the markdown-duplicate-URL fix above ---
+  # --- must not break: unlike "[url](url)", there is no "[...](...)" ---
+  # --- framing here, so _MARKDOWN_DUPLICATE_URL_PATTERN must not match it. ---
+
+  Scenario: A URL containing another URL as a query parameter is captured whole, not truncated
+    Given the environment variable ARXIV_CATEGORY_STRICT is "false"
+    And the accepted repo domains include "code.example.com"
+    And an article has primary category "cs.AI"
+    And the article comment element is "absent"
+    And the article abstract is "See https://code.example.com/redirect?url=https://other.example.com/page for details."
+    When the inclusion filter is applied to the article
+    Then the article is included
+    And the article repo_found_in is "abstract"
+    And the article repo_urls is "https://code.example.com/redirect?url=https://other.example.com/page"

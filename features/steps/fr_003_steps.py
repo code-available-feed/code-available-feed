@@ -1,6 +1,8 @@
 """Step definitions for FR-003: Per-article field extraction from the arxiv API response."""
 
+import contextlib
 import io
+import json
 import xml.etree.ElementTree as ET
 
 from behave import given, then, when
@@ -148,6 +150,23 @@ def step_extract_comment_urls(context):
     )
 
 
+@when("the pipeline extracts the comment URLs with log capture")
+def step_extract_comment_urls_with_log_capture(context):
+    """Same as the plain step, but captures the JSON logs emitted during the call.
+
+    context.captured_comment_log holds the raw log lines, for asserting on
+    diagnostic log lines (e.g. the malformed-candidate-URL log line) that are
+    not otherwise observable through the returned URL list.
+    """
+    stdout_buf = io.StringIO()
+    with contextlib.redirect_stdout(stdout_buf):
+        src.pipeline_feed._setup_logging()
+        context.extracted_urls = src.pipeline_feed.extract_comment_urls(
+            context.article_comment
+        )
+    context.captured_comment_log = stdout_buf.getvalue()
+
+
 @then('the recorded title is "{expected}"')
 def step_recorded_title(context, expected):
     actual = context.extracted_article.title
@@ -248,4 +267,27 @@ def step_recorded_comment_urls_table(context):
     actual = context.extracted_urls
     assert actual == expected, (
         f"Expected comment URLs {expected!r}, got {actual!r}"
+    )
+
+
+@then("the recorded comment URLs are empty")
+def step_recorded_comment_urls_empty(context):
+    assert context.extracted_urls == [], (
+        f"Expected no comment URLs, got {context.extracted_urls!r}"
+    )
+
+
+@then('the comment extraction log contains a message containing "{text}"')
+def step_comment_extraction_log_contains(context, text):
+    """Assert a JSON log line captured by the log-capture When step contains text."""
+    lines = context.captured_comment_log.splitlines()
+    for line in lines:
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if text in record.get("message", ""):
+            return
+    raise AssertionError(
+        f"Expected a log message containing {text!r}, got: {context.captured_comment_log!r}"
     )

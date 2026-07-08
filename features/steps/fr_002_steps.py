@@ -167,3 +167,17 @@ def step_inclusion_filter_log_contains(context, text):
     raise AssertionError(
         f"Expected a log message containing {text!r}, got: {context.captured_inclusion_log!r}"
     )
+
+
+@then('the inclusion filter log does not contain a message containing "{text}"')
+def step_inclusion_filter_log_does_not_contain(context, text):
+    """Assert no JSON log line captured by the log-capture When step contains text."""
+    lines = context.captured_inclusion_log.splitlines()
+    for line in lines:
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        assert text not in record.get("message", ""), (
+            f"Expected no log message containing {text!r}, but found: {line!r}"
+        )

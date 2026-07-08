@@ -253,3 +253,31 @@ Feature: FR-002 Article inclusion filter with cascading code-URL search
     Then the article is included
     And the article repo_found_in is "abstract"
     And the article repo_urls is "https://code.example.com/redirect?url=https://other.example.com/page"
+
+  # --- Diagnostic logging for valid URLs on domains outside the accepted ---
+  # --- list, to spot repository providers worth adding to ACCEPTED_REPO_DOMAINS ---
+  # --- / ACCEPTED_REPO_DOMAIN_SUFFIXES.  The second scenario is a single, ---
+  # --- deliberate exception to the "never use real domain names in tests" ---
+  # --- rule: it exercises the real production ACCEPTED_REPO_DOMAINS default ---
+  # --- (no domain override step), so it must use an actually-accepted real ---
+  # --- domain rather than an injected fictitious one. ---
+
+  Scenario: A syntactically valid URL on a domain outside the accepted list is logged for review
+    Given the environment variable ARXIV_CATEGORY_STRICT is "false"
+    And an article has primary category "cs.AI"
+    And the article comment element is "absent"
+    And the article abstract is "Code at https://code.example.com/user/repo for the curious."
+    When the inclusion filter is applied to the article with log capture
+    Then the inclusion filter log contains a message containing "status=abstract_rejected_domain_url"
+    And the inclusion filter log contains a message containing "hostname=code.example.com"
+    And the article is excluded
+
+  Scenario: A URL on a genuinely accepted domain does not trigger the rejected-domain log line
+    Given the environment variable ARXIV_CATEGORY_STRICT is "false"
+    And an article has primary category "cs.AI"
+    And the article comment element is "absent"
+    And the article abstract is "Code at https://github.com/example-user/example-repo for the curious."
+    When the inclusion filter is applied to the article with log capture
+    Then the inclusion filter log does not contain a message containing "status=abstract_rejected_domain_url"
+    And the article is included
+    And the article repo_found_in is "abstract"

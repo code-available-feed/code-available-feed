@@ -409,9 +409,12 @@ def extract_repo_urls(
     candidate that _is_url_on_accepted_domain cannot parse (e.g. a
     scheme-prefixed URL malformed by the regex passes, see
     _extract_candidate_urls) is logged at INFO with status=abstract_malformed_url
-    and excluded, rather than raising; source_url identifies the originating
-    article in that log line and defaults to "" for direct/test callers that
-    have no article context.
+    and excluded, rather than raising.  A candidate that parses but whose
+    hostname is not in the accepted domain/suffix set is logged at INFO with
+    status=abstract_rejected_domain_url and excluded; see that log line for
+    the aggregation use case.  source_url identifies the originating article
+    in both log lines and defaults to "" for direct/test callers that have no
+    article context.
     """
     if not text:
         return []
@@ -437,6 +440,17 @@ def extract_repo_urls(
             continue
         if is_accepted:
             filtered.append(url)
+        else:
+            # Diagnostic only: a syntactically valid URL whose hostname is
+            # not in ACCEPTED_REPO_DOMAINS / ACCEPTED_REPO_DOMAIN_SUFFIXES.
+            # Aggregate across a log file to spot repository providers worth
+            # adding to the accepted set, e.g.:
+            #   grep status=abstract_rejected_domain_url | grep -oP 'hostname=\S+' | sort | uniq -c | sort -rn
+            hostname = urllib.parse.urlparse(url).hostname or ""
+            _logger.info(
+                "origin=new status=abstract_rejected_domain_url hostname=%s candidate=%s url=%s",
+                hostname, url, source_url,
+            )
 
     return filtered
 
@@ -518,8 +532,11 @@ def extract_pdf_repo_urls(
 
     A candidate (from any of the three layers) that _is_url_on_accepted_domain
     cannot parse is logged at INFO with status=pdf_malformed_url and excluded,
-    rather than raising; source_url identifies the originating article in
-    that log line and defaults to "" for direct/test callers that have no
+    rather than raising.  A candidate that parses but whose hostname is not
+    in the accepted domain/suffix set is logged at INFO with
+    status=pdf_rejected_domain_url and excluded; see that log line for the
+    aggregation use case.  source_url identifies the originating article in
+    both log lines and defaults to "" for direct/test callers that have no
     article context.
 
     Returns a tuple (urls, contexts):
@@ -581,6 +598,17 @@ def extract_pdf_repo_urls(
                 continue
             if is_accepted:
                 page_accepted.append(u)
+            else:
+                # Diagnostic only: a syntactically valid URL whose hostname
+                # is not in ACCEPTED_REPO_DOMAINS / ACCEPTED_REPO_DOMAIN_SUFFIXES.
+                # Aggregate across a log file to spot repository providers
+                # worth adding to the accepted set, e.g.:
+                #   grep status=pdf_rejected_domain_url | grep -oP 'hostname=\S+' | sort | uniq -c | sort -rn
+                hostname = urllib.parse.urlparse(u).hostname or ""
+                _logger.info(
+                    "origin=new status=pdf_rejected_domain_url page=%d hostname=%s candidate=%s url=%s",
+                    page_index + 1, hostname, u, source_url,
+                )
 
         for url in page_accepted:
             if url in url_context:

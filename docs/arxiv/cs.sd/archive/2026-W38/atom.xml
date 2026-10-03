@@ -1,0 +1,1529 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:code-available-feed="tag:code-available-feed.github.io,2026:atom-extensions">
+  <title>cs.SD strict=false code-available-feed/code-available-feed</title>
+  <id>https://code-available-feed.github.io/code-available-feed/arxiv/cs.sd/atom.xml</id>
+  <updated>2026-09-17T14:50:12Z</updated>
+  <link rel="self" type="application/atom+xml" href="https://code-available-feed.github.io/code-available-feed/arxiv/cs.sd/atom.xml" />
+  <link rel="alternate" type="text/html" href="https://github.com/code-available-feed/code-available-feed" />
+  <entry>
+    <title>[eess.AS] Model-Agnostic and Language-Agnostic Voice Pipeline Improvement for the Agriculture Domain</title>
+    <author>
+      <name>Aakash Singh</name>
+    </author>
+    <author>
+      <name>Lakshmi Pedapudi</name>
+    </author>
+    <author>
+      <name>Chandrashekar M S</name>
+    </author>
+    <author>
+      <name>Sanyam Singh</name>
+    </author>
+    <author>
+      <name>Naga Ganesh</name>
+    </author>
+    <author>
+      <name>Vineet Singh</name>
+    </author>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.20504v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.20504v1" />
+    <published>2026-09-17T14:50:12Z</published>
+    <updated>2026-09-17T14:50:12Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Aakash Singh et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;FarmerChat is Digital Green&amp;#x27;s AI-powered agricultural advisory assistant for smallholder farmers, who access it in their own language through text, voice, or photographs. Voice is a critical channel for this population, yet field-recorded speech is challenging for general-purpose automatic speech recognition (ASR) because recordings frequently contain machinery noise, background media, competing speakers, and domain-specific agricultural vocabulary. These conditions disproportionately affect crop, pest, chemical, and quantity terms that carry the meaning of a farmer&amp;#x27;s query.
+  We present a modular, model-agnostic pipeline for improving ASR quality in FarmerChat without fine-tuning or replacing the underlying ASR model. The pipeline combines gated audio enhancement, speaker diarization and target-speaker selection, ASR, domain-aware correction using a weighted agricultural lexicon, and a quality gate for detecting unreliable transcripts. Only the diarization stage is fine-tuned; all other stages use off-the-shelf models behind common interfaces.
+  We evaluate the pipeline on human-annotated FarmerChat recordings in Hindi, Telugu, and Odia using word error rate (WER) and a domain-weighted error rate that gives greater importance to agricultural terminology. The largest improvements occur on multi-speaker recordings, where target-speaker selection prevents competing speech from entering the transcript. Across the full corpus, the pipeline reduces WER by 16-23% relative on three cloud ASR models and by 5% on an on-device model. On multi-speaker recordings, the reductions are 32-42% for the cloud models and 16% for the on-device model. All reported reductions are statistically significant. These results show that targeted preprocessing, speaker selection, and domain-aware post-processing can substantially improve agricultural speech transcription while preserving the underlying ASR model.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;20 tables, 11 figures, 23 pages&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[eess.AS] State-Space-Based FIR Filtering on a Quantum Computer</title>
+    <author>
+      <name>Roope Salmi</name>
+    </author>
+    <author>
+      <name>Davide Rocchesso</name>
+    </author>
+    <author>
+      <name>Vesa Välimäki</name>
+    </author>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.20331v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.20331v1" />
+    <published>2026-09-17T13:04:29Z</published>
+    <updated>2026-09-17T13:04:29Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Roope Salmi et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Many signal processing tasks require intensive computations. Quantum computing promises to accelerate certain tasks, but algorithms must be designed around the limitations of quantum mechanics. This paper provides a quantum implementation of finite impulse response (FIR) filters, which are a widely used tool in classical signal processing. The filter can be parallelized and composed as part of larger quantum algorithms, with potential for speedups using quantum amplitude estimation and future fault-tolerant quantum hardware. To accomplish these properties, we introduce a state-space framework wherein sample-based signal processing is performed with unitary quantum circuits. We present the quantum delay gate as the quantum analog of the delay line in discrete-time signal processing. Unitary circuits intrinsically describe lossless systems, but we also implement lowpass and other bounded filters by emulating a projection operator. The FIR filter implementation is tested and demonstrated with a quantum circuit simulator.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Submitted to ICASSP 2027&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.CL] Reading Emotions in the Token Space: Discriminative Adaptation of SpeechLLMs for Emotion Recognition</title>
+    <author>
+      <name>Hasindri Watawana</name>
+    </author>
+    <author>
+      <name>Sergio Burdisso</name>
+    </author>
+    <author>
+      <name>Esaú Villatoro-Tello</name>
+    </author>
+    <author>
+      <name>Manjunath K E</name>
+    </author>
+    <author>
+      <name>Kadri Hacioglu</name>
+    </author>
+    <author>
+      <name>Petr Motlicek</name>
+    </author>
+    <author>
+      <name>Andreas Stolcke</name>
+    </author>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.20081v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.20081v1" />
+    <published>2026-09-17T11:38:44Z</published>
+    <updated>2026-09-17T11:38:44Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Hasindri Watawana et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;SpeechLLMs have shown strong potential for emotion recognition, yet they read the predicted emotion off a generative decoder not suited for classification: it can emit labels outside the target set and favors frequent classes. We propose a discriminative adaptation that reads the final prompt token&amp;#x27;s hidden state through a classification head, producing a label in one forward pass without modifying the backbone. Because this readout starts from the hidden state the model would otherwise decode, it gives a controlled comparison of generative and discriminative inference in an otherwise identical speechLLM. We keep the head a single linear layer, trading little accuracy for interpretability: each emotion becomes one direction in the LLM output token space, revealing associated tokens. On IEMOCAP, across two speechLLM architectures, it improves Macro F1 and removes hallucinations, with largest gains on realistic ASR transcripts. Our analysis reveals that these emotion directions encode indirect associations mirroring biases in web-scale text.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] CircleMatch: Prototype Matching with Circular Temporal Statistics for Tiny Keyword Spotting</title>
+    <author>
+      <name>Jiajun Sun</name>
+    </author>
+    <author>
+      <name>Zhe Gao</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.20070v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.20070v1" />
+    <published>2026-09-17T11:24:15Z</published>
+    <updated>2026-09-17T11:24:15Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Jiajun Sun, Zhe Gao&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Keyword spotting (KWS), the task of identifying predefined words in speech, is a core capability of voice-enabled devices. Achieving high KWS accuracy under tight parameter budgets across different vocabulary sizes remains challenging. We present CircleMatch, a matching framework enabling KWS with very few parameters. Its encoder independently compresses frequency bands and fuses them into frame features. These features are then matched against learned class-specific prototypes to produce temporal response curves. Parameter-free circular aggregation encodes time as angles and summarizes response distributions and relative timing for classification. We develop four tiny variants, Circle-D4, Circle-D8, Circle-D16, and Circle-D32, ranging from approximately 1k to 7k parameters in the 12-class setting. Experiments with multiple random seeds on Speech Commands v1/v2 and the English and Spanish Micro subsets of the Multilingual Spoken Words Corpus demonstrate competitive accuracy with tiny models. Our qualitative analysis further suggests approximate shift equivariance of prototype responses and adaptation to temporal compression. Code and model weights are available at https://github.com/ora942878/CircleMatch.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;5 pages, 4 figures, 2 tables&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[eess.AS] Foreground Voice Activity Detection: Learning Speaker Selectivity from Supervision</title>
+    <author>
+      <name>Guangzhao Yang</name>
+    </author>
+    <author>
+      <name>Muhammad Huzaifah</name>
+    </author>
+    <author>
+      <name>Yu Pan</name>
+    </author>
+    <author>
+      <name>Jinya Sakurai</name>
+    </author>
+    <author>
+      <name>Ningjie Bai</name>
+    </author>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.19856v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.19856v1" />
+    <published>2026-09-17T08:07:04Z</published>
+    <updated>2026-09-17T08:07:04Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Guangzhao Yang et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Voice activity detection (VAD) fronts most voice-agent pipelines, yet production detectors treat all human speech, background talkers included, as valid activity; in crowded settings this floods recognition, stalls turn-taking, and triggers false barge-in. We formalize Foreground VAD (FVAD): a frame-synchronous, enrollment-free task in which only the dominant speaker, defined by sustained presence rather than instantaneous loudness, is positive, and which reduces to conventional VAD when a single speaker is present. We show that foreground selectivity is largely governed by training supervision: the crucial ingredient is an augmentation recipe pairing foreground-only labels with competing-speaker mixing, generated fully automatically without human annotation. To quantify selectivity we introduce the Background False-Alarm Rate (BG-FAR), gated by foreground F1, and build a controlled benchmark, Mix-Interference, complemented by an adapted VOiCES for real-world far-field evaluation. Across equal-size backbones, Mamba and LSTM perform on par while a longer-context attention model is no better, suggesting that training supervision plays a substantially larger role than temporal modeling capacity in achieving foreground selectivity. The resulting lightweight streaming model, Mamba-FVAD, outperforms commercial VADs and enrollment-based speaker-aware systems in foreground selectivity while staying competitive on conventional VAD, at 1-2 ms per-frame CPU latency.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[eess.AS] GrainSpeech: Less Context, More Detail for Compact Speech Synthesis</title>
+    <author>
+      <name>Zitao Liang</name>
+    </author>
+    <author>
+      <name>Chang Gao</name>
+    </author>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.18856v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.18856v1" />
+    <published>2026-09-16T15:59:20Z</published>
+    <updated>2026-09-16T15:59:20Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Zitao Liang, Chang Gao&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Compact acoustic models face a challenging quality-capacity trade-off. We investigate two factors in this regime: encoder context and Mel-spectrogram supervision. A receptive-field-scaling study shows that expanding self-attention beyond 15 phonemes provides no consistent gains in pitch, energy, or duration prediction. Guided by this finding, we introduce a fixed-receptive-field convolutional encoder that reduces the respective prediction errors by 36.0%, 17.3%, and 3.4%. We further show that directly transferring image-domain gradient-variance supervision restores fine-scale variation but degrades predicted quality, motivating a Mel-specific formulation with axis-specific gradients, overlapping local statistics, and log-domain variance matching. GrainSpeech contains only 264.8K parameters and achieves 17.9x real-time Mel generation on a microcontroller (MCU), while attaining UTMOS scores comparable to substantially larger models with less than 1.5% of their parameters. Source code and demos are available at https://github.com/lab-emi/GrainSpeech.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Multi-Teacher Distillation for Cross-Domain Streaming Electrolaryngeal Speech Encoding</title>
+    <author>
+      <name>Benedikt Mayrhofer</name>
+    </author>
+    <author>
+      <name>Enrique Orozco Olivares</name>
+    </author>
+    <author>
+      <name>Franz Pernkopf</name>
+    </author>
+    <author>
+      <name>Philipp Aichinger</name>
+    </author>
+    <author>
+      <name>Martin Hagmüller</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.18686v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.18686v1" />
+    <published>2026-09-16T14:00:38Z</published>
+    <updated>2026-09-16T14:00:38Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Benedikt Mayrhofer et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Self-supervised learning (SSL) has improved speech representations, yet performance degrades in pathological domains such as electrolaryngeal (EL) speech, and the computational footprint of SSL models limits their applicability in real-time, on-device deployment. We propose a multi-teacher knowledge distillation framework to train a lightweight, streaming content encoder that generalizes across healthy (HE) and EL speech. Two teachers are distilled progressively: a frozen SSL model providing discrete phonetic cluster targets from HE speech, and an EL-fine-tuned speech recognition model supplying continuous bottleneck feature targets. Evaluated via downstream speech recognition, our approach reduces the EL word error rate to 21.2%, compared to 39.3% for the strongest zero-shot SSL baseline. Among causal convolutional, Transformer, Conformer, and Mamba-based student architectures, a Mel-Conformer achieves the best combination of EL accuracy and computational efficiency. The final encoder contains 21.9,M parameters and runs at a real-time factor of 0.30 under ONNX Runtime on a single CPU core.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;7 pages, 4 figures, 4 tables. Accepted at IEEE Spoken Language Technology Workshop (SLT) 2026&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.CL] HearInContext: A Benchmark for Implicit Context in Speech Recognition</title>
+    <author>
+      <name>Yifan Gao</name>
+    </author>
+    <author>
+      <name>Yao Tian</name>
+    </author>
+    <author>
+      <name>Hongbin Suo</name>
+    </author>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.18680v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.18680v1" />
+    <published>2026-09-16T13:56:13Z</published>
+    <updated>2026-09-16T13:56:13Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Yifan Gao et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Contextual ASR can benefit from semantic cues or from target words explicitly provided in the context. We introduce HearInContext, a Mandarin--English benchmark that pairs shared synthetic speech with assistant replies supporting different interpretations. The benchmark comprises 3,764 semantic test cases built around homophones. Implicit contexts exclude candidate words; explicit contexts name the target. No-context and unrelated-context controls measure the benefit of relevant history and sensitivity to irrelevant history. Context-capable models benefit from implicit cues but achieve higher target recall with explicit hints. Fine-tuning Qwen3-ASR-1.7B improves implicit-context target recall by 11.0 and 11.5 percentage points in Mandarin and English, respectively, while absolute CER/WER changes on AISHELL-1 and LibriSpeech remain below 0.1 percentage points. Gains extend to explicit conditions excluded from fine-tuning and to Mandarin hotword recognition on real recordings.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] VoiceTrace: A Benchmark and Retrieval Framework for Who-Said-What Speech Retrieval</title>
+    <author>
+      <name>Aaron Yee</name>
+    </author>
+    <author>
+      <name>Fengjie Lu</name>
+    </author>
+    <author>
+      <name>Jiarui Hai</name>
+    </author>
+    <author>
+      <name>Chenang Jiang</name>
+    </author>
+    <author>
+      <name>Helin Wang</name>
+    </author>
+    <author>
+      <name>Siwei Tu</name>
+    </author>
+    <author>
+      <name>Weitao You</name>
+    </author>
+    <author>
+      <name>Lingyun Sun</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.18521v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.18521v1" />
+    <published>2026-09-16T11:49:45Z</published>
+    <updated>2026-09-16T11:49:45Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Aaron Yee et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Speech retrieval has become increasingly important as spoken content continues to grow across meetings, lectures, podcasts, and videos. Existing benchmarks and models have advanced semantic search over spoken content, but largely focus on \emph{what} is said while overlooking \emph{who} says it. In many real-world scenarios, however, users need to retrieve speech based jointly on semantic content and a target speaker, where the speaker may be specified naturally through a reference speech utterance rather than a predefined identity. To address this gap, we introduce \textbf{VoiceTrace-Bench}, a benchmark for hybrid speech retrieval in which each query combines text specifying \emph{what} to retrieve with reference speech specifying \emph{who} to retrieve. This setting requires models to integrate complementary semantic and speaker information directly from heterogeneous query inputs. Motivated by the joint audio-text modeling capabilities of audio-language models (ALMs), we develop \textbf{VoiceTrace}, a two-stage retrieval framework consisting of \textbf{VoiceTrace-Emb}, an embedding model that learns unified representations for efficient large-scale retrieval, and \textbf{VoiceTrace-Reranker}, a reranking model that jointly examines each query--candidate pair for fine-grained relevance estimation. Experiments show that VoiceTrace achieves state-of-the-art performance on established semantic speech retrieval benchmarks, while substantially outperforming cascade-based approaches on VoiceTrace-Bench, demonstrating its effectiveness for both conventional semantic retrieval and the new hybrid retrieval setting.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Look Less, Hear Better: Jointly Rewarded GRPO for Streaming ASR</title>
+    <author>
+      <name>Xiuwen Zheng</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.18333v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.18333v1" />
+    <published>2026-09-16T08:55:40Z</published>
+    <updated>2026-09-16T08:55:40Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Xiuwen Zheng&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Streaming automatic speech recognition (ASR) must be judged jointly on what it transcribes and on how quickly it commits each word. Delayed streams modeling (DSM) has become the dominant paradigm for streaming large audio-language models, exposing a structural delay $τ$ that bounds the decoder&amp;#x27;s lookahead. We show that $τ$ is a poor proxy for user-perceived latency, and that the alignment-based supervision of DSM leaves latency on the table: the same forced-aligned transcript is used at every $τ$, forcing the model to withhold words it could already commit. We introduce AWED, a word-level emission-delay metric defined relative to the acoustic end of each word, and post-train a DSM recognizer with GRPO under a reward that scores transcription accuracy and measured delay jointly. Trained at a single operating point ($τ=6$ frames), our model dominates both its supervised fine-tuning initialization and the Voxtral Realtime backbone across all evaluated lookahead budgets: it cuts WER by 30.8\% relative at an 80\,ms structural delay, and by 5.7\% relative at 480\,ms while lowering median AWED from 1.17\,s to 1.04\,s. Latency-rewarded post-training thus advances the accuracy--latency Pareto frontier of streaming ASR without architectural change.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] CPR: Combining global composing, local performing and full-sequence refining in piano rendering with continuous autoregressive modelling</title>
+    <author>
+      <name>Chong Jing</name>
+    </author>
+    <author>
+      <name>Junan Zhang</name>
+    </author>
+    <author>
+      <name>Zhizheng Wu</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.18216v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.18216v1" />
+    <published>2026-09-16T06:46:00Z</published>
+    <updated>2026-09-16T06:46:00Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Chong Jing et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Prompt-conditioned piano MIDI-to-Music rendering aims to faithfully render target notes while reproducing the timbre of a reference recording. Existing approaches primarily follow two paradigms: autoregressive (AR) modeling and flow matching (or diffusion). Discrete-codec AR models provide causal temporal modeling, but quantization can discard acoustic detail. Flow matching better preserves acoustic structure in the cost of full-sequence attention costs and worse semantic structure. Continuous autoregressive models operate directly on continuous representations. It not only combines the condition-following ability of AR models and distribution-modeling capacity of flow matching but also bypasses the quantization bottleneck with lower computational costs. Building on this principle, we present Composer--Performer--Refiner (CPR) framework. Composer autoregressively predicts continuous hidden states, Performer generates 24kHz acoustic latents through local flow matching and Refiner then upsamples the waveform to 48 kHz. We further introduce Bottlenecked Representation Alignment (BREPA) and Modality--Time RoPE (MT-RoPE) to strengthen musical semantic structure in Composer hidden states and temporal alignments across modalities. Codes are available at https://github.com/FEAfeatherTHER/CPR_official&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.HC] Encypher: Shared Agency and Social Presence in Collaborative Music Generation for Dance Cyphers</title>
+    <author>
+      <name>Zhixing Chen</name>
+    </author>
+    <author>
+      <name>Cheng-Zhi Anna Huang</name>
+    </author>
+    <category term="cs.HC" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.18062v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.18062v1" />
+    <published>2026-09-16T03:08:34Z</published>
+    <updated>2026-09-16T03:08:34Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Zhixing Chen, Cheng-Zhi Anna Huang&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Music and dance are social practices of expression and connection, yet most HCI work in human-AI co-creation centers the solo performer. As generative music matures, we ask not only what AI can compose but what social encounters it can organize around sound. We present Encypher, a collaborative generative music system that translates collective movement qualities into text prompts conditioning real-time music generation for dance cyphers. Through five weeks of co-design with local dancers, a user study with unacquainted participants, a public museum event, and a live performance, we found that users developed shared agency, perceiving the music as a response to the room&amp;#x27;s energy. While newcomers felt uncertain, the system fostered social presence by prompting them to look to each other for cues. By treating sociality as a design concern rather than a downstream effect, we offer a framework and design implications for AI systems for collaborative, embodied expression.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Preprint. Under review at CHI 2027. 11 figures, 1 table. Project page: https://encypher-chi.github.io/&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[eess.AS] G-Mamba: Sparse Graph-Guided Mamba for Audio-Visual Speech Enhancement</title>
+    <author>
+      <name>Guo-Ruei Tseng</name>
+    </author>
+    <author>
+      <name>Hung-Shin Lee</name>
+    </author>
+    <author>
+      <name>Hsin-Min Wang</name>
+    </author>
+    <author>
+      <name>Berlin Chen</name>
+    </author>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.18009v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.18009v1" />
+    <published>2026-09-16T02:00:09Z</published>
+    <updated>2026-09-16T02:00:09Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Guo-Ruei Tseng et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Lightweight audio-visual speech enhancement (AVSE) models face a critical trade-off between computational efficiency and cross-modal alignment accuracy. While simple concatenation lacks relational expressiveness, dense cross-attention incurs computational overhead and is prone to unreliable cross-modal correspondence under strong acoustic interference. We propose Sparse Graph-Guided Mamba (SG-Mamba), a lightweight AVSE framework that integrates a sparse heterogeneous graph with a linear-complexity Mamba backbone. The graph explicitly models modality-specific relations through content-adaptive attention and cross-frame audio-visual connections, while Mamba captures long-range temporal context. We further introduce an audio skip connection to preserve spectral detail without sacrificing noise suppression. Evaluated on LRS3, SG-Mamba achieves competitive or superior performance against strong lightweight baselines and reaches 13.091 dB SI-SDR under noise-only condition. It also remains robust in cluttered multi-speaker conditions with a competitive cost of 3.45 G MACs (or 6.90 G FLOPs). Results on VoxCeleb2 further suggest that explicit structural priors improve robustness, generalizability, and computational efficiency in lightweight AVSE.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Accepted to IEEE SLT 2026&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] LACE: Layer-Wise Compression for Dynamic Frame Rate Codecs</title>
+    <author>
+      <name>Thanapat Trachu</name>
+    </author>
+    <author>
+      <name>Samuele Cornell</name>
+    </author>
+    <author>
+      <name>William Chen</name>
+    </author>
+    <author>
+      <name>Shinji Watanabe</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.17509v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.17509v1" />
+    <published>2026-09-15T17:46:51Z</published>
+    <updated>2026-09-15T17:46:51Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Thanapat Trachu et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Neural audio codecs are a key component in speech language modeling. However, their high frame rates lead to long sequence lengths, increasing computational costs. Dynamic frame rate codecs mitigate this by reducing the effective frame rate using a compression step to merge multiple frames together. However, most prior methods either operate on single-codebook codecs or apply a single compression step before multi-layer quantization. This forces all quantization layers to share the same segmentation boundaries, despite the residual embeddings at different quantization layers exhibiting different rates of change over time. We propose LACE (Layer-Adaptive Codec Encoding), a dynamic frame rate codec that applies an independent compression step at each quantization layer, enabling layer-specific segmentation boundaries. To use LACE tokens in downstream text-to-speech (TTS), we further introduce union alignment and boundary anchor mechanisms to make durations consistent across layers while preserving compression benefits. Experiments on LibriTTS show that LACE offers a better rate-quality tradeoff than prior dynamic frame rate methods on the reconstruction task and improves TTS inference efficiency while maintaining competitive synthesis quality. Our code is released as part of the ESPnet3 codec recipe.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Accepted to SLT 2026. 8 pages, 5 figures&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.AI] Sample-Conditioned Representation Selection for Audio Few-Shot Learning</title>
+    <author>
+      <name>Fengrui Liu</name>
+    </author>
+    <author>
+      <name>Ningxin Shen</name>
+    </author>
+    <author>
+      <name>Yi Li</name>
+    </author>
+    <author>
+      <name>Yiwei Fu</name>
+    </author>
+    <author>
+      <name>Feng Liu</name>
+    </author>
+    <author>
+      <name>Jiangmeng Li</name>
+    </author>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.17076v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.17076v1" />
+    <published>2026-09-15T12:15:12Z</published>
+    <updated>2026-09-15T12:15:12Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Fengrui Liu et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Few-shot audio classifiers may rely on foreground-background co-occurrences and fail when those correlations shift. On SpurAudio, the resulting representation shift is concentrated and class dependent: for ResNet12, the top 10 percent of channels explain 82.80 percent of the null-corrected shift contribution. We propose SAMPLESELECT, which predicts a fixed-budget feature mask independently for each input while keeping the encoder and source classifier frozen. Training uses differentiable Gumbel Top-k selection with foreground classification and cross-background contrastive losses; inference uses deterministic Top-k masks and support-only linear adaptation. Across ResNet12 and Conv64 in 5-way 1-shot and 5-shot evaluation, SAMPLESELECT gives the best OOD accuracy among the compared methods and improves the matched full-representation control by 4.90-8.38 percentage points. Ablations and representation analyses further support the learned selection mechanism. Code is available at https://github.com/Cross-Innovation-Lab/SAMPLESELECT/&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Submitted to ICASSP27&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Audio-Visual Turn-taking Prediction in Cocktail Party Scenarios</title>
+    <author>
+      <name>Long-Vu Hoang</name>
+    </author>
+    <author>
+      <name>Naomi Harte</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.17056v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.17056v1" />
+    <published>2026-09-15T12:06:16Z</published>
+    <updated>2026-09-15T12:06:16Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Long-Vu Hoang, Naomi Harte&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Current predictive turn-taking models (PTTMs) achieve strong performance on benchmarks with controlled acoustic conditions and clean audio signals. Their generalisation to conversations with overlapping speech and background interference remains underexplored. In this research, we evaluate audio-visual PTTMs trained with clean data on a challenging cocktail-party testbed derived from the AVCocktail dataset, and analyse their adaptation behaviour to this new domain. Experimental results show consistent performance degradation across audio and visual modalities under noisy conditions, with up to 38% relative drop in weighted F1. Fine-tuning on the new domain improves robustness, but gains vary across modalities and depend on the size of the available pre-training data. These findings provide insights into the different generalisation and adaptation capabilities of the audio and visual modalities, and indicate the need for robust modelling strategies to adapt to the complexities of human interactions in noise. All code and turn labels are made publicly available to facilitate further research.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Accepted to IEEE SLT 2026. This version includes an appendix about manual verified labels for AVCocktail&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Taming Long-form Text-to-Speech</title>
+    <author>
+      <name>Rongxiang Wang</name>
+    </author>
+    <author>
+      <name>Berkin Durmus</name>
+    </author>
+    <author>
+      <name>Aysegul Orhon</name>
+    </author>
+    <author>
+      <name>Eduardo Pacheco</name>
+    </author>
+    <author>
+      <name>Atila Orhon</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.16989v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.16989v1" />
+    <published>2026-09-15T11:03:52Z</published>
+    <updated>2026-09-15T11:03:52Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Rongxiang Wang et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Long-form text-to-speech (TTS) enables multi-turn conversations with consistent prosody and higher quality voice cloning from longer reference audio. Recent open-weights autoregressive TTS models such as Qwen3-TTS and VoxCPM2 attain state-of-the-art word error rate (WER) and speaker similarity (SIM) on short-form prompts but significantly deteriorate when used with long-form prompts. We propose Localized Attention-Constrained Inference (LACI), an inference-only method to detect TTS errors in near real-time, roll back to the error onset and regenerate with temporary guardrails, adding negligible computational overhead. Using LACI, we improve worst-of-N WER across 10 RNG seeds for Qwen3-TTS-0.6B from 35.2% to 3.4% on prompts longer than 1500 words, even surpassing its short-form reliability of 5.4\% on prompts with fewer than 500 words. To demonstrate the efficacy of LACI on voice cloning reliability, we propose a sliding-window version of the SIM metric that we call wSIM. wSIM exposes several novel failure patterns that are not captured by SIM. LACI improves worst-of-N wSIM from 0.01 to 0.47 on 120 seconds of reference audio while reducing the rate of catastrophic generations with WER above 30% from 26% to below 1%&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] CLASH: Counterfactual Auditing of Lexical and Prosodic Reliance in Spoken Sarcasm Detection</title>
+    <author>
+      <name>Qiyang Sun</name>
+    </author>
+    <author>
+      <name>Xudong Li</name>
+    </author>
+    <author>
+      <name>Yupei Li</name>
+    </author>
+    <author>
+      <name>Jiabin Xue</name>
+    </author>
+    <author>
+      <name>Yuhang Dai</name>
+    </author>
+    <author>
+      <name>Jiaming Li</name>
+    </author>
+    <author>
+      <name>Bjorn W. Schuller</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.16582v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.16582v1" />
+    <published>2026-09-15T03:26:37Z</published>
+    <updated>2026-09-15T03:26:37Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Qiyang Sun et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Spoken sarcasm detectors may exploit lexical content, prosody, or their interaction, yet conventional evaluation cannot reveal which cues drive their predictions. We introduce CLASH (Controlled Lexical-Acoustic Separation Harness), a bilingual counterfactual diagnostic framework that evaluates each utterance under original, lexical-preserving, prosody-preserving, and approximately neutralised conditions. We evaluate handcrafted acoustic-feature systems, self-supervised learning (SSL) probes, and large audio language models (LALMs) on CMMA and MUStARD. For target-only Qwen3-Omni, lexical-preserving speech retains a 0.135--0.148 AUROC advantage over prosody-preserving speech after duration balancing, with cluster-bootstrap intervals above zero; alternative lexical resynthesis preserves this advantage. Acoustic interventions shift scores without consistently improving discrimination or changing binary predictions under the evaluated conditions. Context and interaction estimates vary across corpora. These findings distinguish acoustic sensitivity from sarcasm discrimination while exposing duration, identity, and transformation effects.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[eess.AS] OpenEnded: An Open-Response Speech Corpus for Speaking Proficiency Assessment with Human Annotations and ALM Supervision</title>
+    <author>
+      <name>Yu-Wen Chen</name>
+    </author>
+    <author>
+      <name>Eric Zhou</name>
+    </author>
+    <author>
+      <name>Evelyn Ding</name>
+    </author>
+    <author>
+      <name>Tianyi Shen</name>
+    </author>
+    <author>
+      <name>Zhou Yu</name>
+    </author>
+    <author>
+      <name>Julia Hirschberg</name>
+    </author>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.15666v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.15666v1" />
+    <published>2026-09-14T14:47:18Z</published>
+    <updated>2026-09-14T14:47:18Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Yu-Wen Chen et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;The development of automated speaking assessment (ASA) is limited by the scarcity of public datasets, with most existing work relying on read-aloud speech, which limits applicability to real-world communication scenarios. In this work, we introduce OpenEnded, a corpus of English practice speech from Mandarin speakers in open-response tasks. Unlike prior open-response datasets that provide only holistic proficiency scores, OpenEnded offers utterance-level assessments of accuracy, fluency, and prosody. Approximately 10,000 utterances are collected and annotated using a hybrid framework: 1,000 are manually labeled via multi-rater scoring with discrepancy resolution to form a high-quality test set, while the remaining are pseudo-labeled by an audio language model (ALM) for training and development sets. We evaluate ALMs and existing ASA models on the OpenEnded test set and introduce VoxPA as an additional baseline. Results show that ALM-generated pseudo-labels improve training over original ALM scoring, while VoxPA achieves the best performance among all baselines.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;IEEE SLT 2026&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Timbre Analysis of the Hulusi, a Southwestern Chinese Free-Reed Instrument, using Machine Learning</title>
+    <author>
+      <name>Yang Xia</name>
+    </author>
+    <author>
+      <name>Rolf Bader</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.17612v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.17612v1" />
+    <published>2026-09-14T13:14:35Z</published>
+    <updated>2026-09-14T13:14:35Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Yang Xia, Rolf Bader&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;The hulusi is a wind instrument that was invented in Yunnan Province, China, and has become tremendously popular in recent years. It consists of a mouthpiece, a gourd, and three bamboo tubes, all with free reeds made of copper. The main bamboo tube in the middle has seven finger holes. In this instrument, the pipe length, not the free reed&amp;#x27;s eigenfrequency, determines the instrument&amp;#x27;s pitch, unlike, for example, with the Western accordion or the blues harp. In this study, a machine learning model implemented in the COMSAR framework (https://github.com/ifsm) was used to investigate the timbre characteristics of the \emph{hulusi} to cluster different instruments and pitches. The measured \emph{hulusi} pitches C, B, A, G, and F were analyzed according to seven psychoacoustic features, among which only the spectral centroid, sharpness, and fractal correlation dimension are shown to form pitch clusters. These timbre features were used to train Kohonen self-organizing maps (SOMs) for clustering. Brightness and sharpness analysis revealed that the highest pitches were less bright and less sharp than mid- and low-range pitches were. Furthermore, the fractal correlation dimension, which mainly determines the chaoticity of the initial transients, was the best-clustering timbre feature for the hulusi, with the highest pitches showing the least chaoticity. This result is supported by defining a cluster quality index for the SOMs.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Building a Dataset for Music Sample Identification</title>
+    <author>
+      <name>R. Oguz Araz</name>
+    </author>
+    <author>
+      <name>Xavier Lizarraga</name>
+    </author>
+    <author>
+      <name>Xavier Serra</name>
+    </author>
+    <author>
+      <name>Dmitry Bogdanov</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.15465v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.15465v1" />
+    <published>2026-09-14T12:27:55Z</published>
+    <updated>2026-09-14T12:27:55Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;R. Oguz Araz et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Sample identification (SI) is the task of matching an element of a musical work to its musically transformed versions used to create new works. The task has received little attention and lacks large-scale publicly available data. In this work, we mine sampling annotations from a music database and split them for training and evaluation. The resulting dataset is nearly three orders of magnitude larger than the existing SI benchmarks, with training, validation, and test sets of 114 k, 6 k, and 10 k tracks. We find that naively splitting the annotations places the same tracks in different sets. To avoid this, we construct a graph from the annotations and split it over connected components. We further find that a single mega-component contains half of the annotations, making component-wise splitting incompatible with balanced splits; we trim it, yielding a leakage-aware pipeline. We share the dataset for non-commercial scientific research purposes only and make the data-analysis and splitting code publicly available. We hope that our work fosters research on SI.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Extended Abstracts for the Late-Breaking Demo Session of the 27th Int. Society for Music Information Retrieval Conf., 2026&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Listening for Airway Stenosis: A Foundation Model-Based Method for Rapid and Accessible Detection</title>
+    <author>
+      <name>Jean Groeninger</name>
+    </author>
+    <author>
+      <name>Zihao Zhao</name>
+    </author>
+    <author>
+      <name>Juliana de Castilhos</name>
+    </author>
+    <author>
+      <name>Sven Nebelung</name>
+    </author>
+    <author>
+      <name>Daniel Truhn</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.15453v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.15453v1" />
+    <published>2026-09-14T12:20:23Z</published>
+    <updated>2026-09-14T12:20:23Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Jean Groeninger et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Airway stenosis can cause severe respiratory complications, yet its detection often relies on specialized examinations and medical imaging. This study explores the potential of acoustic AI for rapid and accessible airway stenosis detection using readily acquired patient voice recordings. We systematically investigate whether acoustic foundation models (AFMs) can extract acoustic representations associated with airway stenosis-related speech patterns. Experiments are conducted on a cohort of 748 participants from the Bridge2AI-Voice dataset, 134 with airway stenosis and 614 without. The best-performing model achieves an AUROC of 0.952 and an accuracy of 0.924 (means over five-fold cross-validation), highlighting the potential of AFMs to transfer beyond general-purpose speech applications to clinical diagnostic tasks. Further analysis reveals that the model primarily relies on connected-speech recordings rather than isolated acoustic tasks, such as sustained phonation and breathing. Overall, these results suggest that voice-based acoustic AI could complement existing diagnostic workflows by enabling rapid, low-burden, and widely accessible screening for airway stenosis.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Jean Groeninger and Zihao Zhao contributed equally. Code is available at https://github.com/JeanGrng/listening-for-airway-stenosis&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] MUUNRiver-Bench: Diagnosing Relation-Dependent Music Retrieval with Multimodal Instructions</title>
+    <author>
+      <name>Zhancheng Guo</name>
+    </author>
+    <author>
+      <name>Congren Dai</name>
+    </author>
+    <author>
+      <name>Shangda Wu</name>
+    </author>
+    <author>
+      <name>Jianhuai Hu</name>
+    </author>
+    <author>
+      <name>Danni Zhao</name>
+    </author>
+    <author>
+      <name>Xiaobing Li</name>
+    </author>
+    <author>
+      <name>Maosong Sun</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.16090v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.16090v1" />
+    <published>2026-09-14T11:22:53Z</published>
+    <updated>2026-09-14T11:22:53Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Zhancheng Guo et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Music retrieval is relation-dependent: given a reference track, a listener may seek its style with a new theme, a cover, or a comparable voice, and these intents demand contradictory rankings. We present MUUNRiver-Bench, a diagnostic benchmark whose reference-audio queries use natural-language instructions to define relevance. A pipeline combining expert genre priors, LLM-generated prompts and lyrics, synthesis, and expert review yields 3,440 tracks spanning 13 genres and 116 sub-genres, and seven tasks: similar-music, style-preserving lyric-rewriting, lyric-preserving style-rewriting, cover, vocal-timbre, isolated-vocal, and segment retrieval. Across six models in eight configurations, task-wise rank reversals reveal complementary biases: acoustic encoders favour local identity, whereas text-aligned encoders favour semantic relations. Frozen encoders diagnose default similarity preferences; instruction-aware and audio-text fusion systems provide exploratory tests of textual conditioning, with neither simple fusion scheme consistently improving its backbone&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.LG] BioDCASE: Active Learning for Bioacoustics</title>
+    <author>
+      <name>Ben McEwen</name>
+    </author>
+    <author>
+      <name>Rupa Kurinchi-Vendhan</name>
+    </author>
+    <author>
+      <name>Shiqi Zhang</name>
+    </author>
+    <author>
+      <name>Lukas Rauch</name>
+    </author>
+    <author>
+      <name>Marek Herde</name>
+    </author>
+    <author>
+      <name>Sara Beery</name>
+    </author>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.15255v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.15255v1" />
+    <published>2026-09-14T09:14:50Z</published>
+    <updated>2026-09-14T09:14:50Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Ben McEwen et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Ecological monitoring increasingly relies on machine learning models, whose performance depends on the quality and quantity of labelled data. However, obtaining these labels is costly, particularly in passive acoustic monitoring, where vast amounts of data are collected but only a small proportion can feasibly be annotated. Active learning addresses this bottleneck by prioritizing which samples should be labelled. However, progress is difficult to measure, because published methods are evaluated under different models, budgets, evaluation metrics and datasets. To address this challenge, we present the 2026 Active Learning for Bioacoustics BioDCASE challenge: a systematic evaluation of sampling methods designed to identify effective AL strategies. Participant methods were evaluated across four subsets composed of terrestrial and marine data. Across ten proposed sampling methods from seven teams, the top-ranked method achieved an area under the learning curve 26.4 % higher than random sampling at the same annotation budget, averaged over four data subsets. Significant variation in performance was observed across subsets, with the top-performing submission achieving a 67.1 % gain for the HSN subset over random sampling and a gain of 8 % for the ATBFL subset. Top-ranking submissions combined multiple acquisition signals, and diversity-based selection outperformed pure uncertainty sampling. Furthermore, there is evidence that transitioning from diversity-based to uncertainty-based selection and explicitly reducing redundancy within acquisition batches improve model training. There is also initial evidence that larger acquisition batch sizes may be increasingly beneficial later in the labelling process.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;This paper summarises the BioDCASE Active Learning for Bioacoustics data challenge. This paper was reviewed and accepted to the non-archival track of the ECCV Computer Vision for Ecology workshop via OpenReview&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Augmenting Large Audio-Language Models with Frame-Level Grounding for Fine-Grained Temporal Perception</title>
+    <author>
+      <name>Yanfeng Shi</name>
+    </author>
+    <author>
+      <name>Yan Song</name>
+    </author>
+    <author>
+      <name>Junhui Li</name>
+    </author>
+    <author>
+      <name>Tinggan Huang</name>
+    </author>
+    <author>
+      <name>Wu Guo</name>
+    </author>
+    <author>
+      <name>Haoyu Song</name>
+    </author>
+    <author>
+      <name>Ian McLoughlin</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.15215v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.15215v1" />
+    <published>2026-09-14T08:35:35Z</published>
+    <updated>2026-09-14T08:35:35Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Yanfeng Shi et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Large Audio-Language Models (LALMs) have substantially advanced general audio understanding, yet they remain limited in fine-grained temporal perception, particularly in precise event localization. Existing approaches primarily post-train LALMs to predict event boundaries as timestamp tokens. However, this generative formulation lacks explicit correspondence between the timestamp predictions and fine-grained acoustic evidence, limiting the precision and reliability of temporal localization. To address this issue, we augment the LALM with a dedicated frame-level grounding model while leveraging its semantic modeling capability to represent the event query. Specifically, the frozen LALM encodes the event query with audio as context, and the grounding model combines these query representations with fine-grained audio features to localize the target event at the frame level. Extensive experiments across diverse temporal grounding benchmarks demonstrate strong and consistent improvements over existing methods. Further evaluation shows that the grounding model can provide temporal evidence to support downstream reasoning.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Submitted to ICASSP 2027&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Cross-Lingual F5-TTS 2: A Simplified Framework for Language-Agnostic Voice Cloning</title>
+    <author>
+      <name>Qingyu Liu</name>
+    </author>
+    <author>
+      <name>Rixi Xu</name>
+    </author>
+    <author>
+      <name>Yushen Chen</name>
+    </author>
+    <author>
+      <name>Zhikang Niu</name>
+    </author>
+    <author>
+      <name>Haitao Li</name>
+    </author>
+    <author>
+      <name>Pengcheng Zhu</name>
+    </author>
+    <author>
+      <name>Bowen Zhang</name>
+    </author>
+    <author>
+      <name>Jian Zhao</name>
+    </author>
+    <author>
+      <name>Yunting Yang</name>
+    </author>
+    <author>
+      <name>Qinyuan Cheng</name>
+    </author>
+    <author>
+      <name>Xipeng Qiu</name>
+    </author>
+    <author>
+      <name>Berrak Sisman</name>
+    </author>
+    <author>
+      <name>Kai Yu</name>
+    </author>
+    <author>
+      <name>Xie Chen</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.15184v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.15184v1" />
+    <published>2026-09-14T08:05:26Z</published>
+    <updated>2026-09-14T08:05:26Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Qingyu Liu et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Zero-shot text-to-speech (TTS) can clone a speaker&amp;#x27;s voice from a short audio prompt, yet most TTS systems still require the audio prompt transcript during inference. This dependency prevents cross-lingual voice cloning when the audio prompt transcript is unavailable, particularly for unseen languages. Cross-Lingual F5-TTS removes this dependency and enables transcript-free cross-lingual voice cloning, but it prepares its training data with forced alignment. Forced alignment is sensitive to boundary errors, and its cost grows as more languages are covered. Its speaking rate predictor is also unreliable at estimating duration when the audio prompt begins or ends with silence. In this paper, we present Cross-Lingual F5-TTS 2, a simplified framework for transcript-free cross-lingual voice cloning without forced alignment. Instead of using forced alignment to segment real utterances, we build same-speaker prompt and target pairs using a pretrained F5-TTS model and fine-tune the same model on these constructed pairs. This simplifies data preparation and preserves the acoustic modeling capability of the pretrained model, enabling adaptation with only a short fine-tuning stage. We further make the syllable-level speaking rate predictor robust to leading and trailing silence through silence-aware augmentation. Experiments show that Cross-Lingual F5-TTS 2 reaches higher speaker similarity than F5-TTS and Cross-Lingual F5-TTS while maintaining intelligibility. All related resources are publicly available.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Rethinking Procedural Audio Pre-training: Source Scaling and Objective Adaptation</title>
+    <author>
+      <name>Jiajun Peng</name>
+    </author>
+    <author>
+      <name>Fengrui Liu</name>
+    </author>
+    <author>
+      <name>Xinyu Liu</name>
+    </author>
+    <author>
+      <name>Feng Liu</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.15067v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.15067v1" />
+    <published>2026-09-14T05:32:14Z</published>
+    <updated>2026-09-14T05:32:14Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Jiajun Peng et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Procedural audio has emerged as a viable source for transferable audio representation learning, but its design principles remain unclear.We revisit two questions: how a procedural source should be scaled, and whether training choices developed on natural audio should transfer unchanged to procedural data.Using a controlled source, we separate scale into formula-class coverage C and within-class rendering diversity I.Experiments with FDSL and AudioMAE show that these two forms of scale provide different benefits and depend on the learning formulation and downstream task. A matched AudioMAE study further shows that procedural audio favors low mask ratios (10%--25%), whereas AudioSet-28K favors 50%--75%. Shared-codebook analysis reveals lower patch diversity and stronger temporal predictability in procedural audio. These results motivate source-aware procedural pre-training, where source scaling and learning configuration are considered jointly.Code is available at https://github.com/Cross-Innovation-Lab/Formula-Bank.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Submitted to ICASSP2027&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.CL] Typhoon ASR Streaming: Steerable Low-Latency Thai Speech Recognition with Real-Time Shallow Fusion</title>
+    <author>
+      <name>Warit Sirichotedumrong</name>
+    </author>
+    <author>
+      <name>Tanawin Samutsin</name>
+    </author>
+    <author>
+      <name>Shah Faisal Wani</name>
+    </author>
+    <author>
+      <name>Sittipong Sripaisarnmongkol</name>
+    </author>
+    <author>
+      <name>Kunat Pipatanakul</name>
+    </author>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.14991v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.14991v1" />
+    <published>2026-09-14T03:53:52Z</published>
+    <updated>2026-09-14T03:53:52Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Warit Sirichotedumrong et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Open Thai automatic speech recognition (ASR) is dominated by offline, Whisper-based models that read the whole utterance before transcribing, ruling out low-latency uses such as live captioning and voice agents. We present a deployable system for streaming Thai ASR that lets a user steer its vocabulary at decode time, without retraining. A widely used open Thai model, trained with full context, collapses when run as a true stream; we restore streaming with a cache-aware encoder, by converting it or adapting a natively streaming one, and add a shallow-fusion layer that re-ranks candidates inside the streaming decoder with a GPU n-gram language model and phrase boosting. Across two Thai benchmarks and two model sizes, the streaming models stay usable where the full-context model fails, cutting character error rate 4.3-4.5x at a one-second look-ahead while running faster than real time. Decode-time steering then lifts keyword recall from 16.6% to 20.7% at no accuracy cost and negligible overhead; most of the gain comes from an n-gram over ordinary training transcripts, which resolves the written form of code-switched words the model hears but spells inconsistently, with phrase boosting adding targeted control over rare domain terms.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;4 pages, 2 figures, 3 tables. Accepted to IEEE SLT 2026 (Demo Track)&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] POLARIS: Training-Free Audio Fingerprinting with Saliency-Based Landmarks and Delaunay Grouping</title>
+    <author>
+      <name>Jiheng Li</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.14820v2</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.14820v2" />
+    <published>2026-09-13T22:23:25Z</published>
+    <updated>2026-09-15T21:11:25Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Jiheng Li&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;This work presents POLARIS, a training-free audio fingerprinting system that selects landmarks from a locally normalized saliency field and groups them into sparse fingerprints using Delaunay triangulation. To deal with query distortion, POLARIS adds fingerprints from two-hop Delaunay neighborhoods only at query time, without enlarging the reference index. An adaptive configuration applies this expansion only when the original fingerprints do not produce a confident match. We evaluate POLARIS on synthetic distortions from the public PEX Hard Medium benchmark, excluding queries with pitch or tempo shifts, and on a new benchmark of real re-recorded music. POLARIS achieves the best performance among the evaluated training-free methods on both benchmarks. On the real recordings, its adaptive configuration also outperforms the neural NMFP baseline with a comparable measured query time and a smaller logical reference payload. Code, dataset, and instructions for reproducing all experiments are available at https://github.com/JihengLi/POLARIS.git.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[eess.AS] Bridging Data, Reasoning, and Alignment: A Unified Framework for Context-Aware Instruction-Following TTS</title>
+    <author>
+      <name>Jingbin Hu</name>
+    </author>
+    <author>
+      <name>Luyu Wang</name>
+    </author>
+    <author>
+      <name>Wenjie Tian</name>
+    </author>
+    <author>
+      <name>Kangxiang Xia</name>
+    </author>
+    <author>
+      <name>Qirui Zhan</name>
+    </author>
+    <author>
+      <name>Haoyu Zhang</name>
+    </author>
+    <author>
+      <name>Yunxiang Chen</name>
+    </author>
+    <author>
+      <name>Houdun Liu</name>
+    </author>
+    <author>
+      <name>Lei Xie</name>
+    </author>
+    <author>
+      <name>Liumeng Xue</name>
+    </author>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.14740v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.14740v1" />
+    <published>2026-09-13T19:01:16Z</published>
+    <updated>2026-09-13T19:01:16Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Jingbin Hu et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;The ISCSLP 2026 CoT-TTS Challenge requires TTS systems to generate Chain-of-Thought (CoT) reasoning from dialogue history before synthesizing contextually appropriate speech. While the official baseline establishes a unified architecture, it remains constrained by limited contextual comprehension, weak instruction fidelity, and suboptimal audio quality. We present a systematic optimization pipeline to address these limitations. First, we develop a data process framework that cleans raw data via FullSubNet denoising, Qwen3-ASR re-transcription, and Qwen3.5-35B-A3B-based history-CoT consistency analysis, while distilling 545K high-fidelity instruction samples using Qwen3-TTS and Seed-VC under strict quality filtration. Second, we propose a Context-Aware Direct Preference Optimization (CA-DPO) method. By employing a cascaded filtering strategy, ASR prescreening, LLM tournament ranking, and speaker similarity verification, we obtain high-confidence preference pairs that significantly enhance holistic ``Context$\rightarrow$CoT$\rightarrow$Speech&amp;#x27;&amp;#x27; consistency during DPO training. Third, we establish an evaluation method featuring a 500-sample test set and an LLM-as-Judge framework to independently assess reasoning and execution fidelity. Experiments demonstrate that our system significantly outperforms the baseline across all objective and subjective metrics, validating our data governance and alignment strategies.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;accepted by ISCSLP 2026, the ISCSLP 2026 CoT-TTS Challenge&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.CL] Neyshekar: An Open Persian Read-Speech Corpus for Automatic Speech Recognition</title>
+    <author>
+      <name>Ahmad Amirivojdan</name>
+    </author>
+    <author>
+      <name>Farzad Nadiri</name>
+    </author>
+    <author>
+      <name>Abolfazl Alizadeh</name>
+    </author>
+    <author>
+      <name>Shaghayegh Yaraghi</name>
+    </author>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.14542v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.14542v1" />
+    <published>2026-09-13T14:30:43Z</published>
+    <updated>2026-09-13T14:30:43Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Ahmad Amirivojdan et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Neyshekar is presented as an open Persian read-speech corpus designed for coverage of both formal and informal language, named entities, and longer utterances. In version 6, 62,279 validated recordings totalling 99.02 hours are provided from 190 contributors, with 34,541 distinct recorded prompts. The prompt pool was assembled from human-written material, contextualised homographs, and reviewed language-model-generated text. Text entries were normalised with the shekar library, which supports both formal and informal Persian, and every submitted recording was reviewed against a common validation rubric. About 24% of released clips are classified as informal by an automatic classifier; these register labels are not human-validated. Item-level rater labels are provided for reproducible agreement estimation, opaque per-clip contributor identifiers make the speaker-disjoint partitioning auditable and support contributor-clustered uncertainty estimates, and a text-disjoint test subset is included for evaluation beyond previously seen prompts. Per-contributor recording load and reference-free signal quality are characterised for every released clip. Corpus characteristics are compared with Persian Common Voice under shared processing. Utility is assessed through two ASR architectures, three optimisation seeds, WER and CER, and independent evaluation on the public PSRB sample. Against duration-matched Common Voice training at approximately 32 hours, in-domain WER is reduced by 9.5 points for Whisper and 11.6 points for XLS-R, and by approximately eight points for both architectures on the independent PSRB sample. Transfer and mixture benefits are not consistently observed across architectures and training budgets. The corpus is released under CC0; code and data are made available through the project repository at https://github.com/amirivojdan/neyshekar.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;24 pages, 6 figures; dataset and code available at https://github.com/amirivojdan/neyshekar&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Exploiting Speech LLM Representations for Multilingual and Cross-Lingual Parkinson's Disease Detection</title>
+    <author>
+      <name>Sarthak Giri</name>
+    </author>
+    <author>
+      <name>Zi Haur Pang</name>
+    </author>
+    <author>
+      <name>Tatsuya Kawahara</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.14431v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.14431v1" />
+    <published>2026-09-13T11:12:03Z</published>
+    <updated>2026-09-13T11:12:03Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Sarthak Giri et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Speech Large Language Models (Speech LLMs) have shown strong performance across diverse tasks, yet their utility for pathological speech analysis remains underexplored. In this work, we investigate the effectiveness of internal representations from encoder and decoder components of Speech LLMs for Parkinson&amp;#x27;s Disease (PD) detection across multilingual and cross-lingual settings. Our findings reveal that encoder representations consistently outperform their decoder counterparts in most models and settings and that pathological cues may be progressively attenuated as audio representations are projected into the language model space. We further show that generative outputs are less reliable for clinical tasks compared to internal representations. To leverage information spread across multiple layers, we propose a Squeeze-and-Excitation (SE)-based dynamic layer aggregation framework, which surpasses best-layer selection in multiple experiments, suggesting that PD-relevant acoustic cues are distributed across transformer layers rather than concentrated in one.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Accepted at IEEE Spoken Language Technology Workshop (SLT) 2026&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] AURA: Unified Multimodal Framework for Conversational Music Editing</title>
+    <author>
+      <name>Quoc-Huy Trinh</name>
+    </author>
+    <author>
+      <name>Minh-Van Nguyen</name>
+    </author>
+    <author>
+      <name>Debesh Jha</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.14344v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.14344v1" />
+    <published>2026-09-13T07:09:30Z</published>
+    <updated>2026-09-13T07:09:30Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Quoc-Huy Trinh et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Instruction-guided music editors typically process each request independently, limiting their ability to support workflows in which users progressively refine a track. We introduce AURA, a unified multimodal framework for conversational music editing. AURA uses a multimodal large language model to interpret the complete dialogue history, an optional image, and reference audio, distilling the editing intent into compact concept tokens. A concept-to-audio module injects these tokens and frame-aligned reference features into a frozen MusicGen backbone, enabling precise edits while preserving unaffected content. AURA optimizes only 91M parameters while retaining 1.9B frozen backbone parameters. Experiments on Slakh2100 and MoisesDB demonstrate substantial improvements in edit correctness and content preservation over existing instruction-guided methods, including a 4-5 times reduction in FAD for out-of-domain addition and removal.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Robust Cross-Domain Speech-Based Alzheimer's Disease Detection via Iterative Adversarial Self-Training</title>
+    <author>
+      <name>Luqi Sun</name>
+    </author>
+    <author>
+      <name>Shreeram Suresh Chandra</name>
+    </author>
+    <author>
+      <name>Aurosweta Mahapatra</name>
+    </author>
+    <author>
+      <name>Emily Mower Provost</name>
+    </author>
+    <author>
+      <name>Brian MacWhinney</name>
+    </author>
+    <author>
+      <name>Berrak Sisman</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.14139v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.14139v1" />
+    <published>2026-09-12T20:40:33Z</published>
+    <updated>2026-09-12T20:40:33Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Luqi Sun et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;As Alzheimer&amp;#x27;s disease (AD) has increasingly become a major global public health issue, speech-based AD detection has attracted widespread attention. However, most existing methods are trained and evaluated on a single dataset, often leading to severe cross-domain performance degradation due to reliance on dataset-specific artifacts rather than disease-related speech cues. In real-world applications, reliable Alzheimer&amp;#x27;s disease detection requires models that are robust to variations in recording environments, speakers and data collection conditions. To address this challenge, this paper adopts unsupervised domain adaptation to learn robust, domain-invariant feature representations in the absence of target-domain diagnosis labels. On this basis, a novel unsupervised domain adaptation method, Iterative Adversarial Self-Training (IAST), is proposed. Results demonstrate that IAST significantly improves the generalization ability and robustness under various cross-domain settings.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[eess.AS] HARP: Agentic Hybrid Retrieval and Analysis for Long-Form Audio</title>
+    <author>
+      <name>Chin-Jou Li</name>
+    </author>
+    <author>
+      <name>Masao Someki</name>
+    </author>
+    <author>
+      <name>Woojeong Jin</name>
+    </author>
+    <author>
+      <name>Yashish M. Siriwardena</name>
+    </author>
+    <author>
+      <name>Tanmay Laud</name>
+    </author>
+    <author>
+      <name>Shanil Puri</name>
+    </author>
+    <author>
+      <name>Shinji Watanabe</name>
+    </author>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.14116v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.14116v1" />
+    <published>2026-09-12T19:35:33Z</published>
+    <updated>2026-09-12T19:35:33Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Chin-Jou Li et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Long-form audio analysis requires systems to localize and integrate evidence distributed across extended recordings. While existing work primarily retrieves semantic content through structured textual representations, many real-world queries depend on acoustic evidence that is better preserved in continuous representations or raw audio. We introduce HARP (Hybrid Audio Retrieval Pipeline), an agentic framework and benchmark for systematically studying retrieval and evidence representations in long-audio analysis. Hybrid retrieval combining keyword and vector search shows the most robust performance. When paired with both metadata and retrieved audio as evidence, average answer accuracy improves by around 10% and rationale accuracy by around 6% over single-modality retrieval and evidence. Fine-grained evaluation shows that answer accuracy alone overestimates system capability and that HARP mostly follows human performance trends across query types. These results highlight the importance of combining structured retrieval with flexible access to audio evidence and evaluating long-audio systems beyond answer accuracy.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;SLT 2026&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] StepAudio 3 Realtime Technical Report</title>
+    <author>
+      <name>Bin Lin</name>
+    </author>
+    <author>
+      <name>Bo Zhao</name>
+    </author>
+    <author>
+      <name>Boyang Zhang</name>
+    </author>
+    <author>
+      <name>Boyong Wu</name>
+    </author>
+    <author>
+      <name>Chao Yan</name>
+    </author>
+    <author>
+      <name>Chen Geng</name>
+    </author>
+    <author>
+      <name>Chen Wu</name>
+    </author>
+    <author>
+      <name>Cheng Yi</name>
+    </author>
+    <author>
+      <name>Chengli Feng</name>
+    </author>
+    <author>
+      <name>Chenglin Zhu</name>
+    </author>
+    <author>
+      <name>Chengting Feng</name>
+    </author>
+    <author>
+      <name>Chengyuan Yao</name>
+    </author>
+    <author>
+      <name>Daijiao Liu</name>
+    </author>
+    <author>
+      <name>DanNi Wan</name>
+    </author>
+    <author>
+      <name>Daxin Jiang</name>
+    </author>
+    <author>
+      <name>Dongjian Li</name>
+    </author>
+    <author>
+      <name>Dongqing Pang</name>
+    </author>
+    <author>
+      <name>Fei Tian</name>
+    </author>
+    <author>
+      <name>Feng Tian</name>
+    </author>
+    <author>
+      <name>Future Li</name>
+    </author>
+    <author>
+      <name>Gang Yu</name>
+    </author>
+    <author>
+      <name>Guanglong Yang</name>
+    </author>
+    <author>
+      <name>Haoyang Zhang</name>
+    </author>
+    <author>
+      <name>Hongyuan Wang</name>
+    </author>
+    <author>
+      <name>Jia Peng</name>
+    </author>
+    <author>
+      <name>Jiahao Song</name>
+    </author>
+    <author>
+      <name>Jialong Xue</name>
+    </author>
+    <author>
+      <name>Jiamin Fan</name>
+    </author>
+    <author>
+      <name>Jiangjie Zhen</name>
+    </author>
+    <author>
+      <name>Jianzheng Gao</name>
+    </author>
+    <author>
+      <name>Jincheng Wen</name>
+    </author>
+    <author>
+      <name>Jinghua Liang</name>
+    </author>
+    <author>
+      <name>Jinglan Gong</name>
+    </author>
+    <author>
+      <name>Jun Chen</name>
+    </author>
+    <author>
+      <name>Li Xie</name>
+    </author>
+    <author>
+      <name>Liang Zhao</name>
+    </author>
+    <author>
+      <name>Lifang Zhang</name>
+    </author>
+    <author>
+      <name>Lingli Ji</name>
+    </author>
+    <author>
+      <name>Lun Cai</name>
+    </author>
+    <author>
+      <name>Min Xu</name>
+    </author>
+    <author>
+      <name>Peilin Li</name>
+    </author>
+    <author>
+      <name>Peng Yang</name>
+    </author>
+    <author>
+      <name>Pengfei Tan</name>
+    </author>
+    <author>
+      <name>Qingjian Lin</name>
+    </author>
+    <author>
+      <name>Qinxin Du</name>
+    </author>
+    <author>
+      <name>Ruijie Xiong</name>
+    </author>
+    <author>
+      <name>Runze Li</name>
+    </author>
+    <author>
+      <name>Shenghua Hu</name>
+    </author>
+    <author>
+      <name>Shengqian Qin</name>
+    </author>
+    <author>
+      <name>Shi Qiu</name>
+    </author>
+    <author>
+      <name>Siqi Tu</name>
+    </author>
+    <author>
+      <name>Siyi Zhou</name>
+    </author>
+    <author>
+      <name>Tianjiao Deng</name>
+    </author>
+    <author>
+      <name>Wanying Lu</name>
+    </author>
+    <author>
+      <name>Weiming Niu</name>
+    </author>
+    <author>
+      <name>Wen Sun</name>
+    </author>
+    <author>
+      <name>WenWen Qu</name>
+    </author>
+    <author>
+      <name>Xiangyu Zhang</name>
+    </author>
+    <author>
+      <name>Xianwei Zhang</name>
+    </author>
+    <author>
+      <name>Xiaosu Su</name>
+    </author>
+    <author>
+      <name>Xing Chen</name>
+    </author>
+    <author>
+      <name>Xinyu Liu</name>
+    </author>
+    <author>
+      <name>Xuerui Yang</name>
+    </author>
+    <author>
+      <name>Yan Wu</name>
+    </author>
+    <author>
+      <name>Yang Li</name>
+    </author>
+    <author>
+      <name>Yang Yang</name>
+    </author>
+    <author>
+      <name>Yechang Huang</name>
+    </author>
+    <author>
+      <name>Yibo Zhu</name>
+    </author>
+    <author>
+      <name>Yifan Zhang</name>
+    </author>
+    <author>
+      <name>Yinuo Yan</name>
+    </author>
+    <author>
+      <name>Youjun Chen</name>
+    </author>
+    <author>
+      <name>Yu Fu</name>
+    </author>
+    <author>
+      <name>Yu Luo</name>
+    </author>
+    <author>
+      <name>Yu Zhou</name>
+    </author>
+    <author>
+      <name>Yujie Chen</name>
+    </author>
+    <author>
+      <name>Yumang Wang</name>
+    </author>
+    <author>
+      <name>Yunzhou Ju</name>
+    </author>
+    <author>
+      <name>Yuxiang Yang</name>
+    </author>
+    <author>
+      <name>Yuxin Li</name>
+    </author>
+    <author>
+      <name>Yuxin Zhang</name>
+    </author>
+    <author>
+      <name>Zekai Liu</name>
+    </author>
+    <author>
+      <name>Zengwei Yao</name>
+    </author>
+    <author>
+      <name>Zhaoxin Yuan</name>
+    </author>
+    <author>
+      <name>Zhenwei Mou</name>
+    </author>
+    <author>
+      <name>Zhiquan Zhang</name>
+    </author>
+    <author>
+      <name>Zhiyue Wu</name>
+    </author>
+    <author>
+      <name>Zichao Li</name>
+    </author>
+    <author>
+      <name>Zichao Zhou</name>
+    </author>
+    <author>
+      <name>Ziqi Ren</name>
+    </author>
+    <author>
+      <name>Zixuan Wang</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.14005v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.14005v1" />
+    <published>2026-09-12T15:40:02Z</published>
+    <updated>2026-09-12T15:40:02Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Bin Lin et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Realtime spoken interaction demands deep reasoning, prompt responses, and fluid turn-taking. We present StepAudio 3 Realtime, an audio-language foundation model organized around a continuous listen-converse-think-act loop. Deep Perception captures rich acoustic cues to interpret user intent, while Seamless Duplex models synchronized audio streams to handle pauses, backchannels, and interruptions naturally. Crucially, we resolve the tension between deep deliberation and latency via Think-While-Speaking, executing private reasoning in parallel with spoken delivery. In reasoning mode, StepAudio 3 reaches a 73.0 macro average on StepAudioChat. With Think-While-Speaking, it achieves dialogue and reasoning performance comparable to dedicated reasoning models while speaking in real time. Furthermore, an integrated Voice Agent handles asynchronous tool execution without disrupting the dialogue flow. StepAudio 3 Realtime achieves top-tier performance across key dimensions: an exceptional 90.6 on the MMSU benchmark, 98.9 Overall on the Artificial Analysis Full-Duplex Bench, and a 56.0% macro task-success rate on $τ$-Voice.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[eess.AS] DualSpecSE: A Dual-Path Speech Enhancement Network Integrating Mel and Complex Spectrograms</title>
+    <author>
+      <name>Xingchen Li</name>
+    </author>
+    <author>
+      <name>Ziqian Wang</name>
+    </author>
+    <author>
+      <name>Zikai Liu</name>
+    </author>
+    <author>
+      <name>Yike Zhu</name>
+    </author>
+    <author>
+      <name>Zihan Zhang</name>
+    </author>
+    <author>
+      <name>Longshuai Xiao</name>
+    </author>
+    <author>
+      <name>Lei Xie</name>
+    </author>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.13911v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.13911v1" />
+    <published>2026-09-12T12:35:20Z</published>
+    <updated>2026-09-12T12:35:20Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Xingchen Li et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;In this paper, we propose DualSpecSE, a speech enhancement framework that jointly models Mel-spectrogram and complex spectrogram in a dual-path architecture for improved ASR performance and higher-quality speech reconstruction. The Mel branch learns coarse-grained acoustic representations and produces enhanced Mel-spectrograms for direct ASR usage, while the complex branch refines fine-grained spectral details for high-fidelity waveform reconstruction. Built upon the cross-band and narrow-band blocks from CleanMel, DualSpecSE introduces an interaction module and a fusion module to enable effective information exchange between the two branches. The model simultaneously outputs enhanced Mel and complex spectrogram without requiring a pretrained vocoder. Experimental results demonstrate consistent improvements in speech fidelity, perceptual quality, and ASR performance. Codes and audio samples are available.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Accepted by ISCSLP 2026&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] DiTAR+: Dual Optimization for Robust Autoregressive Diffusion Speech Synthesis</title>
+    <author>
+      <name>Ziyu Zhang</name>
+    </author>
+    <author>
+      <name>Tianlun Zuo</name>
+    </author>
+    <author>
+      <name>Hanzhao Li</name>
+    </author>
+    <author>
+      <name>Haoyu Zhang</name>
+    </author>
+    <author>
+      <name>Lei Xie</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.13909v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.13909v1" />
+    <published>2026-09-12T12:32:02Z</published>
+    <updated>2026-09-12T12:32:02Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Ziyu Zhang et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Continuous-latent Autoregressive Diffusion Transformer (AR-DiT) models have demonstrated immense potential in zero-shot speech generation. However, they still suffer from limited decoding stability when synthesizing long utterances or complex linguistic structures. This instability primarily stems from a restricted historical receptive field and an acoustic inertia dependency within the diffusion decoder, which causes the model to ignore semantic conditions. To address these challenges, we propose DiTAR+, a dual-optimization framework. First, we introduce Dilated Context Sampling to expand the macro-level historical receptive field without violating physical temporal continuity, thereby preventing cumulative error propagation. Second, we propose Hierarchical Acoustic Masking to prevent shallow layers from attending to acoustic pre-context, explicitly decoupling semantic alignment from acoustic detail reconstruction. Extensive experiments show that our framework effectively mitigates pronunciation errors and semantic hallucinations, enhances generation robustness on challenging sentences, and maintains exceptionally high speaker similarity throughout the entirety of long-form utterances. On the linguistically challenging ZH-Hard set, DiTAR+ reduces the word error rate from 12.478% to 9.893%, and on extended utterances of 25 to 35 seconds it improves speaker similarity from 0.741 to 0.759 while simultaneously lowering the word error rate from 2.778% to 2.173%, outperforming both discrete-token and pure flow-matching baselines.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] CRAF: Cross-View Residual-Aware Fusion for Deepfake Speech Detection</title>
+    <author>
+      <name>Minh-Xuan Phan</name>
+    </author>
+    <author>
+      <name>Khalid Zaman</name>
+    </author>
+    <author>
+      <name>Candy Olivia Mawalim</name>
+    </author>
+    <author>
+      <name>Masashi Unoki</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.13842v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.13842v1" />
+    <published>2026-09-12T09:56:45Z</published>
+    <updated>2026-09-12T09:56:45Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Minh-Xuan Phan et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Recent advances in speech synthesis and voice conversion have made deepfake speech increasingly realistic, making generalization to unseen spoofing attacks a critical challenge. Pretrained speech and audio models offer a promising direction for improving robustness to such unseen attacks. Self-supervised learning (SSL) models capture fine-grained, low-level acoustic characteristics, whereas Auditory Large Language Models (ALLMs) provide higher-level contextual representations. These complementary views can provide useful cues for improving generalization to unseen attacks. However, direct fusion does not explicitly disentangle information shared across the two views from view-specific complementary information, limiting effective cross-view integration. To address this, we propose CRAF, a cross-view residual-aware fusion framework that uses ALLM-guided cross-view attention to enrich SSL representations and adopts ALLM as a high-level reference to separate ALLM-explainable information from complementary SSL residual information. The residual is selectively refined through adaptive gating and integrated through SSL-primary fusion. Experiments on ASVspoof 5 show that CRAF with Kimi-Audio achieves an EER of 5.96% and a minDCF of 0.1192, demonstrating robustness to unseen spoofing attacks.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] The VoiceMOS Challenge 2026: Evaluating Speech Enhancement, Emotional TTS and Accented TTS Systems</title>
+    <author>
+      <name>Wen-Chin Huang</name>
+    </author>
+    <author>
+      <name>Wei Wang</name>
+    </author>
+    <author>
+      <name>Marvin Sach</name>
+    </author>
+    <author>
+      <name>Xiaoxue Gao</name>
+    </author>
+    <author>
+      <name>Nicholas Sanders</name>
+    </author>
+    <author>
+      <name>Erica Cooper</name>
+    </author>
+    <author>
+      <name>Toda Tomoki</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.13792v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.13792v1" />
+    <published>2026-09-12T08:11:02Z</published>
+    <updated>2026-09-12T08:11:02Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Wen-Chin Huang et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;We present the results of the VoiceMOS Challenge 2026, the fifth edition of a scientific challenge on automatic prediction of subjective speech assessments. After expanding the scope to music and general audio in 2025, we refocused the evaluation target on speech and organized three tracks: prediction of absolute and comparative category ratings for enhanced speech, prediction of naturalness and emotion-related tasks for emotional text-to-speech systems, and prediction of speaker and accent similarity for codec-based speech synthesis systems. The challenge attracted a total of 18 teams worldwide, with most teams successfully surpassing the provided baselines. We summarize the challenge results, representative top-performing systems, participant feedback, and directions for future editions.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Preprint&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[eess.AS] Subphonetic Acoustic Modeling via Optimal Transport for Pronunciation Assessment</title>
+    <author>
+      <name>Haopeng Geng</name>
+    </author>
+    <author>
+      <name>Jiun-Ting Li</name>
+    </author>
+    <author>
+      <name>Daisuke Saito</name>
+    </author>
+    <author>
+      <name>Nobuaki Minematsu</name>
+    </author>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2609.13694v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2609.13694v1" />
+    <published>2026-09-12T04:04:06Z</published>
+    <updated>2026-09-12T04:04:06Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Haopeng Geng et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Pronunciation assessment requires acoustic evidence that is temporally precise, diagnostically meaningful, and faithful to the learner&amp;#x27;s actual production. However, existing acoustic models often struggle to provide recognition and segmentation evidence simultaneously. CTC-based phone recognizers can predict phone sequences flexibly, but their sparse and peaky posteriors often miss phone boundaries and fine-grained pronunciation cues. In contrast, text-dependent forced aligners provide reliable temporal information when transcripts are available, but are not directly applicable to reference-free pronunciation analysis. In this work, we propose a topology-aware frame-wise acoustic model that learns dense ordered state posteriors within each phone. The key idea is to recover phone-internal state structure in a neural acoustic model by combining ordered subphonetic states with optimal temporal transport classification (OTTC). This combination encourages dense monotonic frame-level state discrimination while preserving phone recognition ability. Experiments on read, spontaneous, and L2 speech show improved segmentation over neural baselines with competitive recognition performance. Downstream evaluations further show gains in mispronunciation detection and automatic pronunciation assessment. Probing analysis suggests that the learned states capture phoneme-dependent acoustic structure rather than arbitrary frame-level distributions.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Accepted to SLT 2026&lt;/p&gt;</content>
+  </entry>
+  <code-available-feed:processed>
+    <code-available-feed:article url="https://arxiv.org/abs/2609.08672v2" published="2026-09-08T12:39:06Z" updated="2026-09-15T09:12:31Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.08977v3" published="2026-09-08T16:22:23Z" updated="2026-09-12T11:55:26Z" repo_found_in="comment" repo_urls="https://Omni-Interaction-Gander.github.io/Omni-Interaction-Agent" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.09757v2" published="2026-09-09T05:58:40Z" updated="2026-09-16T17:11:39Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.10645v2" published="2026-09-09T13:03:49Z" updated="2026-09-12T18:56:21Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.11137v2" published="2026-09-10T06:28:50Z" updated="2026-09-15T06:38:48Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.12484v2" published="2026-09-11T06:30:41Z" updated="2026-09-15T13:50:27Z" repo_found_in="pdf" repo_urls="https://github.com/awkrail/dcase2026" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.13413v2" published="2026-09-11T18:20:46Z" updated="2026-09-15T15:18:15Z" repo_found_in="abstract" repo_urls="https://github.com/ErmisAI/XVSS-X;https://huggingface.co/datasets/lgris/XVSS-X" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.13659v1" published="2026-09-12T02:31:38Z" updated="2026-09-12T02:31:38Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.13694v1" published="2026-09-12T04:04:06Z" updated="2026-09-12T04:04:06Z" repo_found_in="pdf" repo_urls="https://github.com/k2-fsa/k2;https://huggingface.co/datasets/gilkeyio/librispeech-alignments" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.13792v1" published="2026-09-12T08:11:02Z" updated="2026-09-12T08:11:02Z" repo_found_in="pdf" repo_urls="https://github.com/voicemos-challenge/vmc2026-b;https://github.com/voicemos-challenge/vmc2026-baselines;https://huggingface.co/speechbrain/spkrec-ecapa;https://huggingface.co/speechbrain/spkrec-ecapa-voxceleb;https://huggingface.co/urgent-challenge/urgen;https://huggingface.co/urgent-challenge/urgent-mos-f1c1m5dcorpus" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.13842v1" published="2026-09-12T09:56:45Z" updated="2026-09-12T09:56:45Z" repo_found_in="pdf" repo_urls="https://huggingface.co/Qwen/Qwen2-Audio-7B-Instruct;https://huggingface.co/moonshotai/Kimi-Audio-7B-Instruct;https://huggingface.co/stepfun-ai/Step-Audio-2-mini-Base" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.13881v1" published="2026-09-12T11:10:48Z" updated="2026-09-12T11:10:48Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.13909v1" published="2026-09-12T12:32:02Z" updated="2026-09-12T12:32:02Z" repo_found_in="pdf" repo_urls="https://github.com/BytedanceSpeech/seed-tts-eval" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.13911v1" published="2026-09-12T12:35:20Z" updated="2026-09-12T12:35:20Z" repo_found_in="pdf" repo_urls="https://github.com/StellanLi/SenSE-demo;https://github.com/espnet/espnet/tree/master/egs2" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14005v1" published="2026-09-12T15:40:02Z" updated="2026-09-12T15:40:02Z" repo_found_in="pdf" repo_urls="https://stepaudiollm.github.io/step-audio-3-realtime/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14116v1" published="2026-09-12T19:35:33Z" updated="2026-09-12T19:35:33Z" repo_found_in="pdf" repo_urls="https://github.com/chinjouli/harp" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14139v1" published="2026-09-12T20:40:33Z" updated="2026-09-12T20:40:33Z" repo_found_in="pdf" repo_urls="https://sleepwalker554.github.io/IAST_website/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14145v1" published="2026-09-12T20:49:53Z" updated="2026-09-12T20:49:53Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14174v1" published="2026-09-12T22:26:30Z" updated="2026-09-12T22:26:30Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14344v1" published="2026-09-13T07:09:30Z" updated="2026-09-13T07:09:30Z" repo_found_in="pdf" repo_urls="https://openrb-lab.github.io/AURA-demo/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14427v1" published="2026-09-13T11:01:26Z" updated="2026-09-13T11:01:26Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14431v1" published="2026-09-13T11:12:03Z" updated="2026-09-13T11:12:03Z" repo_found_in="pdf" repo_urls="https://huggingface.co/fixie-ai/ultravox-v0;https://huggingface.co/fixie-ai/ultravox-v0_5-llama-3_2-1b" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14455v1" published="2026-09-13T11:50:52Z" updated="2026-09-13T11:50:52Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14467v1" published="2026-09-13T12:17:02Z" updated="2026-09-13T12:17:02Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14542v1" published="2026-09-13T14:30:43Z" updated="2026-09-13T14:30:43Z" repo_found_in="comment" repo_urls="https://github.com/amirivojdan/neyshekar" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14666v1" published="2026-09-13T17:08:38Z" updated="2026-09-13T17:08:38Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14730v1" published="2026-09-13T18:47:01Z" updated="2026-09-13T18:47:01Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14740v1" published="2026-09-13T19:01:16Z" updated="2026-09-13T19:01:16Z" repo_found_in="pdf" repo_urls="https://github.com/BytedanceSpeech/;https://github.com/BytedanceSpeech/seed-tts-eval;https://github.com/sarulab-speech/UTMOSv2;https://hujingbin1.github.io/CoT-TTS-Demo-Page/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14764v1" published="2026-09-13T19:55:08Z" updated="2026-09-13T19:55:08Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14820v1" published="2026-09-13T22:23:25Z" updated="2026-09-13T22:23:25Z" repo_found_in="abstract" repo_urls="https://github.com/JihengLi/POLARIS.git" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14820v2" published="2026-09-13T22:23:25Z" updated="2026-09-15T21:11:25Z" repo_found_in="abstract" repo_urls="https://github.com/JihengLi/POLARIS.git" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14916v1" published="2026-09-14T02:08:15Z" updated="2026-09-14T02:08:15Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14956v1" published="2026-09-14T03:00:06Z" updated="2026-09-14T03:00:06Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14990v1" published="2026-09-14T03:50:48Z" updated="2026-09-14T03:50:48Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.14991v1" published="2026-09-14T03:53:52Z" updated="2026-09-14T03:53:52Z" repo_found_in="pdf" repo_urls="https://warit-s.github.io/typhoon-asr-streaming/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.15067v1" published="2026-09-14T05:32:14Z" updated="2026-09-14T05:32:14Z" repo_found_in="abstract" repo_urls="https://github.com/Cross-Innovation-Lab/Formula-Bank" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.15184v1" published="2026-09-14T08:05:26Z" updated="2026-09-14T08:05:26Z" repo_found_in="pdf" repo_urls="https://qingyuliu0521.github.io/Cross-Lingual;https://qingyuliu0521.github.io/Cross-Lingual_F5-TTS_2_demo/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.15215v1" published="2026-09-14T08:35:35Z" updated="2026-09-14T08:35:35Z" repo_found_in="pdf" repo_urls="https://saber5203.github.io/frame-level-grounding/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.15221v1" published="2026-09-14T08:41:23Z" updated="2026-09-14T08:41:23Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.15240v1" published="2026-09-14T08:57:25Z" updated="2026-09-14T08:57:25Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.15255v1" published="2026-09-14T09:14:50Z" updated="2026-09-14T09:14:50Z" repo_found_in="pdf" repo_urls="https://biodcase.github.io/challenge2026/submission;https://biodcase.github.io/challenge2026/task4-results;https://biodcase.github.io/challenge2026/task4-results#technical-reports;https://github.com/BenMcEwen1/BaseAL" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.15313v1" published="2026-09-14T10:03:49Z" updated="2026-09-14T10:03:49Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.15453v1" published="2026-09-14T12:20:23Z" updated="2026-09-14T12:20:23Z" repo_found_in="comment" repo_urls="https://github.com/JeanGrng/listening-for-airway-stenosis" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.15465v1" published="2026-09-14T12:27:55Z" updated="2026-09-14T12:27:55Z" repo_found_in="pdf" repo_urls="https://mtg.github.io/whosampled-130k-dataset/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.15650v1" published="2026-09-14T14:33:28Z" updated="2026-09-14T14:33:28Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.15666v1" published="2026-09-14T14:47:18Z" updated="2026-09-14T14:47:18Z" repo_found_in="pdf" repo_urls="https://github.com/yuwchen/OpenEnded" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.15675v1" published="2026-09-14T14:51:37Z" updated="2026-09-14T14:51:37Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.16090v1" published="2026-09-14T11:22:53Z" updated="2026-09-14T11:22:53Z" repo_found_in="pdf" repo_urls="https://github.com/a43992899/openl2s;https://huggingface.co/Qwen/;https://huggingface.co/Qwen/Qwen3-Omni-30B-A3B-Captioner" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.16315v1" published="2026-09-14T20:25:58Z" updated="2026-09-14T20:25:58Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.16535v1" published="2026-09-15T02:34:07Z" updated="2026-09-15T02:34:07Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.16582v1" published="2026-09-15T03:26:37Z" updated="2026-09-15T03:26:37Z" repo_found_in="pdf" repo_urls="https://github.com/glam-imperial/clash" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.16612v1" published="2026-09-15T04:19:03Z" updated="2026-09-15T04:19:03Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.16989v1" published="2026-09-15T11:03:52Z" updated="2026-09-15T11:03:52Z" repo_found_in="pdf" repo_urls="https://github.com/QwenLM/Qwen3-TTS;https://huggingface.co/;https://huggingface.co/hexgrad/Kokoro-82M;https://huggingface.co/nvidia/parakeet-tdt-0;https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.17056v1" published="2026-09-15T12:06:16Z" updated="2026-09-15T12:06:16Z" repo_found_in="pdf" repo_urls="https://github.com/lggvu/mm-turn-taking" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.17076v1" published="2026-09-15T12:15:12Z" updated="2026-09-15T12:15:12Z" repo_found_in="abstract" repo_urls="https://github.com/Cross-Innovation-Lab/SAMPLESELECT/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.17234v1" published="2026-09-15T14:13:51Z" updated="2026-09-15T14:13:51Z" repo_found_in="pdf" repo_urls="https://github.com/Aratako/Irodori-TTS;https://github.com/r9y9/pyopenjtalk;https://huggingface.co/Aratako/;https://huggingface.co/datasets/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.17350v1" published="2026-09-15T15:49:37Z" updated="2026-09-15T15:49:37Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.17509v1" published="2026-09-15T17:46:51Z" updated="2026-09-15T17:46:51Z" repo_found_in="pdf" repo_urls="https://huggingface.co/espnet/libritts;https://huggingface.co/espnet/libritts_dac_24k;https://huggingface.co/espnet/libritts_encodec_24k;https://huggingface.co/espnet/libritts_soundstream24k;https://huggingface.co/microsoft/wavlm-base-plus-sv" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.17612v1" published="2026-09-14T13:14:35Z" updated="2026-09-14T13:14:35Z" repo_found_in="abstract" repo_urls="https://github.com/ifsm" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.17884v1" published="2026-09-15T22:22:21Z" updated="2026-09-15T22:22:21Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.18009v1" published="2026-09-16T02:00:09Z" updated="2026-09-16T02:00:09Z" repo_found_in="pdf" repo_urls="https://github.com/0u5gary/SG-Mamba" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.18041v1" published="2026-09-16T02:41:41Z" updated="2026-09-16T02:41:41Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.18062v1" published="2026-09-16T03:08:34Z" updated="2026-09-16T03:08:34Z" repo_found_in="comment" repo_urls="https://encypher-chi.github.io/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.18216v1" published="2026-09-16T06:46:00Z" updated="2026-09-16T06:46:00Z" repo_found_in="abstract" repo_urls="https://github.com/FEAfeatherTHER/CPR_official" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.18333v1" published="2026-09-16T08:55:40Z" updated="2026-09-16T08:55:40Z" repo_found_in="pdf" repo_urls="https://huggingface.co/mistralai/;https://huggingface.co/mistralai/Voxtral-Mini-4B-Realtime-2602" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.18521v1" published="2026-09-16T11:49:45Z" updated="2026-09-16T11:49:45Z" repo_found_in="pdf" repo_urls="https://caml-labs.github.io/V;https://huggingface.co/Qwen/Qwen3-Embedding-8B;https://huggingface.co/models?search=midashenglm-7b" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.18585v1" published="2026-09-16T12:44:11Z" updated="2026-09-16T12:44:11Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.18673v1" published="2026-09-16T13:50:55Z" updated="2026-09-16T13:50:55Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.18680v1" published="2026-09-16T13:56:13Z" updated="2026-09-16T13:56:13Z" repo_found_in="pdf" repo_urls="https://github.com/OPPO-Mente-Lab/HearInContext" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.18686v1" published="2026-09-16T14:00:38Z" updated="2026-09-16T14:00:38Z" repo_found_in="pdf" repo_urls="https://github.com/iver56/torch-audiomentations;https://github.com/snakers4/silero-vad;https://github.com/state-spaces/mamba" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.18748v1" published="2026-09-16T14:41:11Z" updated="2026-09-16T14:41:11Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.18748v2" published="2026-09-16T14:41:11Z" updated="2026-09-17T15:49:07Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.18766v1" published="2026-09-16T14:51:37Z" updated="2026-09-16T14:51:37Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.18766v2" published="2026-09-16T14:51:37Z" updated="2026-09-17T15:41:24Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.18856v1" published="2026-09-16T15:59:20Z" updated="2026-09-16T15:59:20Z" repo_found_in="abstract" repo_urls="https://github.com/lab-emi/GrainSpeech" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.19397v1" published="2026-09-16T20:27:22Z" updated="2026-09-16T20:27:22Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.19398v1" published="2026-09-16T20:29:03Z" updated="2026-09-16T20:29:03Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.19818v1" published="2026-09-17T07:28:40Z" updated="2026-09-17T07:28:40Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.19856v1" published="2026-09-17T08:07:04Z" updated="2026-09-17T08:07:04Z" repo_found_in="pdf" repo_urls="https://github.com/TEN-framework/ten-vad/tree/main/testset;https://github.com/amsehili/auditok;https://github.com/jtkim-kaist/V;https://github.com/pirxus/personalV;https://github.com/wiseman/py-webrtcvad" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.20063v1" published="2026-09-17T11:14:58Z" updated="2026-09-17T11:14:58Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.20070v1" published="2026-09-17T11:24:15Z" updated="2026-09-17T11:24:15Z" repo_found_in="abstract" repo_urls="https://github.com/ora942878/CircleMatch" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.20081v1" published="2026-09-17T11:38:44Z" updated="2026-09-17T11:38:44Z" repo_found_in="pdf" repo_urls="https://emo-box.github.io/leaderboard1.html;https://github.com/emo-box/EmoBox;https://github.com/microsoft/unilm/tree/master/beats;https://huggingface.co/openai/whisper-medium" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.20124v1" published="2026-09-17T12:20:48Z" updated="2026-09-17T12:20:48Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.20331v1" published="2026-09-17T13:04:29Z" updated="2026-09-17T13:04:29Z" repo_found_in="pdf" repo_urls="https://github.com/ollpu/quantum-fir/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2609.20504v1" published="2026-09-17T14:50:12Z" updated="2026-09-17T14:50:12Z" repo_found_in="pdf" repo_urls="https://github.com/aakashdg/agri-voice-pipeline;https://huggingface.co/DigiGreen/pyannote-segmentation-agri-indic;https://huggingface.co/datasets/DigiGreen/agri-lexicon-hindi;https://huggingface.co/datasets/DigiGreen/agri-voice-eval;https://huggingface.co/spaces/DigiGreen/farmerchat-voice-pipeline-demo" />
+  </code-available-feed:processed>
+</feed>

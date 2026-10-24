@@ -1,0 +1,843 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:code-available-feed="tag:code-available-feed.github.io,2026:atom-extensions">
+  <title>cs.SD strict=false code-available-feed/code-available-feed</title>
+  <id>https://code-available-feed.github.io/code-available-feed/arxiv/cs.sd/atom.xml</id>
+  <updated>2026-07-09T17:55:33Z</updated>
+  <link rel="self" type="application/atom+xml" href="https://code-available-feed.github.io/code-available-feed/arxiv/cs.sd/atom.xml" />
+  <link rel="alternate" type="text/html" href="https://github.com/code-available-feed/code-available-feed" />
+  <entry>
+    <title>[cs.SD] MulTTiPop: A Multitrack Transcription Dataset for Pop Music</title>
+    <author>
+      <name>Nathan Pruyne</name>
+    </author>
+    <author>
+      <name>Benjamin Stoler</name>
+    </author>
+    <author>
+      <name>William Chen</name>
+    </author>
+    <author>
+      <name>Chien-yu Huang</name>
+    </author>
+    <author>
+      <name>Shinji Watanabe</name>
+    </author>
+    <author>
+      <name>Chris Donahue</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.08756v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.08756v1" />
+    <published>2026-07-09T17:55:33Z</published>
+    <updated>2026-07-09T17:55:33Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Nathan Pruyne et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;We present MulTTiPop, a dataset of pop music segments and their associated multitrack MIDI recordings for the evaluation of automatic music transcription models. MulTTiPop contains 572 segments of popular music totaling 3.5 hours of audio, and contains songs from diverse genres and decades from the 1930s to 2000s. To collect this dataset, we perform metadata-based matching on song segments from the Lakh MIDI and TheoryTab datasets, manually identify an anchor beat between the audio and MIDI, then use beat tracking on the audio and warp the MIDI to match its tempo and timing. We evaluate state-of-the-art automatic music transcription models on MulTTiPop and find substantial room for improvement, with the best model achieving 38% Onset F1. More details and sound examples of MulTTiPop are available at https://gclef-cmu.org/multtipop.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;8 pages, 4 figures. Associated web preview available at https://gclef-cmu.org/multtipop&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] It Takes Few to TANGO: A Quantized Distributed Model for Binaural Speech Enhancement</title>
+    <author>
+      <name>Zahra Benslimane</name>
+    </author>
+    <author>
+      <name>Pierre Chouteau</name>
+    </author>
+    <author>
+      <name>Martyna Poreba</name>
+    </author>
+    <author>
+      <name>Fabrice Auzanneau</name>
+    </author>
+    <author>
+      <name>Michal Szczepanski</name>
+    </author>
+    <author>
+      <name>Fabian Chersi</name>
+    </author>
+    <author>
+      <name>Romain Serizel</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.08645v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.08645v1" />
+    <published>2026-07-09T16:17:42Z</published>
+    <updated>2026-07-09T16:17:42Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Zahra Benslimane et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Neural network-based multichannel speech enhancement systems achieve strong enhancement performance, but their computational and memory requirements limit deployment on resource-constrained devices. This paper investigates low-precision inference for TANGO, a hybrid distributed binaural speech enhancement system combining neural mask estimation with spatial filtering. We evaluate post-training quantization and quantization-aware training for the neural components, and analyze how quantization errors in the mask estimators propagate through the downstream spatial filtering stage. Our analysis shows that, although quantization degrades intermediate mask estimates, the spatial filtering stage compensates for most quantization-induced errors. Leveraging this robustness, we simplify TANGO into MN-TANGO, reducing both model size and computational complexity while maintaining comparable final performance. By combining INT8 weight-and-activation quantization with ERB compression and grouped recurrent layers, the most compact MN-TANGO reaches 4.65 MMAC/s and 0.177 MB.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[eess.AS] Why Do You Say It Like That? A Phoneme-Level Framework for Explainable Speech Deepfake Detection</title>
+    <author>
+      <name>Anna Taylor</name>
+    </author>
+    <author>
+      <name>Michele Panariello</name>
+    </author>
+    <author>
+      <name>Massimiliano Todisco</name>
+    </author>
+    <author>
+      <name>Chiara Galdi</name>
+    </author>
+    <author>
+      <name>Nicholas Evans</name>
+    </author>
+    <author>
+      <name>Driss Matrouf</name>
+    </author>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.08586v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.08586v1" />
+    <published>2026-07-09T15:23:45Z</published>
+    <updated>2026-07-09T15:23:45Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Anna Taylor et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;As the accuracy of speech deepfake detection improves with the use of self-supervised representations such as wav2vec 2.0 and HuBERT, understanding why the speech is classified as bona fide or deepfake remains an open challenge. In pursuit of more trustworthy and interpretable artificial intelligence, we introduce a phoneme-level analysis framework that connects model predictions to measurable phonetic units. Our post-hoc explainability method is generally applicable to a variety of speech deepfake detection systems based on convolutional neural networks since it leverages Gradient-weighted Class Activation Mapping in conjunction with speech recognition to generate saliency maps aligned with phonemes and pauses. This pipeline reveals statistically significant attack- and speaker-dependent phonetic cues associated with spoofed speech in terms that humans can understand. Experiments using ASVspoof 5 show comparable detection performance to similar architectures while providing linguistic interpretations across speakers and spoofing conditions.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] A Quantized Native Runtime for On-Device Semantic Audio Generation</title>
+    <author>
+      <name>Matteo Spanio</name>
+    </author>
+    <author>
+      <name>Antonio Rodà</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.08526v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.08526v1" />
+    <published>2026-07-09T14:21:34Z</published>
+    <updated>2026-07-09T14:21:34Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Matteo Spanio, Antonio Rodà&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Semantic audio applications increasingly require controllable generation on commodity and embedded hardware rather than through framework-heavy datacenter stacks. We present \textit{aria}, a dependency-free native runtime that runs the complete text-to-music pipeline of Stable Audio~3 (SA3) on ordinary GPUs, CPU-only machines, and a Raspberry~Pi~5, with no Python or deep-learning framework underneath. Our main contribution is a study of quantization: running the model at lower numerical precision to fit tight memory budgets, saving memory in place rather than adding to it. Because the runtime owns every internal tensor, it also exposes activation steering, a low-cost way to steer what the model generates. We judge the quality cost with three independent measures of the output (prompt adherence, overall audio quality, taste preservation), each compared against the ordinary variation between random seeds. Eight-bit precision shows no measurable quality loss on any measure while sharply cutting memory, and it is the fastest mode on the GPU; four-bit adds a small, bounded cost but shrinks the footprint enough to run the $1.2$-billion-parameter model on an $8$\,GB Pi. Against the official implementation, aria matches or exceeds generation speed and starts about seven times faster. A case study of the steering interface generates music carrying taste associations (\emph{sonic seasoning}), with genuine but bounded control for a subset of attributes. These results make a compact, quantized runtime with built-in control a practical basis for on-device semantic audio in Internet-of-Sounds settings. The \textit{aria} runtime is released at https://github.com/matteospanio/aria.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Under review at International Symposium on the Internet of Sounds (IS2)&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[eess.AS] On the Role of Conversational Timing in Synthetic Training Data for ASR</title>
+    <author>
+      <name>Máté Gedeon</name>
+    </author>
+    <author>
+      <name>Péter Mihajlik</name>
+    </author>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.08371v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.08371v1" />
+    <published>2026-07-09T11:40:33Z</published>
+    <updated>2026-07-09T11:40:33Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Máté Gedeon, Péter Mihajlik&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Synthetic multi-speaker conversations are widely used to train conversational automatic speech recognition (ASR) systems, but it remains unclear which timing properties make simulated data most useful. This paper studies conversational timing as a controllable training variable rather than merely as a corpus statistic to be reproduced. We parameterize pause and overlap timing distributions with an exponential-tilting family estimated from multiple conversational corpora, and then explore the resulting four-dimensional parameter space with Latin hypercube sampling and multi-objective Bayesian optimization. Each sampled timing configuration is used to generate simulated training conversations, train an ASR system, and evaluate concatenated-permutation word and character error rates (cpWER and cpCER) on a Hungarian dialogue corpus. The results show that downstream ASR behavior is explained more directly by induced timing statistics than by raw simulator coordinates or corpus proximity. In particular, higher overlap exposure is associated with lower cpWER, whereas longer and more variable gaps are associated with higher cpWER; cpCER follows the same trend, but with weaker statistical support. Bayesian optimization yields modest aggregate improvements, but its main value is analytical: it produces controlled timing interventions that reveal an overlap--gap trade-off in simulated conversational training data. These findings suggest that realistic simulation should be complemented by task-relevant diagnostics of overlap, gap, and timing-variability profiles.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.CL] Best-of-$N$ TTS Evaluation is Confounded by ASR Family Alignment</title>
+    <author>
+      <name>Taehyung Yu</name>
+    </author>
+    <author>
+      <name>Seongjae Kang</name>
+    </author>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.08256v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.08256v1" />
+    <published>2026-07-09T09:01:03Z</published>
+    <updated>2026-07-09T09:01:03Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Taehyung Yu, Seongjae Kang&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Best-of-$N$ (BoN) inference improves content consistency in zero-shot text-to-speech by selecting from $N$ candidates with an automatic speech recognition (ASR) verifier. We identify an underexplored evaluation confound: a verifier&amp;#x27;s apparent quality depends strongly on which ASR family judges it. On LibriSpeech-PC test-clean~\citep{librispeechpc} with F5-TTS~\citep{f5tts}, verifier rankings reverse across Whisper, wav2vec~2.0, and HuBERT evaluators, and same-family verifier-evaluator pairs recover 2-3$\times$ more oracle headroom than cross-family pairs despite near-identical representations (linear CKA $0.978$) -- a pattern consistent with identity- or lineage-level coupling rather than representational overlap. We propose two \textbf{cross-family rank ensembles} (rank-averaging and conjunctive max-rank) that attain the lowest mean WER across three independent evaluators -- $1.61\%$ at $N{=}10$ ($-12\%$ relative to F5-TTS) -- with no measurable degradation under automatic SIM-o/UTMOS metrics; the best single verifier drives WER from $2.06\%$ to $1.72\%$ ($-16.5\%$) under the official F5-TTS evaluator. We recommend cross-evaluator triangulation as default reporting practice.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Accepted at ICML 2026 Workshop on Machine Learning for Audio&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] MuScriptor: An Open Model for Multi-Instrument Music Transcription</title>
+    <author>
+      <name>Simon Rouard</name>
+    </author>
+    <author>
+      <name>Michael Krause</name>
+    </author>
+    <author>
+      <name>Axel Roebel</name>
+    </author>
+    <author>
+      <name>Carl-Johann Simon-Gabriel</name>
+    </author>
+    <author>
+      <name>Alexandre Défossez</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.08168v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.08168v1" />
+    <published>2026-07-09T07:12:30Z</published>
+    <updated>2026-07-09T07:12:30Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Simon Rouard et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Existing methods for automatic music transcription are often limited to single-instrument recordings or fail on complex, real music mixes. Although previous work utilizes synthetic training data, the resulting models generalize poorly, leading to largely unusable transcription output in realistic, multi-instrument settings. In this work, we analyze the effectiveness of synthetic data for pre-training while combining it with fine-tuning on real music audio and post-training using reinforcement learning. We further introduce conditioning on instrument presence to customize transcriptions. Finally, we release MuScriptor, an open-weight multi-instrument music transcription model that works on real-world music recordings from across a diverse range of musical genres.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] PS4: Proxy-Supervised Joint Training for Real Target Speaker Extraction</title>
+    <author>
+      <name>Wanyi Ning</name>
+    </author>
+    <author>
+      <name>Wei Zhou</name>
+    </author>
+    <author>
+      <name>Yingpeng Li</name>
+    </author>
+    <author>
+      <name>Yinshang Guo</name>
+    </author>
+    <author>
+      <name>Haitao Qian</name>
+    </author>
+    <author>
+      <name>Yiming Cheng</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.08111v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.08111v1" />
+    <published>2026-07-09T04:51:11Z</published>
+    <updated>2026-07-09T04:51:11Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Wanyi Ning et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Training target speaker extraction (TSE) models for real conversational mixtures remains challenging because large-scale training corpora and clean target speech for supervision are unavailable. We present PS4, a proxy-supervised training framework for TSE in real conversational mixtures, with two main contributions. First, we construct a large-scale corpus of 71,771 training samples derived from four public datasets, covering both Chinese and English scenarios. Each sample contains an overlapping speech mixture, per-speaker enrollment audio, a ground-truth transcript, and frame-level voice activity labels. Second, we propose a proxy-supervised joint training strategy that fine-tunes a BSRNN-based TSE model using four complementary differentiable objectives: ASR cross-entropy, speaker similarity, frame-level voice activity detection, and perceptual audio quality. Starting from a publicly available pre-trained checkpoint, only the BSRNN separator is updated during fine-tuning. On the REAL-T challenge leaderboard, PS4 ranks 2nd overall, achieving the best speaker similarity and timing F1 among all submitted systems.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] MMGenre: Benchmarking Singing Voice Synthesis across Multiple Musical Genres</title>
+    <author>
+      <name>Wenhao Feng</name>
+    </author>
+    <author>
+      <name>Yuxun Tang</name>
+    </author>
+    <author>
+      <name>Jiatong Shi</name>
+    </author>
+    <author>
+      <name>Qin Jin</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.06986v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.06986v1" />
+    <published>2026-07-08T04:15:51Z</published>
+    <updated>2026-07-08T04:15:51Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Wenhao Feng et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Singing voice synthesis (SVS) has progressed rapidly, yet its ability to generalize across diverse musical genres remains underexplored. Existing benchmarks are heavily biased toward pop music, limiting systematic analysis of genre-dependent behavior. We introduce MMGenre, a benchmark for multi-genre SVS diagnosis, supported by an automatic pipeline for constructing genre-aligned music scores. MMGenre spans 10 major genres and 26 subgenres, enabling comprehensive analysis of genre-aware synthesis. Extensive evaluation of representative SVS models reveals limited genre discrimination: synthesized vocals across genres exhibit highly similar acoustic characteristics and weak separability. While zero-shot genre adaptation yields only marginal improvements, lightweight genre-specific continued training leads to substantial gains. MMGenre provides a standardized framework for multi-genre SVS evaluation and exposes critical challenges in achieving genre-aware singing voice synthesis.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Accepted by Interspeech 2026. Camera-ready version. 4 pages, 5 figures.Project page: https://fengjin1117.github.io/mmgenre-demo/&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] MADB: A Large-Scale Music Aesthetics Dataset with Professional and Multi-Dimensional Annotations</title>
+    <author>
+      <name>Sirui Zhang</name>
+    </author>
+    <author>
+      <name>Tianle Wang</name>
+    </author>
+    <author>
+      <name>Xinyi Tong</name>
+    </author>
+    <author>
+      <name>Peiyang Yu</name>
+    </author>
+    <author>
+      <name>Jishang Chen</name>
+    </author>
+    <author>
+      <name>Liangke Zhao</name>
+    </author>
+    <author>
+      <name>Haoxin Zhang</name>
+    </author>
+    <author>
+      <name>Duo Xu</name>
+    </author>
+    <author>
+      <name>Xin Jin</name>
+    </author>
+    <author>
+      <name>Feng Yu</name>
+    </author>
+    <author>
+      <name>Songchun Zhu</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.06929v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.06929v1" />
+    <published>2026-07-08T02:49:29Z</published>
+    <updated>2026-07-08T02:49:29Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Sirui Zhang et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Music aesthetic assessment is a challenging yet underexplored problem, requiring models to capture fine-grained, multi-dimensional human perceptual judgments. Progress in this area has been limited by the lack of large-scale datasets with structured aesthetic annotations. We introduce MADB, a large-scale dataset and benchmark comprising 9,999 tracks annotated by 30 trained annotators. Each track is rated by around 10 annotators across 10 perceptual dimensions and one overall score, with additional textual comments for multimodal analysis. We establish a unified evaluation framework over multiple pretrained models. Results reveal substantial gaps between model predictions and human judgments, exposing key limitations of current approaches. MADB provides a new benchmark for human-aligned music understanding. Project page: https://github.com/knownree/madb&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[eess.AS] WordVoice: Explicit and Decoupled Multi-Dimensional Word-Level Control for LLM-Based TTS</title>
+    <author>
+      <name>Sihang Nie</name>
+    </author>
+    <author>
+      <name>Jinxin Ji</name>
+    </author>
+    <author>
+      <name>Xiaofen Xing</name>
+    </author>
+    <author>
+      <name>Deyi Tuo</name>
+    </author>
+    <author>
+      <name>Chengbin Jin</name>
+    </author>
+    <author>
+      <name>Jialong Mai</name>
+    </author>
+    <author>
+      <name>Xiangmin Xu</name>
+    </author>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.06461v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.06461v1" />
+    <published>2026-07-07T16:22:59Z</published>
+    <updated>2026-07-07T16:22:59Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Sihang Nie et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;While recent Large Language Model (LLM)-based Text-to-Speech (TTS) systems have achieved remarkable naturalness, they predominantly rely on implicit end-to-end generation paradigms, resulting in coarse-grained control. In scenarios demanding precise stylistic interventions and strict temporal alignment, such as audiobook narration and video dubbing, the inability to explicitly manipulate word-level acoustic attributes remains a critical bottleneck. This limitation is primarily amplified by the severe scarcity of fine-grained annotated datasets and the architectural challenge of integrating multi-dimensional control signals into discrete autoregressive generation. To address this, we propose a unified framework for highly precise word-level control. First, we construct WordVoice-5A, a massive 4.7k-hour bilingual dataset featuring five-dimensional word-level annotations (duration, boundary, energy, pitch and tone) developed through a rigorous linguistically-guided pipeline. Second, we introduce WordVoice to transform the implicit generation process into an explicit, highly controllable paradigm. Specifically, we introduce a bound-token mechanism within the LLM to formulate an explicit ``acoustic planning&amp;#x27;&amp;#x27; process, enabling adaptive multi-task prosodic planning and flexible manual intervention. Furthermore, we augment the token-to-waveform stage with a fine-grained acoustic modulation module, bridging the resolution gap to strictly align word-level attributes between highly compressed discrete tokens and continuous waveforms. Extensive experiments demonstrate that WordVoice achieves superior, decoupled control over multiple acoustic dimensions while maintaining competitive zero-shot synthesis stability. The code and audio samples are publicly available at https://xxh333.github.io/wordvoice-demo/.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;10 pages, 4 figures, 6 tables; Preprint&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.MM] Precise Video-to-Audio Generation with Cross-Modal Alignment in Latent Space</title>
+    <author>
+      <name>Thanh V. T. Tran</name>
+    </author>
+    <author>
+      <name>Ngoc-Son Nguyen</name>
+    </author>
+    <author>
+      <name>Luong Tran</name>
+    </author>
+    <author>
+      <name>Long-Khanh Pham</name>
+    </author>
+    <author>
+      <name>Paarth Neekhara</name>
+    </author>
+    <author>
+      <name>Shezheen Hussain</name>
+    </author>
+    <author>
+      <name>Van Nguyen</name>
+    </author>
+    <category term="cs.MM" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.06405v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.06405v1" />
+    <published>2026-07-07T15:34:43Z</published>
+    <updated>2026-07-07T15:34:43Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Thanh V. T. Tran et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Video-to-audio (V2A) generation aims to synthesize realistic audio that is both semantically consistent with and temporally synchronized to a silent video. Despite recent progress, many methods still rely on multi-stage training, resulting in high computational costs and long runtimes, or transform visual input into text to leverage pretrained text-to-audio models, sacrificing fine-grained temporal cues. To overcome these limitations, we propose Flowley, an end-to-end, single-stage training architecture that produces soundtracks by combining visual features with textual prompts. Crucially, we introduce Progressive Soft-masked Cross-Attention, which embeds audio-visual synchronization directly within its attention mechanism, adding zero additional computational cost compared to standard attention layers. We further observe that existing V2A benchmarks lack sound-oriented descriptive captions, which can potentially degrade the quality of the synthesized audio. To remedy this, we propose SoundCap, a plug-and-play pipeline for creating detailed, sound-aware captions that guide the model. Remarkably, without integrating any pretrained audio-visual alignment modules, Flowley achieves state-of-the-art performance on VGGSound across multiple metrics. Moreover, by incorporating SoundCap, we further exceed the performance of the strongest existing close-sourced methods in terms of audio quality in the zero-shot setting.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Accepted to ECCV 2026&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] InsideSSL: Understanding Self-Supervised Speech Representations using a Model-Centric Perspective</title>
+    <author>
+      <name>Samir Sadok</name>
+    </author>
+    <author>
+      <name>Xavier Alameda-Pineda</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.06392v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.06392v1" />
+    <published>2026-07-07T15:25:47Z</published>
+    <updated>2026-07-07T15:25:47Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Samir Sadok, Xavier Alameda-Pineda&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Self-supervised learning (SSL) models, such as Wav2Vec2, HuBERT, and WavLM, have become foundational across a wide range of speech and audio tasks. Despite their success, understanding their internal layer-wise dynamics remains an ongoing challenge. To address this, we propose a two-part model-centric framework called InsideSSL. First, we establish a task-agnostic analysis from three intrinsic per-layer perspectives: compression (entropy), geometry (curvature), and robustness to perturbations. We show that varying training objectives induce distinct regimes of acoustic compression and manifold unfolding. Second, we introduce the cross-layer Generative Compatibility Matrix (GCM) to evaluate functional transferability, exposing stable phonetic cores, identity volatility, and deep-layer semantic pruning. In addition to these evaluations, linear probing connects the model-centric perspective to downstream tasks, demonstrating how layer topology dictates phoneme, pitch, and speaker encoding.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;10 pages - 9 figures - accepted at INTERSPEECH 2026 (long paper track)&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Designing Maintainable Hybrid Generative Systems: A Quantum-Inspired Approach to Automated Music Harmony Generation</title>
+    <author>
+      <name>Josef Pavlicek</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.06296v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.06296v1" />
+    <published>2026-07-07T14:03:10Z</published>
+    <updated>2026-07-07T14:03:10Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Josef Pavlicek&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;This paper presents the design and evaluation of a maintainable hybrid generative architecture for automated music harmony generation from melody. The proposed system combines quantum-inspired candidate exploration over overlapping melodic contexts with explicit rule-based optimization to balance generative flexibility and structural control. The architecture is evaluated using explicit and reproducible metrics covering structural coherence, functional agreement, harmonic similarity, and robustness. The results show that the proposed approach produces harmonizations that preserve tonal structure and cadential behavior while allowing multiple valid harmonic realizations. Furthermore, the optimization layer improves structural coherence, stability, and predictability without requiring a training corpus. The study demonstrates that transparent and controllable hybrid generative systems can be systematically designed and evaluated within the context of Information Systems Development.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;12 pages, 1 figure, 4 tables. Extended version of the 4-page paper accepted at the 34th International Conference on Information Systems Development (ISD2026, Prague). Source code and dataset available at https://github.com&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Determinantal point process sampling for bioacoustic active learning</title>
+    <author>
+      <name>Hugo Magaldi</name>
+    </author>
+    <author>
+      <name>Gabriel Dubus</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.06063v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.06063v1" />
+    <published>2026-07-07T09:35:53Z</published>
+    <updated>2026-07-07T09:35:53Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Hugo Magaldi, Gabriel Dubus&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Eco-acoustic monitoring generates vast volumes of audio data, making active learning a promising approach for reducing annotation effort while efficiently training reliable biodiversity classifiers. This report presents CARE-DPP, a batch active-learning acquisition method submitted to BioDCASE Active Learning for Bioacoustics 2026 challenge. The method combines class-balanced predictive uncertainty with embedding-space novelty, while a determinantal point process (DPP) objective selects a high-quality and non-redundant acquisition batch. The uncertainty-novelty balance is annealed over the annotation budget: early cycles emphasize geometric coverage, whereas later cycles increasingly exploit classifier uncertainty. To mitigate unreliable early scores, the DPP candidate pool mixes top-quality candidates with a decreasing proportion of random exploration. An adaptive acquisition schedule uses smaller batches early and larger batches later. Evaluated over five repeats on the BirdSet HSN, POW and UHH subsets and on ATBFL, CARE-DPP obtains a mean development AULC of 0.50 for macro mAP, compared with 0.46 for the official CoreSet baseline. Ablations identify DPP batch diversification and the adaptive acquisition schedule as the largest contributors.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;BioDCASE Challenge 2026 - Task 4 Active learning. Ranked 2/14&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Music I Care About: Automated Multimodal Benchmarking of LLM Music Perception Skills on (Almost) Any Music</title>
+    <author>
+      <name>Tomáš Sourada</name>
+    </author>
+    <author>
+      <name>Katia Vendrame</name>
+    </author>
+    <author>
+      <name>Jan Hajič</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.06015v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.06015v1" />
+    <published>2026-07-07T08:57:34Z</published>
+    <updated>2026-07-07T08:57:34Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Tomáš Sourada et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Music represents a cornerstone of human culture, existing digitally across diverse modalities, including audio, symbolic encodings (e.g., MIDI, MusicXML), and sheet music. Despite the advancement of Multimodal Large Language Models (MLLMs), current music benchmarks face three major limitations. First, large static benchmarks are resource-intensive to evaluate, and it remains unclear how their results transfer to diverse kinds of music beyond those included in the benchmark. Second, benchmarks claiming to measure &amp;quot;music understanding&amp;quot; often fail to require music perception. Third, they do not support systematic performance comparisons across musical modalities. To overcome these issues, we introduce the Music I Care About Meta-Benchmark (MusICA-MetaBench), a framework that automatically derives on-demand benchmarks directly from user-provided data. By leveraging structured symbolic representations (e.g., MusicXML) and our pre-defined question templates, we build multiple-choice question-answer pairs that probe music perception competencies, aligned with music pedagogy, across audio, music notation images, and symbolic files. We demonstrate our framework with the ChoraleBricks dataset, and experimentally determine benchmark sizes that ensure statistically reliable model comparisons for this setup. By comparing against text-only and white-noise baselines, we show our questions do measure music perception. Ultimately, MusICA-MetaBench represents a significant advancement in the cross-modal assessment of music perception for MLLMs. By proposing a dataset-specific benchmarking paradigm, it enables efficient on-demand evaluation of music perception capabilities.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;9 pages, 4 figures, 4 tables&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.MM] Multimodal Video-to-Music Recommendation via Semantic Retrieval and Temporal Reranking</title>
+    <author>
+      <name>Seungheon Doh</name>
+    </author>
+    <author>
+      <name>Minhee Lee</name>
+    </author>
+    <author>
+      <name>Sangmoon Lee</name>
+    </author>
+    <author>
+      <name>Ben Sangbae Chon</name>
+    </author>
+    <author>
+      <name>Juhan Nam</name>
+    </author>
+    <category term="cs.MM" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.05971v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.05971v1" />
+    <published>2026-07-07T08:04:56Z</published>
+    <updated>2026-07-07T08:04:56Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Seungheon Doh et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;We present VTMR, a two-stage framework for Video-To-Music Recommendation. In Stage~1, VTMR aligns comprehensive video and music signals in a joint audio-visual-text representation space and efficiently retrieves semantically compatible candidates using coarse global embeddings. In Stage~2, it reranks the retrieved candidates by attending to the temporal sequences of both video and music, thereby capturing fine-grained temporal correspondence. Evaluated on the video-to-music recommendation task, the multimodal retrieval stage improves R@10 from 14.2 to 15.9 and Median Rank from 75 to 58 over the strongest baseline; the temporal reranker further boosts R@10 to 18.3 and Median Rank to 46, demonstrating complementary gains from richer query encoding and temporal alignment. A human preference study confirms that VTMR is on par with a commercial baseline in overall preference, while outperforming a generative baseline in music quality.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Accepted for publication at The Machine Learning for Audio workshop at ICML 2026&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.CL] Audio Sentiment Analysis via Distillation and Cross-Modal Integration of Generated Multilingual Transcripts</title>
+    <author>
+      <name>Andrei-George Durdun</name>
+    </author>
+    <author>
+      <name>Victor Constantinescu</name>
+    </author>
+    <author>
+      <name>Radu Tudor Ionescu</name>
+    </author>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.06611v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.06611v1" />
+    <published>2026-07-07T06:48:23Z</published>
+    <updated>2026-07-07T06:48:23Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Andrei-George Durdun et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Automatically recognizing the sentiment, positive or negative, from speech is a challenging task, requiring both the analysis of vocal inflections and the interpretation of uttered words. Recent solutions rely on audio foundation models to solve the task, but it remains unclear if such models can take all aspects into account. To this end, we propose a multimodal solution that integrates audio and text information via cross-modal transformers, where text transcripts are automatically generated via an automatic speech recognition (ASR) tool. Moreover, we create multiple text modalities by automatically translating the transcripts into multiple languages via machine translation tools. Audio and multilingual text features are combined via a cascaded architecture comprising cross-modal transformer blocks that integrate modalities one by one. We further distill knowledge from the multimodal model, called teacher, into a unimodal (audio only) model, called student. We conduct experiments on a large-scale dataset, demonstrating that the automatically generated textual information can bring significant performance boosts in multimodal sentiment polarity classification. Our ablation study confirms that both automatic transcripts and automatic translations are helpful. Moreover, we show that the audio-only model can be enhanced via distillation, boosting performance without any computational overhead during inference. To reproduce the reported results, we publicly release our code at https://github.com/andreidurdun/cross-modal-audio-sentiment.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Accepted at KES 2026&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.CL] Unified Audio Intelligence Without Regressing on Text Intelligence</title>
+    <author>
+      <name>Zhifeng Kong</name>
+    </author>
+    <author>
+      <name>Sang-gil Lee</name>
+    </author>
+    <author>
+      <name>Jaehyeon Kim</name>
+    </author>
+    <author>
+      <name>Boxin Wang</name>
+    </author>
+    <author>
+      <name>Zihan Liu</name>
+    </author>
+    <author>
+      <name>Sungwon Kim</name>
+    </author>
+    <author>
+      <name>Yang Chen</name>
+    </author>
+    <author>
+      <name>Arushi Goel</name>
+    </author>
+    <author>
+      <name>Rajarshi Roy</name>
+    </author>
+    <author>
+      <name>Wenliang Dai</name>
+    </author>
+    <author>
+      <name>Zhuolin Yang</name>
+    </author>
+    <author>
+      <name>Yangyi Chen</name>
+    </author>
+    <author>
+      <name>Dongfu Jiang</name>
+    </author>
+    <author>
+      <name>Sreyan Ghosh</name>
+    </author>
+    <author>
+      <name>Tuomas Rintamaki</name>
+    </author>
+    <author>
+      <name>Andrew Tao</name>
+    </author>
+    <author>
+      <name>Jonathan Raiman</name>
+    </author>
+    <author>
+      <name>Mohammad Shoeybi</name>
+    </author>
+    <author>
+      <name>Bryan Catanzaro</name>
+    </author>
+    <author>
+      <name>Wei Ping</name>
+    </author>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.05196v2</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.05196v2" />
+    <published>2026-07-06T15:11:57Z</published>
+    <updated>2026-07-07T15:36:48Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Zhifeng Kong et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Audio intelligence involves understanding, reasoning about, and generating both audio and speech. In this work, we introduce Nemotron-Labs-Audex-30B-A3B (Audex), a unified audio-text LLM built on Nemotron-Cascade-2-30B-A3B, a strong text-only MoE LLM. Audex adopts a simple unified design with a single Transformer decoder: audio inputs are encoded and projected into the text embedding space, while text tokens and quantized audio output tokens are treated uniformly during generation. This architecture enables strong audio-text fusion, seamless multimodal generation, and compatibility with standard LLM training and inference infrastructure. For training, we meticulously curate audio-text datasets comprising 157.4B audio tokens and 320.5B text tokens. We apply multi-stage supervised training on these datasets, followed by text-only Cascade RL and multi-domain on-policy distillation. Audex delivers state-of-the-art audio understanding, speech recognition and translation, text-to-speech, audio generation, and speech-to-speech generation, while preserving very compelling reasoning, alignment, knowledge, long-context, and agentic capabilities of its text-only LLM backbone with marginal or no regression. We release the model checkpoints to facilitate open research.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;We release the Audex models at https://huggingface.co/collections/nvidia/nemotron-labs-audex&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Context-Aware ASR for Mandarin Technical Lectures</title>
+    <author>
+      <name>Ho-Lam Chung</name>
+    </author>
+    <author>
+      <name>Yiming Chen</name>
+    </author>
+    <author>
+      <name>Hung-yi Lee</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.05058v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.05058v1" />
+    <published>2026-07-06T13:31:09Z</published>
+    <updated>2026-07-06T13:31:09Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Ho-Lam Chung et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Technical lectures mix Mandarin speech with English technical terms. These terms carry the core meaning of the lecture, yet they occupy few characters. Character error rate (CER) therefore hides their recognition failures. We study whether lecture context helps recognize these terms. We build a term-rich Mandarin AI/ML lecture benchmark, and we define term-centric metrics that measure technical-term recognition directly. We then propose a two-pass, reference-free decoding method. The first pass runs segment-only ASR. We extract the most frequent technical terms from the first-pass hypotheses, and we prompt the recognizer with this self-built glossary in the second pass. Across five ASR backbones, the first-pass glossary raises term recall for every model and holds or lowers CER on all five. On Breeze-ASR-25 it lifts term recall from 52.50% to 60.13% while lowering CER, and a hybrid that adds a small external term list reaches 62.05% recall and 82.73% term precision. Lecture context, recovered from the model&amp;#x27;s own output, is a practical signal for technical-term recognition. Term-centric evaluation exposes errors that CER misses.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.CL] DuplexChat: Constructing Speaker-Separated Full-Duplex Dialogue Speech at Scale for Spoken Dialogue Language Modeling</title>
+    <author>
+      <name>Wataru Nakata</name>
+    </author>
+    <author>
+      <name>Yuki Saito</name>
+    </author>
+    <author>
+      <name>Hiroshi Saruwatari</name>
+    </author>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.04941v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.04941v1" />
+    <published>2026-07-06T11:17:27Z</published>
+    <updated>2026-07-06T11:17:27Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Wataru Nakata et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Full-duplex spoken dialogue models are trained on conversational speech in which each speaker is represented as a separate stream, but existing large-scale public speech corpora are mostly monaural, making them unsuited for SDLM training. We present DuplexChat, an open-source corpus for full-duplex spoken dialogue models, and DuplexChat-Pipe, a pipeline for constructing speaker-separated full-duplex dialogue speech from public podcast feeds. DuplexChat-Pipe filters language-specific podcast feeds, retrieves and cleans episode audio, extracts diarization-guided two-speaker dialogue clips, and applies speech separation and restoration to produce one channel per speaker. Running this pipeline yields a speaker-separated spoken dialogue corpus covering 282,634 hours of English and 132,723 hours of Japanese. Analysis results on DuplexChat show that it contains turn-taking dynamics present in human dialogues.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;4 pages, 1 figures, submitted to SLT demo track&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Extending Xenakis: From Architectural Geometry to Sonification of the Philips Pavilion</title>
+    <author>
+      <name>Changda Ma</name>
+    </author>
+    <author>
+      <name>Sunshiyu Wang</name>
+    </author>
+    <author>
+      <name>Canting Zhu</name>
+    </author>
+    <author>
+      <name>Alexandria Smith</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.06589v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.06589v1" />
+    <published>2026-07-06T06:30:45Z</published>
+    <updated>2026-07-06T06:30:45Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Changda Ma et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Architecture and music have been linked through proportion and temporal structure, yet architectural geometry is rarely viewed as a source of generative music. Revisiting Xenakis&amp;#x27; one-directional transformation from string glissandi in Metastaseis to the ruled surfaces of the Philips Pavilion, we invert this workflow and sonify the completed Pavilion as a temporal composition. We reconstruct the Pavilion as nine ruled surfaces, extract their governing ruling lines, and subdivide each surface into structural lines and spatial sampling points. Four evenly spaced ruling lines per surface generate continuous string glissandi, while 3357 sampled points develop five density-based energy blocks and a sparse brass and woodwind subsequence. Implemented in Python, the system produces MIDI rendered in Ableton Live, accompanied by a real-time 3D visualization that reveals architectural motion, stasis, and structural contrast through sound and image. In general, this work paves the way for the transfer of architectural geometry as a performable musical structure, extending Xenakis&amp;#x27;s architectural and musical thinking to sonification and interactive music practice.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Accepted to the International Computer Music Conference (ICMC) 2026&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Training-Free Model Selection and Domain-Aware Score Calibration for First-Shot Anomalous Sound Detection</title>
+    <author>
+      <name>Grach Mkrtchian</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.04526v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.04526v1" />
+    <published>2026-07-05T22:22:31Z</published>
+    <updated>2026-07-05T22:22:31Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Grach Mkrtchian&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;First-shot anomalous sound detection in DCASE Challenge Task 2 must flag anomalies of unseen machine types with a single threshold, without knowing whether a test clip comes from the data-rich source domain (990 normal training clips) or the data-scarce target domain (10). Two organizer-reported problems remain open: source- and target-domain AUC are negatively correlated across systems, and development-set performance does not predict evaluation-set performance. We address both with a training-free post-hoc layer over frozen audio embeddings: (i) per-domain quantile calibration shrunk toward a pooled map by a prior strength m, tracing a source/target balance frontier, and (ii) a label-free cross-validated domain-balance criterion that ranks candidate configurations from training normals only, paired with a coarse development-labeled viability veto. On DCASE 2025, the criterion rank-predicts the official evaluation score across a 45-configuration grid (Spearman rho = +0.91; family-block bootstrap 95% CI [+0.83, +0.95]) while development score is uninformative (+0.06). Criterion-based selection raises the evaluation score from 55.83 to 59.34 (jackknife CI [2.2, 4.8]) and, on an extended grid, to 61.05 -- retrospectively fourth of 35 teams. Replicating on DCASE 2023 and 2024 bounds the claim: development score is uninformative in all three years and degenerate configurations recur (vetoed every time), but under family-clustered uncertainty the criterion&amp;#x27;s predictive evidence survives only in 2025; in both replication years a fixed full-equalization default matches or beats criterion-based selection. A DCASE 2026 forward test is frozen before the 2026 evaluation ground truth is released; all headline numbers are reproduced by the official evaluator.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[eess.AS] Weakly Guided and Autoregressive Beamformer Parameterization for Generalizable Moving Speaker Extraction in Higher-Order Ambisonics</title>
+    <author>
+      <name>Jakob Kienegger</name>
+    </author>
+    <author>
+      <name>Tal Peer</name>
+    </author>
+    <author>
+      <name>Sina Khanagha</name>
+    </author>
+    <author>
+      <name>Timo Gerkmann</name>
+    </author>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.04471v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.04471v1" />
+    <published>2026-07-05T19:32:57Z</published>
+    <updated>2026-07-05T19:32:57Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Jakob Kienegger et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Linear spatial filters (beamformers) enable robust, generalizable and interpretable speech enhancement with performance guarantees under ideal parameterization. Modern beamformers are often parameterized by deep neural networks, whose performance degrades in dynamic scenarios with multiple moving speakers of unknown directions. We propose a data-driven beamforming pipeline, which only requires an estimate of the target&amp;#x27;s initial direction. Building on a higher-order ambisonics representation, we show that neural temporal-spectral processing can be decoupled from linear spatial processing, and thereby achieve generalizable and array-agnostic enhancement. By incorporating autoregression into a frame-wise causal framework, we maintain consistent performance throughout fast speaker motion and long recordings. Evaluation on synthetic data demonstrates robust enhancement under challenging conditions with closely spaced and crossing speakers. Real-world recordings in a dynamic office meeting scenario complement these findings and show generalizability across varying ambisonics orders.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Accepted at the International Workshop on Acoustic Signal Enhancement (IWAENC) 2026&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] Doppelganger: Sound Effects and Their Synthetic Twins</title>
+    <author>
+      <name>Elliott Ash</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.04337v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.04337v1" />
+    <published>2026-07-05T14:35:25Z</published>
+    <updated>2026-07-05T14:35:25Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Elliott Ash&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Audio-conditioned generators now produce synthetic sound effects from real recordings, so the real and synthetic versions of an event increasingly coexist in sound libraries and in the corpora used to train audio models -- yet no benchmark measures whether a representation can match a synthetic clip to the specific real recording it was generated from. I introduce Doppelganger, a benchmark for matching sound effects across the synthetic-real boundary, pairing 10,420 real clips across 34 everyday sound events each with an audio-conditioned synthetic twin, alongside a controlled 7-class corpus. Off-the-shelf audio encoders do not cross the boundary cleanly. Making the embedding ignore the boundary the standard way -- training it on sound-event labels -- works on familiar sounds but backfires on new ones, dropping below the untrained encoder. Training on the pairs instead -- a clip and its own synthetic twin -- generalizes. On sound events held out of training, it recovers the exact real source about 80% of the time (up from 61% untrained; chance 0.03%), whereas no objective meaningfully improves category-level recognition on those unseen events. The learned matching is specific to one generator -- it survives changes to that generator&amp;#x27;s settings but not a switch to a different generator, and collapses for the text-only generators tested. A human annotation baseline (49 listeners) lands well above chance but below the models on the same trials. Synthetic twins fool people into calling them real about 29% of the time, yet a generator-specific detector separates these audio-conditioned twins from real recordings perfectly.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;19 pages. Code: https://github.com/elliottash/doppelganger ; Data: https://huggingface.co/datasets/elliottash/doppelganger ; Models: https://huggingface.co/elliottash/doppelganger&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[eess.AS] MOSAIC: Interpretable Multi-Token Cross-Attention of Biophonetic and Self-Supervised Representations for Unified Voice Anti-Spoofing</title>
+    <author>
+      <name>Yugwon Won</name>
+    </author>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.04314v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.04314v1" />
+    <published>2026-07-05T14:02:09Z</published>
+    <updated>2026-07-05T14:02:09Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Yugwon Won&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;The dominant trend in voice anti-spoofing fuses self-supervised (SSL) backbones (e.g., WavLM) with handcrafted features, yet such fusion typically lacks transparency in cue-to-layer interactions, and simple concatenation limits cross-modal learning. We propose MOSAIC (Multi-token Oriented Speech Anti-spoofing via Integrated Cross-attention), an interpretable multi-token cross-attention framework that splits a 152-dimensional biophonetic feature vector into six semantic-group query tokens (Praat, phase, LFCC mean/std, sub-band mean/std) and attends them over thirteen mean-std pooled WavLM-Large transformer layers as keys/values. The resulting 6x13 attention matrix visualizes cue-to-layer alignment; a z-score analysis of the per-token activations shows that biophonetic/phase tokens activate more on bona fide speech while spectral/channel tokens activate more on spoofed speech -- yielding per-cue, per-layer attribution that extends prior fusion approaches. Trained jointly with focal loss, a dual LA/PA domain-adversarial classifier, and a bona-fide-only VAE regularizer, MOSAIC attains EER 1.93% / 1.98% on ASVspoof 2019 LA / PA -- a single unified model that approaches the PA-specialized SOTA (LFCC-CMR, 1.34%) while remaining competitive on LA -- and 9.28% / 6.21% / 40.09% on ASVspoof 2021 LA / DF / PA.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;5 pages, 2 figures. Submitted to IEEE Signal Processing Letters&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.CL] Speaker-Disentangled Chunk-Wise Regression for Syllabic Tokenization</title>
+    <author>
+      <name>Ryota Komatsu</name>
+    </author>
+    <author>
+      <name>Kota Kawakita</name>
+    </author>
+    <author>
+      <name>Takuma Okamoto</name>
+    </author>
+    <author>
+      <name>Takahiro Shinozaki</name>
+    </author>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.04064v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.04064v1" />
+    <published>2026-07-05T00:39:57Z</published>
+    <updated>2026-07-05T00:39:57Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Ryota Komatsu et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Unsupervised syllabic tokenization aims to learn discrete syllabic tokens that capture latent linguistic content-related structure from raw speech. Recent syllabic tokenization methods employ teacher-student distillation of the pretrained HuBERT to organize latent speech frame representations into syllabic segments. However, when trained with an utterance-level cross-entropy objective, the model predicts speaker identity rather than linguistic content, thereby compromising the purity of syllabic tokens. To address this problem, we propose a speaker-disentangled syllabic tokenizer that regresses speaker-perturbed student representations toward clean teacher targets within fixed-length chunks. Experimental results demonstrate that our proposed method achieves state-of-the-art performance in syllable boundary detection and syllabic segment clustering. Moreover, a speech language model trained on our syllabic tokens achieves a 7% relative improvement in syntactic and semantic understanding over the phone-level SpiRit-LM.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Accepted by IEEE Open Journal of Signal Processing (OJSP), 10 pages, 4 figures&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>[cs.SD] TokAN: Accent Normalization Using Self-Supervised Speech Tokens</title>
+    <author>
+      <name>Qibing Bai</name>
+    </author>
+    <author>
+      <name>Shuai Wang</name>
+    </author>
+    <author>
+      <name>Yuhan Du</name>
+    </author>
+    <author>
+      <name>Bohan Li</name>
+    </author>
+    <author>
+      <name>Yannan Wang</name>
+    </author>
+    <author>
+      <name>Haizhou Li</name>
+    </author>
+    <category term="cs.SD" scheme="http://arxiv.org/schemas/atom" />
+    <id>https://arxiv.org/abs/2607.03928v1</id>
+    <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2607.03928v1" />
+    <published>2026-07-04T15:45:38Z</published>
+    <updated>2026-07-04T15:45:38Z</updated>
+    <content type="html">&lt;h3&gt;Authors:&lt;/h3&gt;
+&lt;p&gt;Qibing Bai et al.&lt;/p&gt;
+&lt;h3&gt;Abstract:&lt;/h3&gt;
+&lt;p&gt;Accent normalization (AN) seeks to convert non-native (L2) accented speech into standard (L1) speech while preserving speaker identity. The current techniques either require naturally recorded parallel L1-L2 speech for training, or suffer from quality degradation when supervised by synthesized targets. In this paper, we present TokAN, a token-based accent normalization framework that operates on self-supervised discrete speech tokens extracted from a L1-L2 jointly trained vector-quantization (VQ) tokenizer, without the need of synthetic supervisory speech. An autoregressive encoder-decoder model performs token-to-token conversion, translating L2-accented token sequences into the tokens of standard voice. We also introduce reinforcement learning (RL) post-training based on Group Relative Policy Optimization (GRPO), using word error rate and accent classifier confidence as complementary rewards. A non-autoregressive flow-matching synthesizer recovers the Mel-spectrogram from the converted tokens, conditioned on the source speaker embedding. We also develop a flow-matching duration predictor that supports total-duration-aware synthesis, making TokAN applicable to duration-critical tasks such as voice dubbing and live casting. Experiments on seven English accents demonstrate that TokAN reduced the word error rate from 12.40% to 9.89% after supervised fine-tuning, and further to 9.23% after RL post-training, consistently outperforming frame-to-frame, direct flow-matching, and prompt-based token-conversion baselines in terms of accent reduction and intelligibility.&lt;/p&gt;
+&lt;h3&gt;Comments:&lt;/h3&gt;
+&lt;p&gt;Submitted to IEEE Transactions on Audio, Speech, and Language Processing (TASLP)&lt;/p&gt;</content>
+  </entry>
+  <code-available-feed:processed>
+    <code-available-feed:article url="https://arxiv.org/abs/2607.03018v2" published="2026-07-03T06:53:26Z" updated="2026-07-07T05:16:09Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.03844v1" published="2026-07-04T12:23:46Z" updated="2026-07-04T12:23:46Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.03928v1" published="2026-07-04T15:45:38Z" updated="2026-07-04T15:45:38Z" repo_found_in="pdf" repo_urls="https://github.com/P1ping/TokAN;https://github.com/huggingface/trl;https://github.com/microsoft/UniSpeech/tree/main/downstreams/speaker;https://github.com/microsoft/UniSpeech/tree/main/downstreams/speaker_verification;https://github.com/resemble-ai/Resemblyzer;https://github.com/sarulab-speech/UTMOSv2;https://huggingface.co/Jzuluaga/accent-id-commonaccent;https://huggingface.co/Jzuluaga/accent-id-commonaccent_xlsr-en-english;https://huggingface.co/amphion/Vevo;https://huggingface.co/datasets/MushanW/GLOBE;https://huggingface.co/facebook/hubert-large-ll60k;https://huggingface.co/facebook/s2t-medium-librispeech-asr;https://huggingface.co/facebook/w2v-bert-2.0;https://huggingface.co/facebook/wav2vec2-large-lv60;https://huggingface.co/microsoft/wavlm-large;https://p1ping.github.io/TokAN-Samples" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.04064v1" published="2026-07-05T00:39:57Z" updated="2026-07-05T00:39:57Z" repo_found_in="pdf" repo_urls="https://github.com/ryota-komatsu/speaker;https://github.com/ryota-komatsu/speaker_disentangled_hubert" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.04154v1" published="2026-07-05T07:42:41Z" updated="2026-07-05T07:42:41Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.04314v1" published="2026-07-05T14:02:09Z" updated="2026-07-05T14:02:09Z" repo_found_in="pdf" repo_urls="https://github.com/YugwonWon/mosaic-anti-spoofing" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.04337v1" published="2026-07-05T14:35:25Z" updated="2026-07-05T14:35:25Z" repo_found_in="comment" repo_urls="https://github.com/elliottash/doppelganger;https://huggingface.co/datasets/elliottash/doppelganger;https://huggingface.co/elliottash/doppelganger" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.04383v1" published="2026-07-05T16:22:14Z" updated="2026-07-05T16:22:14Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.04463v1" published="2026-07-05T19:08:01Z" updated="2026-07-05T19:08:01Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.04471v1" published="2026-07-05T19:32:57Z" updated="2026-07-05T19:32:57Z" repo_found_in="pdf" repo_urls="https://sp-uhh.github.io/weakly-guided-beamforming/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.04498v1" published="2026-07-05T20:51:24Z" updated="2026-07-05T20:51:24Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.04526v1" published="2026-07-05T22:22:31Z" updated="2026-07-05T22:22:31Z" repo_found_in="pdf" repo_urls="https://github.com/polestvr/daco-experiments" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.04619v1" published="2026-07-06T02:58:47Z" updated="2026-07-06T02:58:47Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.04826v1" published="2026-07-06T08:59:07Z" updated="2026-07-06T08:59:07Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.04848v1" published="2026-07-06T09:19:03Z" updated="2026-07-06T09:19:03Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.04868v1" published="2026-07-06T09:42:51Z" updated="2026-07-06T09:42:51Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.04937v1" published="2026-07-06T11:07:58Z" updated="2026-07-06T11:07:58Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.04941v1" published="2026-07-06T11:17:27Z" updated="2026-07-06T11:17:27Z" repo_found_in="pdf" repo_urls="https://github.com/sarulab-speech/DuplexChat;https://huggingface.co/nvidia/parakeet-tdt;https://huggingface.co/nvidia/parakeet-tdt_ctc-0.6b-ja" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.05007v1" published="2026-07-06T12:48:21Z" updated="2026-07-06T12:48:21Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.05051v1" published="2026-07-06T13:25:33Z" updated="2026-07-06T13:25:33Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.05058v1" published="2026-07-06T13:31:09Z" updated="2026-07-06T13:31:09Z" repo_found_in="pdf" repo_urls="https://github.com/BYVoid/OpenCC" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.05196v1" published="2026-07-06T15:11:57Z" updated="2026-07-06T15:11:57Z" repo_found_in="comment" repo_urls="https://huggingface.co/collections/nvidia/Nemotron-Labs-Audex" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.05196v2" published="2026-07-06T15:11:57Z" updated="2026-07-07T15:36:48Z" repo_found_in="comment" repo_urls="https://huggingface.co/collections/nvidia/nemotron-labs-audex" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.05364v1" published="2026-07-06T17:40:54Z" updated="2026-07-06T17:40:54Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.05902v1" published="2026-07-07T06:58:46Z" updated="2026-07-07T06:58:46Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.05971v1" published="2026-07-07T08:04:56Z" updated="2026-07-07T08:04:56Z" repo_found_in="pdf" repo_urls="https://seungheondoh.github.io/video-to-music-demo" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06014v1" published="2026-07-07T08:57:00Z" updated="2026-07-07T08:57:00Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06015v1" published="2026-07-07T08:57:34Z" updated="2026-07-07T08:57:34Z" repo_found_in="pdf" repo_urls="https://github.com/tomsouri/;https://github.com/tomsouri/MusICA-MetaBench-preprint" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06027v1" published="2026-07-07T09:07:30Z" updated="2026-07-07T09:07:30Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06054v1" published="2026-07-07T09:31:19Z" updated="2026-07-07T09:31:19Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06063v1" published="2026-07-07T09:35:53Z" updated="2026-07-07T09:35:53Z" repo_found_in="pdf" repo_urls="https://biodcase.github.io/challenge2026/task4" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06088v1" published="2026-07-07T10:00:23Z" updated="2026-07-07T10:00:23Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06274v1" published="2026-07-07T13:41:03Z" updated="2026-07-07T13:41:03Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06296v1" published="2026-07-07T14:03:10Z" updated="2026-07-07T14:03:10Z" repo_found_in="comment" repo_urls="https://github.com" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06299v1" published="2026-07-07T14:04:25Z" updated="2026-07-07T14:04:25Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06392v1" published="2026-07-07T15:25:47Z" updated="2026-07-07T15:25:47Z" repo_found_in="pdf" repo_urls="https://github.com/OFSkean/information_flow;https://github.com/iver56/audiomentations;https://insideSSL.github.io/;https://samsad35.github.io/audio-ssl-dynamics-site/;https://samsad35.github.io/audio-ssl-dynamics-site/#gcm-audio" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06405v1" published="2026-07-07T15:34:43Z" updated="2026-07-07T15:34:43Z" repo_found_in="pdf" repo_urls="https://flowley-v2a.github.io" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06461v1" published="2026-07-07T16:22:59Z" updated="2026-07-07T16:22:59Z" repo_found_in="abstract" repo_urls="https://xxh333.github.io/wordvoice-demo/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06589v1" published="2026-07-06T06:30:45Z" updated="2026-07-06T06:30:45Z" repo_found_in="pdf" repo_urls="https://github.com/WangSun725/;https://github.com/WangSun725/Extending-Xenakis-Architecture-to-Midi-.git" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06611v1" published="2026-07-07T06:48:23Z" updated="2026-07-07T06:48:23Z" repo_found_in="abstract" repo_urls="https://github.com/andreidurdun/cross-modal-audio-sentiment" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06827v1" published="2026-07-07T21:45:04Z" updated="2026-07-07T21:45:04Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06929v1" published="2026-07-08T02:49:29Z" updated="2026-07-08T02:49:29Z" repo_found_in="abstract" repo_urls="https://github.com/knownree/madb" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.06986v1" published="2026-07-08T04:15:51Z" updated="2026-07-08T04:15:51Z" repo_found_in="comment" repo_urls="https://fengjin1117.github.io/mmgenre-demo/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.07015v1" published="2026-07-08T05:17:26Z" updated="2026-07-08T05:17:26Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.07241v1" published="2026-07-08T10:20:50Z" updated="2026-07-08T10:20:50Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.07241v2" published="2026-07-08T10:20:50Z" updated="2026-07-09T06:54:02Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.07733v1" published="2026-07-07T07:47:16Z" updated="2026-07-07T07:47:16Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.07985v1" published="2026-07-08T23:24:55Z" updated="2026-07-08T23:24:55Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.08111v1" published="2026-07-09T04:51:11Z" updated="2026-07-09T04:51:11Z" repo_found_in="pdf" repo_urls="https://github.com/TaurenMountain/PS4;https://github.com/microsoft/dns-challenge;https://huggingface.co/datasets/TaurenMountain/REAL-PS4;https://real-tse.github.io/challenge/" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.08168v1" published="2026-07-09T07:12:30Z" updated="2026-07-09T07:12:30Z" repo_found_in="pdf" repo_urls="https://github.com/muscriptor/muscriptor" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.08256v1" published="2026-07-09T09:01:03Z" updated="2026-07-09T09:01:03Z" repo_found_in="pdf" repo_urls="https://github.com/;https://github.com/yu1012/BoN-TTS" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.08371v1" published="2026-07-09T11:40:33Z" updated="2026-07-09T11:40:33Z" repo_found_in="pdf" repo_urls="https://github.com/gedeonmate/conversation-timing;https://huggingface.co/nvidia/stt" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.08526v1" published="2026-07-09T14:21:34Z" updated="2026-07-09T14:21:34Z" repo_found_in="abstract" repo_urls="https://github.com/matteospanio/aria" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.08545v1" published="2026-07-09T14:38:16Z" updated="2026-07-09T14:38:16Z" repo_found_in="" repo_urls="" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.08586v1" published="2026-07-09T15:23:45Z" updated="2026-07-09T15:23:45Z" repo_found_in="pdf" repo_urls="https://github.com/openai/whisper;https://huggingface.co/Tabahi/CUPE-2i;https://huggingface.co/microsoft/wavlm-base-plus" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.08645v1" published="2026-07-09T16:17:42Z" updated="2026-07-09T16:17:42Z" repo_found_in="pdf" repo_urls="https://github.com/ssi-research/FQSS/tree/main" />
+    <code-available-feed:article url="https://arxiv.org/abs/2607.08756v1" published="2026-07-09T17:55:33Z" updated="2026-07-09T17:55:33Z" repo_found_in="comment" repo_urls="https://gclef-cmu.org/multtipop" />
+  </code-available-feed:processed>
+</feed>
